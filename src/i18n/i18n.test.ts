@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { BRANCHES, RESULTS, STATS } from "@/data/site"
+import { BRANCHES, OVERALL_RESULTS, RESULTS, STATS } from "@/data/site"
 
 import en from "./en"
 import ru from "./ru"
@@ -13,6 +13,7 @@ describe.each([
   ["en", en],
 ])("%s dictionary", (_, t) => {
   it("labels every result", () => expect(t.results.items).toHaveLength(RESULTS.length))
+  it("labels every overall result", () => expect(t.results.overall.items).toHaveLength(OVERALL_RESULTS.length))
   it("labels every stat", () => expect(t.stats.items).toHaveLength(STATS.length))
   it("describes every branch", () => expect(t.branches.items).toHaveLength(BRANCHES.length))
   it("has one FAQ answer per question in every language", () => expect(t.faq.items).toHaveLength(uz.faq.items.length))

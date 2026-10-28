@@ -58,7 +58,25 @@ const en: Dict = {
   results: {
     kicker: "Results",
     title: "Our results speak for themselves",
-    text: "Where our students were admitted in the 2025–2026 school year.",
+    text: "What our students have achieved over the years, and last school year’s results.",
+    overall: {
+      title: "Overall results",
+      note: "Since the centre opened",
+      items: [
+        "to Presidential Schools",
+        "to Al-Khwarizmi School",
+        "to Mirzo Ulugbek School",
+        "to specialized schools",
+        "to foreign-language schools",
+        "to academic lyceums",
+        "national certificates in math",
+        "to universities",
+      ],
+    },
+    year: {
+      title: "2025–2026 school year",
+      text: "Where our students were admitted.",
+    },
     total: (president: number) =>
       `students got into their dream school in one year, ${president} of them to Presidential Schools.`,
     items: [

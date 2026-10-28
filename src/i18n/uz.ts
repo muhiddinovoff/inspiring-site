@@ -56,7 +56,25 @@ const uz = {
   results: {
     kicker: "Natijalar",
     title: "Natijamiz o‘zi gapiradi",
-    text: "2025–2026 o‘quv yilida o‘quvchilarimiz qaysi maktablarga qabul qilingani.",
+    text: "Yillar davomida o‘quvchilarimiz erishgan umumiy natijalar va o‘tgan o‘quv yilining natijalari.",
+    overall: {
+      title: "Umumiy natijalar",
+      note: "Markaz ochilganidan beri",
+      items: [
+        "Prezident maktablariga",
+        "Al-Xorazmiy maktabiga",
+        "Mirzo Ulug‘bek maktabiga",
+        "Ixtisoslashtirilgan maktablarga",
+        "Xorijiy tillar maktablariga",
+        "Akademik litseylarga",
+        "Matematikadan milliy sertifikat",
+        "Oliy o‘quv yurtlariga",
+      ],
+    },
+    year: {
+      title: "2025–2026 o‘quv yili",
+      text: "O‘quvchilarimiz qaysi maktablarga qabul qilingani.",
+    },
     total: (president: number) =>
       `o‘quvchi bir yilda orzusidagi maktabga kirdi. Shundan ${president} nafari Prezident maktablariga.`,
     items: [

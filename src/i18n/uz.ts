@@ -1,0 +1,255 @@
+const uz = {
+  code: "uz",
+  label: "O‘zbekcha",
+  short: "UZ",
+  decimal: ",",
+  meta: {
+    title: "Inspiring Education — Prezident maktablariga tayyorlov",
+    description:
+      "Prezident va ixtisoslashtirilgan maktablarga tayyorlov markazi. 2025–2026-yilda 192+ o‘quvchi qabul qilindi. Toshkent, Samarqand, Termiz va Navoiyda 10 ta filial.",
+  },
+  common: {
+    apply: "Ariza qoldirish",
+    learnMore: "Ma’lumot olish",
+    close: "Yopish",
+    call: "Qo‘ng‘iroq qilish",
+    language: "Til",
+    skip: "Asosiy mazmunga o‘tish",
+  },
+  nav: {
+    items: {
+      natijalar: "Natijalar",
+      ustozlar: "Ustozlar",
+      dasturlar: "Dasturlar",
+      yol: "Qanday ishlaymiz",
+      savollar: "Savollar",
+      filiallar: "Filiallar",
+    },
+    main: "Asosiy menyu",
+    mobile: "Mobil menyu",
+    footer: "Pastki menyu",
+    open: "Menyuni ochish",
+    close: "Menyuni yopish",
+    home: "Inspiring Education, bosh sahifa",
+  },
+  hero: {
+    badge: "Qabul doimo ochiq",
+    titleBefore: "Farzandingizning ",
+    titleAccent: "Prezident maktabiga",
+    titleAfter: " yo‘li shu yerdan boshlanadi",
+    lead: (n: number) =>
+      `Prezident va ixtisoslashtirilgan maktablarga tayyorlov. 2025–2026-yilda ${n} dan ortiq o‘quvchimiz orzusidagi maktabga qabul qilindi.`,
+    cta: "Bepul maslahat olish",
+    boardKicker: "2025–2026 natijalari",
+    boardText: "o‘quvchi nufuzli maktablarga qabul qilindi",
+    photoAlt: "Sinfxonada dars qilayotgan o‘quvchilar",
+  },
+  stats: {
+    aria: "Raqamlarda",
+    items: [
+      { suffix: "+", label: "o‘quvchi 2025–2026-yilda qabul qilindi" },
+      { suffix: "%", label: "ota-ona darslardan mamnun" },
+      { suffix: "", label: "filial to‘rt shaharda" },
+      { suffix: " ming", label: "ota-ona Telegram kanalimizda" },
+    ],
+  },
+  results: {
+    kicker: "Natijalar",
+    title: "Natijamiz o‘zi gapiradi",
+    text: "2025–2026 o‘quv yilida o‘quvchilarimiz qaysi maktablarga qabul qilingani.",
+    total: (president: number) =>
+      `o‘quvchi bir yilda orzusidagi maktabga kirdi. Shundan ${president} nafari Prezident maktablariga.`,
+    items: [
+      { label: "Davlat ixtisoslashtirilgan maktablari", short: "Davlat ixt." },
+      { label: "Al-Xorazmiy nomidagi xalqaro maktab", short: "Al-Xorazmiy" },
+      { label: "Xorijiy tillarga ixtisoslashgan maktablar", short: "Xorijiy ixt." },
+      { label: "Boshqa nufuzli muassasalar", short: "Boshqa" },
+      { label: "Prezident maktablari", short: "Prezident" },
+    ],
+  },
+  reasons: {
+    kicker: "Nega Inspiring",
+    title: "Ota-onalar bizni nima uchun tanlaydi",
+    photoAlt: "Daftarga yozayotgan o‘quvchi",
+    badge: "ota-ona darslar sifatidan mamnun va bizni boshqalarga tavsiya qiladi",
+    items: [
+      {
+        title: "Imtihonni biladigan ustozlar",
+        text: "Ustozlarimiz yillar davomida aynan Prezident va ixtisoslashtirilgan maktablar imtihoniga tayyorlab kelgan.",
+      },
+      {
+        title: "Real imtihon formatida",
+        text: "Darslar va sinov imtihonlari haqiqiy test talablari, vaqti va savol turlariga moslab o‘tkaziladi.",
+      },
+      {
+        title: "Natijani ko‘rib turasiz",
+        text: "Sinov imtihonlaridan keyin farzandingiz qaysi mavzuda kuchli, qayerda ishlash kerakligini bilib borasiz.",
+      },
+      {
+        title: "Uyingizga yaqin",
+        text: "Toshkentda 7 ta, Samarqand, Termiz va Navoiyda filiallarimiz bor. Qatnov uchun vaqt ketmaydi.",
+      },
+    ],
+  },
+  teachers: {
+    kicker: "Ustozlar",
+    title: "Farzandingizga kim dars beradi",
+    text: "Imtihon talablarini yaxshi biladigan, yillar davomida o‘quvchilarni nufuzli maktablarga olib borgan ustozlar.",
+    fallbackName: "Inspiring ustozi",
+    fallbackSubject: "Imtihonga tayyorlov",
+    fallbackAbout:
+      "Ustoz haqida batafsil ma’lumot tez orada qo‘shiladi. Dars jadvali va guruhlar haqida menejerimizdan so‘rashingiz mumkin.",
+    exp: (e: string) => `${e} tajriba`,
+    enroll: "Darsga yozilish",
+    prev: "Oldingi ustoz",
+    next: "Keyingi ustoz",
+  },
+  programs: {
+    kicker: "Dasturlar",
+    title: "Farzandingiz sinfiga mos yo‘nalish",
+    text: "Narx va jadval sinf hamda filialga qarab belgilanadi. Aniq ma’lumotni menejerimiz aytadi.",
+    featured: "Asosiy yo‘nalish",
+    items: [
+      {
+        grade: "1–2-sinf",
+        title: "Erta boshlash",
+        text: "Bosimsiz, o‘yin orqali mantiq va o‘qish ko‘nikmalari. Keyingi bosqich uchun mustahkam poydevor.",
+        points: ["Mantiqiy fikrlash", "O‘qish va tushunish", "Kichik guruhlar"],
+      },
+      {
+        grade: "3–4-sinf",
+        title: "Prezident maktablariga tayyorlov",
+        text: "Asosiy yo‘nalishimiz. Imtihonning har bir bo‘limi bo‘yicha tizimli tayyorgarlik.",
+        points: ["Matematika va mantiq", "Ona tili va ingliz tili", "Muntazam sinov imtihonlari"],
+      },
+      {
+        grade: "2–4-sinf",
+        title: "Ixtisoslashtirilgan maktablarga",
+        text: "Al-Xorazmiy, davlat va xorijiy tillarga ixtisoslashgan maktablar imtihoni hamda suhbatiga tayyorlov.",
+        points: ["Al-Xorazmiy maktabi", "Xorijiy til maktablari", "Suhbatga tayyorlash"],
+      },
+    ],
+  },
+  steps: {
+    kicker: "Qanday ishlaymiz",
+    title: "Arizadan maktabga qabulgacha",
+    text: "Siz faqat birinchi qadamni qo‘yasiz. Qolgan yo‘lda menejer va ustozlar yoningizda bo‘ladi.",
+    items: [
+      { title: "Ariza qoldirasiz", text: "Bir daqiqa vaqt oladi: ism va telefon raqami yetarli." },
+      {
+        title: "Menejer qo‘ng‘iroq qiladi",
+        text: "Farzandingiz, sinfi va maqsadingiz haqida so‘raydi, savollaringizga javob beradi.",
+      },
+      {
+        title: "Darajani aniqlaymiz",
+        text: "Farzandingiz hozir qayerda turganini bilib, mos guruh va reja tanlanadi.",
+      },
+      { title: "Tizimli darslar", text: "Imtihon mavzulari bo‘yicha mashg‘ulotlar va muntazam sinov imtihonlari." },
+      { title: "Qabul", text: "Hujjat topshirish va imtihon kunlariga oxirgi tayyorgarlik." },
+    ],
+  },
+  faq: {
+    kicker: "Savollar",
+    title: "Ota-onalar ko‘p so‘raydi",
+    text: "Javob topa olmasangiz, qo‘ng‘iroq qiling. Menejerimiz hammasini tushuntiradi.",
+    items: [
+      {
+        q: "Farzandim 2-sinfda, hali erta emasmi?",
+        a: "Yo‘q. Erta boshlash tayyorgarlikni bosimsiz qiladi: farzandingiz mavzularni shoshmasdan o‘zlashtiradi. Menejerimiz yoshiga mos yo‘nalishni tushuntirib beradi.",
+      },
+      {
+        q: "Kurs narxi va dars jadvali qanday?",
+        a: "Narx va jadval sinf, yo‘nalish va filialga qarab belgilanadi. Ariza qoldirsangiz, menejerimiz aniq ma’lumotni aytadi.",
+      },
+      {
+        q: "Qaysi maktablarga tayyorlaysiz?",
+        a: "Prezident maktablari, Al-Xorazmiy nomidagi xalqaro maktab, davlat va xorijiy tillarga ixtisoslashgan maktablar hamda boshqa nufuzli ta’lim muassasalari.",
+      },
+      {
+        q: "Qabul qachon boshlanadi?",
+        a: "Qabul doimo ochiq. Istalgan vaqtda ariza qoldirib, tayyorgarlikni boshlashingiz mumkin.",
+      },
+      {
+        q: "Darslar qayerda o‘tadi?",
+        a: "Toshkentning 7 ta hududida, shuningdek Samarqand, Termiz va Navoiydagi filiallarimizda. Manzillarni pastdagi “Filiallar” bo‘limida topasiz.",
+      },
+    ],
+  },
+  branches: {
+    kicker: "Filiallar",
+    title: "Uyingizga yaqin filialni tanlang",
+    text: "10 ta filial: Toshkentda 7 ta, Samarqand, Termiz va Navoiyda bittadan. Manzilni bossangiz, xarita ochiladi.",
+    filter: "Shahar",
+    all: "Hammasi",
+    landmark: "Mo‘ljal",
+    cities: { tashkent: "Toshkent", samarkand: "Samarqand", termez: "Termiz", navoi: "Navoiy" },
+    items: [
+      { name: "Chilonzor", address: "Novza metro bekati, Sport tovar chorrahasi, 4-qavat" },
+      {
+        name: "Sergeli",
+        address: "Sergeli tumani, 3-bekat oldida",
+        landmark: "Asal med klinikasi tepasida, Saxiy bozor yaqinida",
+      },
+      { name: "Yunusobod", address: "Yunusobod tumani", landmark: "Turkiston metrosi yonida" },
+      { name: "Yangidarxon", address: "Yangihayot tumani, Yangidarxon mahallasi", landmark: "Sergeli 2" },
+      { name: "Yashnobod", address: "Mahtumquli ko‘chasi, 85-uy", landmark: "Makro supermarketi qarshisida" },
+      {
+        name: "Olmos",
+        address: "Yashnobod tumani, Harbiylar shaharchasi, 58a, 8-uy",
+        landmark: "Olmos metrosidan 10 daqiqa, Aziz shifo med qarshisida",
+      },
+      { name: "TTZ", address: "Mirzo Ulug‘bek tumani, TTZ", landmark: "Diadora chorrahasi, Lokomotiv bekati yonida" },
+      {
+        name: "Future Leaders’ Academy",
+        address: "Samarqand, Bo‘stonsaroy ko‘chasi, 29-uy",
+        landmark: "Respublika kasalxonasi, Dag‘bit yo‘nalishidagi Yangi ko‘prik",
+      },
+      { name: "Termiz", address: "Termiz shahri", landmark: "Soat chorrahasi" },
+      {
+        name: "Navoiy",
+        address: "Talabalar ko‘chasi, 50/1",
+        landmark: "Azamat Fayz to‘yxonasi qarshisi, 14-mikrorayon",
+      },
+    ] as { name: string; address: string; landmark?: string }[],
+    school: {
+      kicker: "Xususiy maktab",
+      name: "Inspiring International School",
+      address: "Chilonzor tumani, 1-Katta Chilonzor MFY, 6-uy",
+      landmark: "Toshkent shahar Prokuraturasi yaqinida",
+    },
+  },
+  lead: {
+    kicker: "Qabul doimo ochiq",
+    title: "Birinchi qadamni bugun qo‘ying",
+    text: "Ism va raqamingizni qoldiring. Menejerimiz o‘zi qo‘ng‘iroq qilib, farzandingizga mos yo‘nalish, narx va jadvalni aytadi.",
+    perks: ["Bir daqiqa vaqt oladi", "Hech qanday majburiyat yo‘q", "Raqamingiz faqat siz bilan bog‘lanish uchun"],
+    formTitle: "Bepul maslahatga yozilish",
+    name: "Ismingiz",
+    namePlaceholder: "Masalan, Dilnoza",
+    nameError: "Ismingizni yozing",
+    phone: "Telefon raqami",
+    phoneError: "Raqamni to‘liq yozing, masalan 90 123 45 67",
+    grade: "Farzandingiz sinfi",
+    optional: "(ixtiyoriy)",
+    grades: ["1-sinf", "2-sinf", "3-sinf", "4-sinf"],
+    submit: "Ariza qoldirish",
+    sending: "Yuborilmoqda",
+    thanks: (name: string) => `Rahmat, ${name}!`,
+    sent: (phone: string) => `Arizangiz qabul qilindi. Menejerimiz tez orada ${phone} raqamidan qo‘ng‘iroq qiladi.`,
+    manual: "Arizani tugatish uchun uni Telegramda bizga yuboring yoki qo‘ng‘iroq qiling.",
+    sendTelegram: "Telegramda yuborish",
+    copy: "Nusxa olish",
+    copied: "Nusxalandi",
+    orCall: (phone: string) => `yoki ${phone} raqamiga qo‘ng‘iroq qiling`,
+    leadText: (name: string, phone: string, grade?: string) =>
+      `Ariza: ${name}, tel: ${phone}${grade ? `, ${grade}` : ""}`,
+  },
+  footer: {
+    about:
+      "Prezident va ixtisoslashtirilgan maktablarga tayyorlov markazi. Toshkent, Samarqand, Termiz va Navoiyda 10 ta filial.",
+    subscribers: "13,6 ming",
+  },
+}
+
+export type Dict = typeof uz
+export default uz

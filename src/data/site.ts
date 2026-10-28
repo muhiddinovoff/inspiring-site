@@ -14,6 +14,9 @@ export type NavId = (typeof NAV_IDS)[number]
 /** 2025–2026 o‘quv yili natijalari, kattasidan kichigiga. Matnlari i18n `results.items` da shu tartibda. */
 export const RESULTS = [88, 42, 31, 20, 11] as const
 export const PRESIDENT_COUNT = 11
+
+/** Barcha yillar davomidagi umumiy natijalar ("+" bilan ko‘rsatiladi). Matnlari i18n `results.overall.items` da shu tartibda. */
+export const OVERALL_RESULTS = [105, 150, 40, 400, 35, 150, 400, 600] as const
 export const RESULTS_TOTAL = RESULTS.reduce((s, v) => s + v, 0)
 
 export const STATS = [

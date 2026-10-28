@@ -48,7 +48,7 @@ const uz = {
     cta: "Bepul maslahat olish",
     boardKicker: "2025–2026 natijalari",
     boardText: "o‘quvchi nufuzli maktablarga qabul qilindi",
-    photoAlt: "Sinfxonada dars qilayotgan o‘quvchilar",
+    photoAlt: "Prezident maktabi formasidagi Inspiring Education o‘quvchilari",
   },
   stats: {
     aria: "Raqamlarda",

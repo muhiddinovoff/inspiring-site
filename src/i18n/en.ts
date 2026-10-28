@@ -50,7 +50,7 @@ const en: Dict = {
     cta: "Get a free consultation",
     boardKicker: "2025–2026 results",
     boardText: "students admitted to top schools",
-    photoAlt: "Students in a classroom",
+    photoAlt: "Inspiring Education students in Presidential School uniforms",
   },
   stats: {
     aria: "In numbers",

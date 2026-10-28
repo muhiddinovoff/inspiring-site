@@ -33,7 +33,13 @@ export function LeadForm() {
     e.preventDefault()
     setTried(true)
     if (!nameOk || !phoneOk) return
-    const l: Lead = { name: name.trim(), phone: `+998${digits}`, grade: grade === undefined ? undefined : `${grade + 1}`, lang, source: "sayt" }
+    const l: Lead = {
+      name: name.trim(),
+      phone: `+998${digits}`,
+      grade: grade === undefined ? undefined : `${grade + 1}`,
+      lang,
+      source: "sayt",
+    }
     setLead(l)
     setStatus("sending")
     setStatus((await submitLead(l)) ? "sent" : "manual")
@@ -58,17 +64,14 @@ export function LeadForm() {
         aria-hidden
         className="pointer-events-none absolute -top-40 -left-40 size-[36rem] rounded-full bg-[radial-gradient(closest-side,rgb(10_214_126/0.22),transparent)]"
       />
-      <Shield className="pointer-events-none absolute -right-16 -bottom-24 hidden h-[30rem] w-auto opacity-[0.06] lg:block" gap="#0a3f3a" />
+      <Shield
+        className="pointer-events-none absolute -right-16 -bottom-24 hidden h-[30rem] w-auto opacity-[0.06] lg:block"
+        gap="#0a3f3a"
+      />
 
       <div className="relative mx-auto grid max-w-6xl gap-12 px-4 py-24 md:px-6 md:py-32 lg:grid-cols-[1fr_1fr] lg:gap-20">
         <div>
-          <SectionHeading
-            light
-            className="min-w-0"
-            kicker={L.kicker}
-            title={L.title}
-            text={L.text}
-          />
+          <SectionHeading light className="min-w-0" kicker={L.kicker} title={L.title} text={L.text} />
           <ul className="mt-10 grid gap-4 text-white/85">
             {L.perks.map((p) => (
               <li key={p} className="flex items-center gap-3">
@@ -79,7 +82,10 @@ export function LeadForm() {
               </li>
             ))}
           </ul>
-          <a href={CONTACT.phoneHref} className="mt-10 inline-flex items-center gap-3 font-display text-2xl font-bold text-[#7ee9b8] md:text-3xl">
+          <a
+            href={CONTACT.phoneHref}
+            className="mt-10 inline-flex items-center gap-3 font-display text-2xl font-bold text-[#7ee9b8] md:text-3xl"
+          >
             <Phone className="size-6" /> {CONTACT.phone}
           </a>
         </div>
@@ -110,13 +116,19 @@ export function LeadForm() {
                     aria-invalid={tried && !nameOk}
                     aria-describedby={tried && !nameOk ? "lead-name-err" : undefined}
                   />
-                  {tried && !nameOk && <p id="lead-name-err" className="text-sm text-destructive">{L.nameError}</p>}
+                  {tried && !nameOk && (
+                    <p id="lead-name-err" className="text-sm text-destructive">
+                      {L.nameError}
+                    </p>
+                  )}
                 </div>
 
                 <div className="grid gap-2">
                   <Label htmlFor="lead-phone">{L.phone}</Label>
                   <div className="relative">
-                    <span className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 font-semibold text-muted-foreground">+998</span>
+                    <span className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 font-semibold text-muted-foreground">
+                      +998
+                    </span>
                     <Input
                       id="lead-phone"
                       type="tel"
@@ -131,7 +143,9 @@ export function LeadForm() {
                     />
                   </div>
                   {tried && !phoneOk && (
-                    <p id="lead-phone-err" className="text-sm text-destructive">{L.phoneError}</p>
+                    <p id="lead-phone-err" className="text-sm text-destructive">
+                      {L.phoneError}
+                    </p>
                   )}
                 </div>
 
@@ -148,7 +162,9 @@ export function LeadForm() {
                         onClick={() => setGrade((cur) => (cur === i ? undefined : i))}
                         className={cn(
                           "h-11 rounded-xl border px-1 text-sm font-semibold transition-all duration-200 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 active:scale-95",
-                          grade === i ? "border-transparent bg-primary text-primary-foreground" : "bg-background hover:bg-secondary"
+                          grade === i
+                            ? "border-transparent bg-primary text-primary-foreground"
+                            : "bg-background hover:bg-secondary",
                         )}
                       >
                         {g}
@@ -157,7 +173,13 @@ export function LeadForm() {
                   </div>
                 </fieldset>
 
-                <Button type="submit" variant="accent" size="lg" className="group mt-1 w-full" disabled={status === "sending"}>
+                <Button
+                  type="submit"
+                  variant="accent"
+                  size="lg"
+                  className="group mt-1 w-full"
+                  disabled={status === "sending"}
+                >
                   {status === "sending" ? (
                     <>
                       <Loader2 className="animate-spin" /> {L.sending}
@@ -189,14 +211,10 @@ export function LeadForm() {
                 </motion.span>
                 <h3 className="mt-5 text-2xl font-bold">{L.thanks(lead?.name ?? "")}</h3>
                 {status === "sent" ? (
-                  <p className="mt-2 text-muted-foreground">
-                    {L.sent(CONTACT.phone)}
-                  </p>
+                  <p className="mt-2 text-muted-foreground">{L.sent(CONTACT.phone)}</p>
                 ) : (
                   <>
-                    <p className="mt-2 text-muted-foreground">
-                      {L.manual}
-                    </p>
+                    <p className="mt-2 text-muted-foreground">{L.manual}</p>
                     <p className="mt-4 rounded-xl bg-secondary p-3 text-sm font-medium select-all">{text}</p>
                     <div className="mt-4 grid gap-2 sm:grid-cols-2">
                       <Button asChild variant="accent">

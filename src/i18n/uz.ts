@@ -14,6 +14,7 @@ const uz = {
     close: "Yopish",
     call: "Qo‘ng‘iroq qilish",
     language: "Til",
+    skip: "Asosiy mazmunga o‘tish",
   },
   nav: {
     items: {
@@ -135,8 +136,14 @@ const uz = {
     text: "Siz faqat birinchi qadamni qo‘yasiz. Qolgan yo‘lda menejer va ustozlar yoningizda bo‘ladi.",
     items: [
       { title: "Ariza qoldirasiz", text: "Bir daqiqa vaqt oladi: ism va telefon raqami yetarli." },
-      { title: "Menejer qo‘ng‘iroq qiladi", text: "Farzandingiz, sinfi va maqsadingiz haqida so‘raydi, savollaringizga javob beradi." },
-      { title: "Darajani aniqlaymiz", text: "Farzandingiz hozir qayerda turganini bilib, mos guruh va reja tanlanadi." },
+      {
+        title: "Menejer qo‘ng‘iroq qiladi",
+        text: "Farzandingiz, sinfi va maqsadingiz haqida so‘raydi, savollaringizga javob beradi.",
+      },
+      {
+        title: "Darajani aniqlaymiz",
+        text: "Farzandingiz hozir qayerda turganini bilib, mos guruh va reja tanlanadi.",
+      },
       { title: "Tizimli darslar", text: "Imtihon mavzulari bo‘yicha mashg‘ulotlar va muntazam sinov imtihonlari." },
       { title: "Qabul", text: "Hujjat topshirish va imtihon kunlariga oxirgi tayyorgarlik." },
     ],
@@ -158,7 +165,10 @@ const uz = {
         q: "Qaysi maktablarga tayyorlaysiz?",
         a: "Prezident maktablari, Al-Xorazmiy nomidagi xalqaro maktab, davlat va xorijiy tillarga ixtisoslashgan maktablar hamda boshqa nufuzli ta’lim muassasalari.",
       },
-      { q: "Qabul qachon boshlanadi?", a: "Qabul doimo ochiq. Istalgan vaqtda ariza qoldirib, tayyorgarlikni boshlashingiz mumkin." },
+      {
+        q: "Qabul qachon boshlanadi?",
+        a: "Qabul doimo ochiq. Istalgan vaqtda ariza qoldirib, tayyorgarlikni boshlashingiz mumkin.",
+      },
       {
         q: "Darslar qayerda o‘tadi?",
         a: "Toshkentning 7 ta hududida, shuningdek Samarqand, Termiz va Navoiydagi filiallarimizda. Manzillarni pastdagi “Filiallar” bo‘limida topasiz.",
@@ -175,15 +185,31 @@ const uz = {
     cities: { tashkent: "Toshkent", samarkand: "Samarqand", termez: "Termiz", navoi: "Navoiy" },
     items: [
       { name: "Chilonzor", address: "Novza metro bekati, Sport tovar chorrahasi, 4-qavat" },
-      { name: "Sergeli", address: "Sergeli tumani, 3-bekat oldida", landmark: "Asal med klinikasi tepasida, Saxiy bozor yaqinida" },
+      {
+        name: "Sergeli",
+        address: "Sergeli tumani, 3-bekat oldida",
+        landmark: "Asal med klinikasi tepasida, Saxiy bozor yaqinida",
+      },
       { name: "Yunusobod", address: "Yunusobod tumani", landmark: "Turkiston metrosi yonida" },
       { name: "Yangidarxon", address: "Yangihayot tumani, Yangidarxon mahallasi", landmark: "Sergeli 2" },
       { name: "Yashnobod", address: "Mahtumquli ko‘chasi, 85-uy", landmark: "Makro supermarketi qarshisida" },
-      { name: "Olmos", address: "Yashnobod tumani, Harbiylar shaharchasi, 58a, 8-uy", landmark: "Olmos metrosidan 10 daqiqa, Aziz shifo med qarshisida" },
+      {
+        name: "Olmos",
+        address: "Yashnobod tumani, Harbiylar shaharchasi, 58a, 8-uy",
+        landmark: "Olmos metrosidan 10 daqiqa, Aziz shifo med qarshisida",
+      },
       { name: "TTZ", address: "Mirzo Ulug‘bek tumani, TTZ", landmark: "Diadora chorrahasi, Lokomotiv bekati yonida" },
-      { name: "Future Leaders’ Academy", address: "Samarqand, Bo‘stonsaroy ko‘chasi, 29-uy", landmark: "Respublika kasalxonasi, Dag‘bit yo‘nalishidagi Yangi ko‘prik" },
+      {
+        name: "Future Leaders’ Academy",
+        address: "Samarqand, Bo‘stonsaroy ko‘chasi, 29-uy",
+        landmark: "Respublika kasalxonasi, Dag‘bit yo‘nalishidagi Yangi ko‘prik",
+      },
       { name: "Termiz", address: "Termiz shahri", landmark: "Soat chorrahasi" },
-      { name: "Navoiy", address: "Talabalar ko‘chasi, 50/1", landmark: "Azamat Fayz to‘yxonasi qarshisi, 14-mikrorayon" },
+      {
+        name: "Navoiy",
+        address: "Talabalar ko‘chasi, 50/1",
+        landmark: "Azamat Fayz to‘yxonasi qarshisi, 14-mikrorayon",
+      },
     ] as { name: string; address: string; landmark?: string }[],
     school: {
       kicker: "Xususiy maktab",
@@ -219,7 +245,8 @@ const uz = {
       `Ariza: ${name}, tel: ${phone}${grade ? `, ${grade}` : ""}`,
   },
   footer: {
-    about: "Prezident va ixtisoslashtirilgan maktablarga tayyorlov markazi. Toshkent, Samarqand, Termiz va Navoiyda 10 ta filial.",
+    about:
+      "Prezident va ixtisoslashtirilgan maktablarga tayyorlov markazi. Toshkent, Samarqand, Termiz va Navoiyda 10 ta filial.",
     subscribers: "13,6 ming",
   },
 }

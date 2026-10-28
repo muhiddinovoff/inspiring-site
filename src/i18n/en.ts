@@ -16,6 +16,7 @@ const en: Dict = {
     close: "Close",
     call: "Call",
     language: "Language",
+    skip: "Skip to content",
   },
   nav: {
     items: {
@@ -137,7 +138,10 @@ const en: Dict = {
     text: "You take the first step. From then on, a manager and teachers are with you all the way.",
     items: [
       { title: "You apply", text: "It takes a minute: just a name and a phone number." },
-      { title: "A manager calls you", text: "They ask about your child, their grade and your goals, and answer your questions." },
+      {
+        title: "A manager calls you",
+        text: "They ask about your child, their grade and your goals, and answer your questions.",
+      },
       { title: "We assess the level", text: "We find out where your child is now and pick the right group and plan." },
       { title: "Structured lessons", text: "Classes on every exam topic plus regular mock exams." },
       { title: "Admission", text: "Document submission and final preparation for exam day." },
@@ -160,7 +164,10 @@ const en: Dict = {
         q: "Which schools do you prepare for?",
         a: "Presidential Schools, Al-Khwarizmi International School, state and foreign-language specialized schools, and other leading institutions.",
       },
-      { q: "When does enrollment start?", a: "Enrollment is open all year. You can apply and start preparing at any time." },
+      {
+        q: "When does enrollment start?",
+        a: "Enrollment is open all year. You can apply and start preparing at any time.",
+      },
       {
         q: "Where are classes held?",
         a: "In 7 districts of Tashkent and at our branches in Samarkand, Termez and Navoi. See the addresses in the Branches section below.",
@@ -177,15 +184,31 @@ const en: Dict = {
     cities: { tashkent: "Tashkent", samarkand: "Samarkand", termez: "Termez", navoi: "Navoi" },
     items: [
       { name: "Chilanzar", address: "Novza metro station, Sport Tovar crossroads, 4th floor" },
-      { name: "Sergeli", address: "Sergeli district, by the 3rd stop", landmark: "above Asal Med clinic, near Sakhiy bazaar" },
+      {
+        name: "Sergeli",
+        address: "Sergeli district, by the 3rd stop",
+        landmark: "above Asal Med clinic, near Sakhiy bazaar",
+      },
       { name: "Yunusabad", address: "Yunusabad district", landmark: "next to Turkiston metro" },
       { name: "Yangidarkhon", address: "Yangihayot district, Yangidarkhon mahalla", landmark: "Sergeli 2" },
       { name: "Yashnabad", address: "85 Makhtumkuli street", landmark: "opposite Makro supermarket" },
-      { name: "Olmos", address: "Yashnabad district, Military town, 58a, bldg 8", landmark: "10 min from Olmos metro, opposite Aziz Shifo Med" },
+      {
+        name: "Olmos",
+        address: "Yashnabad district, Military town, 58a, bldg 8",
+        landmark: "10 min from Olmos metro, opposite Aziz Shifo Med",
+      },
       { name: "TTZ", address: "Mirzo Ulugbek district, TTZ", landmark: "Diadora crossroads, next to Lokomotiv stop" },
-      { name: "Future Leaders’ Academy", address: "Samarkand, 29 Bustonsaroy street", landmark: "Republican hospital, New bridge towards Dagbit" },
+      {
+        name: "Future Leaders’ Academy",
+        address: "Samarkand, 29 Bustonsaroy street",
+        landmark: "Republican hospital, New bridge towards Dagbit",
+      },
       { name: "Termez", address: "Termez city", landmark: "Soat crossroads" },
-      { name: "Navoi", address: "50/1 Talabalar street", landmark: "opposite Azamat Fayz wedding hall, 14th microdistrict" },
+      {
+        name: "Navoi",
+        address: "50/1 Talabalar street",
+        landmark: "opposite Azamat Fayz wedding hall, 14th microdistrict",
+      },
     ],
     school: {
       kicker: "Private school",
@@ -221,7 +244,8 @@ const en: Dict = {
       `Request: ${name}, phone: ${phone}${grade ? `, ${grade}` : ""}`,
   },
   footer: {
-    about: "Preparation centre for Presidential and specialized schools. 10 branches in Tashkent, Samarkand, Termez and Navoi.",
+    about:
+      "Preparation centre for Presidential and specialized schools. 10 branches in Tashkent, Samarkand, Termez and Navoi.",
     subscribers: "13.6K",
   },
 }

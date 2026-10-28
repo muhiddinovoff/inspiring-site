@@ -13,18 +13,12 @@ export function Results() {
     <section id="natijalar" className="mx-auto max-w-6xl px-4 py-24 md:px-6 md:py-32">
       <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
         <div>
-          <SectionHeading
-            kicker={t.results.kicker}
-            title={t.results.title}
-            text={t.results.text}
-          />
+          <SectionHeading kicker={t.results.kicker} title={t.results.title} text={t.results.text} />
           <Reveal delay={0.1} className="mt-10 rounded-3xl bg-brand p-7 text-white md:p-8">
             <p className="font-display text-7xl leading-none font-extrabold text-[#7ee9b8] md:text-8xl">
               <CountUp to={RESULTS_TOTAL} suffix="+" />
             </p>
-            <p className="mt-3 text-white/80">
-              {t.results.total(PRESIDENT_COUNT)}
-            </p>
+            <p className="mt-3 text-white/80">{t.results.total(PRESIDENT_COUNT)}</p>
           </Reveal>
         </div>
 

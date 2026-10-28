@@ -15,11 +15,7 @@ export function Steps() {
     <section id="yol" className="mx-auto max-w-6xl px-4 py-24 md:px-6 md:py-32">
       <div className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
         <div className="lg:sticky lg:top-32 lg:self-start">
-          <SectionHeading
-            kicker={t.steps.kicker}
-            title={t.steps.title}
-            text={t.steps.text}
-          />
+          <SectionHeading kicker={t.steps.kicker} title={t.steps.title} text={t.steps.text} />
         </div>
 
         <ol ref={ref} className="relative">

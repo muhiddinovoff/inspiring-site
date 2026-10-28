@@ -35,7 +35,13 @@ export function MobileCta() {
           transition={{ type: "spring", stiffness: 320, damping: 34 }}
           className="fixed inset-x-0 bottom-0 z-30 flex gap-2 border-t bg-background/90 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-xl md:hidden"
         >
-          <Button asChild variant="outline" size="icon" className="size-12 shrink-0" aria-label={`${t.common.call}: ${CONTACT.phone}`}>
+          <Button
+            asChild
+            variant="outline"
+            size="icon"
+            className="size-12 shrink-0"
+            aria-label={`${t.common.call}: ${CONTACT.phone}`}
+          >
             <a href={CONTACT.phoneHref}>
               <Phone />
             </a>

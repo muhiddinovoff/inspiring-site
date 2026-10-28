@@ -14,15 +14,19 @@ export function Branches() {
   const { t } = useI18n()
   const [city, setCity] = useState<(typeof FILTERS)[number]>("all")
   const list = BRANCHES.map((b, i) => ({ ...b, ...t.branches.items[i], key: i })).filter(
-    (b) => city === "all" || b.city === city
+    (b) => city === "all" || b.city === city,
   )
 
   return (
     <section id="filiallar" className="mx-auto max-w-6xl px-4 py-24 md:px-6 md:py-32">
       <SectionHeading kicker={t.branches.kicker} title={t.branches.title} text={t.branches.text} />
 
-      <Reveal delay={0.05} className="mt-10 -mx-4 overflow-x-auto px-4 [scrollbar-width:none]">
-        <div role="tablist" aria-label={t.branches.filter} className="inline-flex gap-1 rounded-full border bg-card p-1">
+      <Reveal delay={0.05} className="-mx-4 mt-10 [scrollbar-width:none] overflow-x-auto px-4">
+        <div
+          role="tablist"
+          aria-label={t.branches.filter}
+          className="inline-flex gap-1 rounded-full border bg-card p-1"
+        >
           {FILTERS.map((c) => {
             const count = c === "all" ? BRANCHES.length : BRANCHES.filter((b) => b.city === c).length
             const on = c === city
@@ -34,7 +38,7 @@ export function Branches() {
                 onClick={() => setCity(c)}
                 className={cn(
                   "relative rounded-full px-4 py-2 text-sm font-semibold whitespace-nowrap transition-colors outline-none focus-visible:ring-[3px] focus-visible:ring-ring/60",
-                  on ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                  on ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 {on && (
@@ -71,7 +75,9 @@ export function Branches() {
                 className="group flex h-full flex-col rounded-2xl border bg-card p-5 transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-1 hover:border-brand-green/60 hover:shadow-[0_20px_40px_-28px_rgb(15_95_88/0.6)]"
               >
                 <span className="flex items-center justify-between gap-3">
-                  <span className="text-xs font-bold tracking-[0.12em] text-brand-ink uppercase">{t.branches.cities[b.city]}</span>
+                  <span className="text-xs font-bold tracking-[0.12em] text-brand-ink uppercase">
+                    {t.branches.cities[b.city]}
+                  </span>
                   <Navigation className="size-4 text-muted-foreground transition-colors group-hover:text-brand-ink" />
                 </span>
                 <span className="mt-3 font-display text-xl font-bold">{b.name}</span>
@@ -103,7 +109,9 @@ export function Branches() {
             <School className="size-7 text-[#7ee9b8]" />
           </span>
           <span className="flex-1">
-            <span className="text-xs font-bold tracking-[0.12em] text-[#7ee9b8] uppercase">{t.branches.school.kicker}</span>
+            <span className="text-xs font-bold tracking-[0.12em] text-[#7ee9b8] uppercase">
+              {t.branches.school.kicker}
+            </span>
             <span className="mt-1 block font-display text-2xl font-bold">{t.branches.school.name}</span>
             <span className="mt-1 block text-white/75">
               {t.branches.school.address}. {t.branches.landmark}: {t.branches.school.landmark}.

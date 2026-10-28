@@ -72,9 +72,7 @@ function ResultsBoard() {
       <div className="relative flex h-full flex-col justify-end gap-6 p-5 text-white md:flex-row md:items-end md:justify-between md:p-10">
         <div>
           <p className="text-sm font-semibold tracking-wide text-[#7ee9b8] uppercase">{t.hero.boardKicker}</p>
-          <p className="mt-2 font-display text-6xl leading-none font-extrabold md:text-8xl">
-            {RESULTS_TOTAL}+
-          </p>
+          <p className="mt-2 font-display text-6xl leading-none font-extrabold md:text-8xl">{RESULTS_TOTAL}+</p>
           <p className="mt-2 max-w-xs text-white/80">{t.hero.boardText}</p>
         </div>
         <ul className="grid w-full max-w-md gap-2.5 rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-md md:p-5">
@@ -100,7 +98,7 @@ export function Hero() {
         aria-hidden
         className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[46rem] bg-[radial-gradient(60%_50%_at_50%_0%,color-mix(in_srgb,var(--color-brand-green)_18%,transparent),transparent)]"
       />
-      <div className="pt-36 -mb-40 md:pt-40 md:-mb-48 lg:pt-28">
+      <div className="-mb-40 pt-36 md:-mb-48 md:pt-40 lg:pt-28">
         <ContainerScroll titleComponent={<Title />}>
           <ResultsBoard />
         </ContainerScroll>

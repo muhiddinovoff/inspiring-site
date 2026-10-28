@@ -75,18 +75,27 @@
   --radius-md: calc(var(--radius) - 3px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 6px);
-  --font-sans: "Manrope", "Segoe UI", system-ui, sans-serif;
-  --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-sans: "Manrope Variable", "Segoe UI", system-ui, sans-serif;
+  /* Bricolage has no Cyrillic, so Russian headings fall through to Onest glyph by glyph. */
+  --font-display: "Bricolage Grotesque Variable", "Onest Variable", "Segoe UI", system-ui, sans-serif;
   --animate-accordion-down: accordion-down 0.28s cubic-bezier(0.22, 1, 0.36, 1);
   --animate-accordion-up: accordion-up 0.22s cubic-bezier(0.22, 1, 0.36, 1);
 
   @keyframes accordion-down {
-    from { height: 0; }
-    to { height: var(--radix-accordion-content-height); }
+    from {
+      height: 0;
+    }
+    to {
+      height: var(--radix-accordion-content-height);
+    }
   }
   @keyframes accordion-up {
-    from { height: var(--radix-accordion-content-height); }
-    to { height: 0; }
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+    to {
+      height: 0;
+    }
   }
 }
 
@@ -99,10 +108,13 @@
     scroll-padding-top: 88px;
   }
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply bg-background font-sans text-foreground antialiased;
     font-feature-settings: "ss01";
   }
-  h1, h2, h3, h4 {
+  h1,
+  h2,
+  h3,
+  h4 {
     @apply font-display tracking-tight;
     text-wrap: balance;
   }
@@ -112,6 +124,13 @@
 }
 
 /* Lenis smooth scrolling */
-html.lenis, html.lenis body { height: auto; }
-.lenis.lenis-smooth { scroll-behavior: auto !important; }
-.lenis.lenis-stopped { overflow: hidden; }
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}

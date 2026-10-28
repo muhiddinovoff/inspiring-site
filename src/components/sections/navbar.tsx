@@ -51,7 +51,7 @@ export function Navbar() {
     <header
       className={cn(
         "fixed inset-x-0 top-0 z-40 pt-[env(safe-area-inset-top)] transition-[background-color,box-shadow,backdrop-filter] duration-300",
-        scrolled || open ? "bg-background/85 shadow-[0_1px_0_var(--color-border)] backdrop-blur-xl" : "bg-transparent"
+        scrolled || open ? "bg-background/85 shadow-[0_1px_0_var(--color-border)] backdrop-blur-xl" : "bg-transparent",
       )}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 md:h-[72px] md:px-6">
@@ -64,7 +64,7 @@ export function Navbar() {
               href={`#${id}`}
               className={cn(
                 "relative rounded-full px-3 py-2 text-sm font-semibold whitespace-nowrap transition-colors",
-                active === id ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                active === id ? "text-foreground" : "text-muted-foreground hover:text-foreground",
               )}
             >
               {active === id && (
@@ -137,10 +137,7 @@ export function Navbar() {
               variants={{ hidden: {}, show: { transition: { staggerChildren: 0.04, delayChildren: 0.1 } } }}
             >
               {NAV_IDS.map((id) => (
-                <motion.li
-                  key={id}
-                  variants={{ hidden: { opacity: 0, x: -16 }, show: { opacity: 1, x: 0 } }}
-                >
+                <motion.li key={id} variants={{ hidden: { opacity: 0, x: -16 }, show: { opacity: 1, x: 0 } }}>
                   <a
                     href={`#${id}`}
                     onClick={() => setOpen(false)}
@@ -155,7 +152,9 @@ export function Navbar() {
                 className="mt-6 grid gap-3"
               >
                 <Button asChild variant="accent" size="lg">
-                  <a href="#ariza" onClick={() => setOpen(false)}>{t.common.apply}</a>
+                  <a href="#ariza" onClick={() => setOpen(false)}>
+                    {t.common.apply}
+                  </a>
                 </Button>
                 <Button asChild variant="outline" size="lg">
                   <a href={CONTACT.phoneHref}>

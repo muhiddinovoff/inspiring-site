@@ -24,11 +24,7 @@ export function Teachers() {
   return (
     <section id="ustozlar" className="mx-auto max-w-6xl px-4 py-24 md:px-6 md:py-32">
       <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
-        <SectionHeading
-          kicker={tr.teachers.kicker}
-          title={tr.teachers.title}
-          text={tr.teachers.text}
-        />
+        <SectionHeading kicker={tr.teachers.kicker} title={tr.teachers.title} text={tr.teachers.text} />
       </div>
 
       <motion.ul

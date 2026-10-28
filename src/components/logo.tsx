@@ -26,7 +26,12 @@ export function Logo({ className, gap, light }: { className?: string; gap?: stri
   return (
     <a href="#top" aria-label={t.nav.home} className={cn("flex items-center gap-2.5", className)}>
       <Shield className="h-9 w-[30px] shrink-0" gap={gap} />
-      <span className={cn("font-display text-[15px] leading-[1.05] font-bold uppercase tracking-wide", light ? "text-white" : "text-foreground")}>
+      <span
+        className={cn(
+          "font-display text-[15px] leading-[1.05] font-bold tracking-wide uppercase",
+          light ? "text-white" : "text-foreground",
+        )}
+      >
         Inspiring
         <span className="block">Education</span>
       </span>

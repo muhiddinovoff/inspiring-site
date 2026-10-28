@@ -1,32 +1,39 @@
 name: Deploy
 
-# Every push builds the site and publishes dist/ to the gh-pages branch, which GitHub Pages serves.
+# Every push to main is checked, built and published to the gh-pages branch, which GitHub Pages serves.
 on:
   push:
-    branches: [main, "claude/**"]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: write
+  pages: write
 
 concurrency:
   group: deploy
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://muhiddinovoff.github.io/inspiring-site/
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version-file: .nvmrc
           cache: npm
       - run: npm ci
       - run: npm run lint
+      - run: npm run format:check
+      - run: npm test
       - run: npm run build
         env:
           VITE_LEAD_ENDPOINT: ${{ vars.VITE_LEAD_ENDPOINT }}
+
       - name: Publish to gh-pages
         uses: peaceiris/actions-gh-pages@v4
         with:
@@ -34,3 +41,11 @@ jobs:
           publish_dir: ./dist
           force_orphan: true
           commit_message: "Deploy ${{ github.sha }}"
+
+      # Pushes made with GITHUB_TOKEN don't start a Pages build on their own, so ask for one explicitly.
+      - name: Request Pages build
+        run: |
+          curl -fsS -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/pages/builds"

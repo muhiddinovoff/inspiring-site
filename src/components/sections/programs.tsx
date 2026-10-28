@@ -12,11 +12,7 @@ export function Programs() {
   return (
     <section id="dasturlar" className="bg-secondary/60">
       <div className="mx-auto max-w-6xl px-4 py-24 md:px-6 md:py-32">
-        <SectionHeading
-          kicker={t.programs.kicker}
-          title={t.programs.title}
-          text={t.programs.text}
-        />
+        <SectionHeading kicker={t.programs.kicker} title={t.programs.title} text={t.programs.text} />
         <motion.div
           variants={staggerParent}
           initial="hidden"
@@ -34,14 +30,16 @@ export function Programs() {
                 transition={{ type: "spring", stiffness: 300, damping: 24 }}
                 className={cn(
                   "flex flex-col rounded-3xl border p-7 md:p-8",
-                  featured ? "border-transparent bg-brand text-white shadow-[0_30px_60px_-30px_rgb(15_95_88/0.8)]" : "bg-card"
+                  featured
+                    ? "border-transparent bg-brand text-white shadow-[0_30px_60px_-30px_rgb(15_95_88/0.8)]"
+                    : "bg-card",
                 )}
               >
                 <div className="flex items-center justify-between gap-3">
                   <span
                     className={cn(
                       "rounded-full px-3 py-1 text-sm font-bold",
-                      featured ? "bg-white/15 text-[#7ee9b8]" : "bg-secondary text-brand-ink"
+                      featured ? "bg-white/15 text-[#7ee9b8]" : "bg-secondary text-brand-ink",
                     )}
                   >
                     {p.grade}
@@ -56,7 +54,7 @@ export function Programs() {
                       <span
                         className={cn(
                           "grid size-6 shrink-0 place-items-center rounded-full",
-                          featured ? "bg-accent text-accent-foreground" : "bg-secondary text-brand-ink"
+                          featured ? "bg-accent text-accent-foreground" : "bg-secondary text-brand-ink",
                         )}
                       >
                         <Check className="size-3.5" strokeWidth={3} />

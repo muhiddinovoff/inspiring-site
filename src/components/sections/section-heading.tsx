@@ -10,9 +10,7 @@ export function SectionHeading({ kicker, title, text, className, light }: Props)
         {kicker}
       </p>
       <h2 className="mt-3 text-4xl leading-[1.05] font-extrabold md:text-5xl">{title}</h2>
-      {text && (
-        <p className={cn("mt-4 text-lg", light ? "text-white/75" : "text-muted-foreground")}>{text}</p>
-      )}
+      {text && <p className={cn("mt-4 text-lg", light ? "text-white/75" : "text-muted-foreground")}>{text}</p>}
     </Reveal>
   )
 }

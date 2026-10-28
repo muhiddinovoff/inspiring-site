@@ -9,6 +9,14 @@
       content="Prezident va ixtisoslashtirilgan maktablarga tayyorlov markazi. 2025–2026-yilda 192+ o‘quvchi qabul qilindi. Toshkent, Samarqand, Termiz va Navoiyda 10 ta filial."
     />
     <meta name="theme-color" content="#0f5f58" />
+    <script>
+      // Apply the saved theme before first paint so the page never flashes the wrong colours.
+      try {
+        var m = localStorage.getItem("theme") || "system"
+        var dark = m === "dark" || (m === "system" && matchMedia("(prefers-color-scheme: dark)").matches)
+        document.documentElement.dataset.theme = dark ? "dark" : "light"
+      } catch (e) {}
+    </script>
     <link rel="canonical" href="https://muhiddinovoff.github.io/inspiring-site/" />
     <link rel="alternate" hreflang="uz" href="https://muhiddinovoff.github.io/inspiring-site/" />
     <link rel="alternate" hreflang="ru" href="https://muhiddinovoff.github.io/inspiring-site/ru/" />

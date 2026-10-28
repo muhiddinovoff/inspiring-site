@@ -21,7 +21,18 @@ export function Shield({ className, gap = "#0f5f58" }: { className?: string; gap
   )
 }
 
-export function Logo({ className, gap, light }: { className?: string; gap?: string; light?: boolean }) {
+/** `compact` hides the wordmark on very narrow phones (under 380px) so the header controls still fit. */
+export function Logo({
+  className,
+  gap,
+  light,
+  compact,
+}: {
+  className?: string
+  gap?: string
+  light?: boolean
+  compact?: boolean
+}) {
   const { t } = useI18n()
   return (
     <a href="#top" aria-label={t.nav.home} className={cn("flex items-center gap-2.5", className)}>
@@ -30,6 +41,7 @@ export function Logo({ className, gap, light }: { className?: string; gap?: stri
         className={cn(
           "font-display text-[15px] leading-[1.05] font-bold tracking-wide uppercase",
           light ? "text-white" : "text-foreground",
+          compact && "max-[379px]:sr-only",
         )}
       >
         Inspiring

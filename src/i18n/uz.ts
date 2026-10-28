@@ -16,6 +16,12 @@ const uz = {
     language: "Til",
     skip: "Asosiy mazmunga o‘tish",
   },
+  theme: {
+    label: "Ko‘rinish",
+    light: "Yorug‘",
+    dark: "Tun",
+    system: "Aralash",
+  },
   nav: {
     items: {
       natijalar: "Natijalar",

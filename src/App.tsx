@@ -15,30 +15,33 @@ import { Steps } from "@/components/sections/steps"
 import { Teachers } from "@/components/sections/teachers"
 import { SkipLink } from "@/components/skip-link"
 import { useSmoothScroll } from "@/hooks/use-smooth-scroll"
+import { ThemeProvider } from "@/hooks/use-theme"
 import { I18nProvider } from "@/i18n"
 
 export default function App() {
   useSmoothScroll()
   return (
-    <I18nProvider>
-      <MotionConfig reducedMotion="user">
-        <SkipLink />
-        <Navbar />
-        <main id="main" tabIndex={-1} className="outline-none">
-          <Hero />
-          <Stats />
-          <Results />
-          <Reasons />
-          <Teachers />
-          <Programs />
-          <Steps />
-          <Faq />
-          <Branches />
-          <LeadForm />
-        </main>
-        <Footer />
-        <MobileCta />
-      </MotionConfig>
-    </I18nProvider>
+    <ThemeProvider>
+      <I18nProvider>
+        <MotionConfig reducedMotion="user">
+          <SkipLink />
+          <Navbar />
+          <main id="main" tabIndex={-1} className="outline-none">
+            <Hero />
+            <Stats />
+            <Results />
+            <Reasons />
+            <Teachers />
+            <Programs />
+            <Steps />
+            <Faq />
+            <Branches />
+            <LeadForm />
+          </main>
+          <Footer />
+          <MobileCta />
+        </MotionConfig>
+      </I18nProvider>
+    </ThemeProvider>
   )
 }

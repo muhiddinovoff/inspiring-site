@@ -23,7 +23,7 @@ export function LanguageSwitcher({ className, id = "lang" }: { className?: strin
             lang={l}
             onClick={() => setLang(l)}
             className={cn(
-              "relative h-8 rounded-full px-2.5 text-xs font-bold tracking-wide transition-colors outline-none focus-visible:ring-[3px] focus-visible:ring-ring/60",
+              "relative h-8 rounded-full px-2 text-xs font-bold tracking-wide transition-colors outline-none focus-visible:ring-[3px] focus-visible:ring-ring/60 sm:px-2.5",
               on ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground",
             )}
           >

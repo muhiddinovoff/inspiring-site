@@ -18,6 +18,12 @@ const en: Dict = {
     language: "Language",
     skip: "Skip to content",
   },
+  theme: {
+    label: "Theme",
+    light: "Light",
+    dark: "Dark",
+    system: "Auto",
+  },
   nav: {
     items: {
       natijalar: "Results",

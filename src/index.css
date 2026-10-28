@@ -1,8 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-/* Follow the OS theme; shadcn's `dark:` utilities key off this variant. */
-@custom-variant dark (@media (prefers-color-scheme: dark));
+/* Theme comes from <html data-theme="light|dark">, set by the theme switcher (src/lib/theme.ts). */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 /* Brand: logo teal #0f5f58 and logo green #0ad67e. Everything else is quiet neutrals so the two brand colours carry the page. */
 :root {
@@ -26,10 +26,31 @@
   --input: #d9e1dd;
   --ring: #0ad67e;
   --brand-ink: #0f5f58;
+  color-scheme: light;
 }
 
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #081614;
+  --foreground: #e7f2ef;
+  --card: #0e221f;
+  --card-foreground: #e7f2ef;
+  --popover: #0e221f;
+  --popover-foreground: #e7f2ef;
+  --primary: #0ad67e;
+  --primary-foreground: #04302a;
+  --secondary: #12302c;
+  --secondary-foreground: #e7f2ef;
+  --muted: #0f2724;
+  --muted-foreground: #9ab8b2;
+  --border: #1b3a36;
+  --input: #24463f;
+  --brand-ink: #7ee9b8;
+}
+
+/* Before the theme script runs (or without JavaScript), follow the device. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme]) {
     --background: #081614;
     --foreground: #e7f2ef;
     --card: #0e221f;
@@ -133,4 +154,11 @@ html.lenis body {
 }
 .lenis.lenis-stopped {
   overflow: hidden;
+}
+
+/* Theme switch: a short cross-fade of the whole page (View Transitions API). */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.45s;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 }

@@ -4,6 +4,7 @@ import { Menu, Phone, X } from "lucide-react"
 
 import { LanguageSwitcher } from "@/components/language-switcher"
 import { Logo } from "@/components/logo"
+import { ThemeCycleButton, ThemeSwitcher } from "@/components/theme-switcher"
 import { Button } from "@/components/ui/button"
 import { CONTACT, NAV_IDS } from "@/data/site"
 import { useI18n } from "@/i18n"
@@ -54,8 +55,8 @@ export function Navbar() {
         scrolled || open ? "bg-background/85 shadow-[0_1px_0_var(--color-border)] backdrop-blur-xl" : "bg-transparent",
       )}
     >
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 md:h-[72px] md:px-6">
-        <Logo />
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-4 sm:gap-4 md:h-[72px] md:px-6">
+        <Logo compact />
 
         <nav aria-label={t.nav.main} className="hidden items-center gap-0.5 xl:flex">
           {NAV_IDS.map((id) => (
@@ -79,7 +80,9 @@ export function Navbar() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <ThemeSwitcher id="theme-top" className="hidden md:inline-flex" />
+          <ThemeCycleButton className="md:hidden" />
           <LanguageSwitcher id="lang-top" />
           <a
             href={CONTACT.phoneHref}
@@ -94,7 +97,7 @@ export function Navbar() {
           <Button
             variant="ghost"
             size="icon"
-            className="xl:hidden"
+            className="size-10 xl:hidden"
             aria-label={open ? t.nav.close : t.nav.open}
             aria-expanded={open}
             onClick={() => setOpen((v) => !v)}
@@ -151,6 +154,7 @@ export function Navbar() {
                 variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0 } }}
                 className="mt-6 grid gap-3"
               >
+                <ThemeSwitcher id="theme-menu" withLabels className="mb-3 flex w-full" />
                 <Button asChild variant="accent" size="lg">
                   <a href="#ariza" onClick={() => setOpen(false)}>
                     {t.common.apply}

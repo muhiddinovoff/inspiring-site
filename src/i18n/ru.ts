@@ -18,6 +18,12 @@ const ru: Dict = {
     language: "Язык",
     skip: "Перейти к содержанию",
   },
+  theme: {
+    label: "Тема",
+    light: "Светлая",
+    dark: "Тёмная",
+    system: "Авто",
+  },
   nav: {
     items: {
       natijalar: "Результаты",

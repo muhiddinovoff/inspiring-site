@@ -20,7 +20,7 @@
 
 ## Imkoniyatlar
 
-- **Uch tilda** — o‘zbek, rus, ingliz. Til tepadagi UZ / RU / EN tugmasi bilan almashadi, eslab qolinadi, havolada `?lang=ru` bilan ham beriladi.
+- **Uch tilda** — o‘zbek, rus, ingliz, har biri o‘z manzilida: [`/`](https://muhiddinovoff.github.io/inspiring-site/), [`/ru/`](https://muhiddinovoff.github.io/inspiring-site/ru/), [`/en/`](https://muhiddinovoff.github.io/inspiring-site/en/). Til tepadagi UZ / RU / EN tugmasi bilan almashadi va eslab qolinadi; har bir til sahifasining sarlavhasi, tavsifi va Telegram preview'i o‘sha tilda.
 - **Silliq animatsiyalar** — Lenis inersion skroll, bosh ekrandagi 3D “ekran” (scroll animatsiya), sanab ko‘tariladigan raqamlar, skroll bilan to‘ladigan yo‘l xaritasi, parallax.
 - **Ariza formasi** — ikki maydon, `+998` telefon maskasi, sinf tanlash; Google Sheets / Telegram'ga ulanadi ([qo‘llanma](docs/lead-endpoint.md)).
 - **Qulaylik** — bosiladigan telefon va xarita havolalari, shahar bo‘yicha filial filtri, mobil pastki panel, qorong‘i rejim.
@@ -82,7 +82,7 @@ docs/                  qo‘llanmalar va README rasmlari
 |---|---|
 | Barcha matnlar | `src/i18n/uz.ts`, `ru.ts`, `en.ts` (tuzilmasi bir xil; biror tilda kalit tushib qolsa, build xato beradi) |
 | Natija raqamlari, filiallar, telefon, havolalar | `src/data/site.ts` |
-| Ustozlar | `src/data/teachers.ts` + rasmlar `public/teachers/` |
+| Ustozlar | `src/data/teachers.ts` (fan, tajriba, yutuqlar uch tilda) + rasmlar `public/teachers/` |
 | Ranglar va shriftlar | `src/index.css` |
 
 ## Deploy

@@ -49,8 +49,7 @@ export function mapLink(address: string) {
   return `https://yandex.uz/maps/?text=${encodeURIComponent(`Inspiring Education, ${address}`)}`
 }
 
-/** Unsplash stock photos used for atmosphere (classroom, studying). */
+/** Unsplash stock photo for the "Why us" section. */
 export const PHOTOS = {
-  classroom: "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1600&q=80",
   studying: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1200&q=80",
 }

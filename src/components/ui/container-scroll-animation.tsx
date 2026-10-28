@@ -1,6 +1,6 @@
 "use client"
 import React, { useRef } from "react"
-import { useScroll, useTransform, motion, MotionValue } from "framer-motion"
+import { useScroll, useSpring, useTransform, useReducedMotion, motion, MotionValue } from "framer-motion"
 
 export const ContainerScroll = ({
   titleComponent,
@@ -13,6 +13,9 @@ export const ContainerScroll = ({
   const { scrollYProgress } = useScroll({
     target: containerRef,
   })
+  // Spring-follow the raw scroll position so the tilt glides instead of stepping with each wheel tick.
+  const progress = useSpring(scrollYProgress, { stiffness: 120, damping: 28, mass: 0.35, restDelta: 0.0005 })
+  const reduceMotion = useReducedMotion()
   const [isMobile, setIsMobile] = React.useState(false)
 
   React.useEffect(() => {
@@ -30,9 +33,9 @@ export const ContainerScroll = ({
     return isMobile ? [0.7, 0.9] : [1.05, 1]
   }
 
-  const rotate = useTransform(scrollYProgress, [0, 1], [20, 0])
-  const scale = useTransform(scrollYProgress, [0, 1], scaleDimensions())
-  const translate = useTransform(scrollYProgress, [0, 1], [0, -100])
+  const rotate = useTransform(progress, [0, 1], reduceMotion ? [0, 0] : [20, 0])
+  const scale = useTransform(progress, [0, 1], reduceMotion ? [1, 1] : scaleDimensions())
+  const translate = useTransform(progress, [0, 1], reduceMotion ? [0, 0] : [0, -100])
 
   return (
     <div className="relative flex h-[60rem] items-center justify-center p-2 md:h-[80rem] md:p-20" ref={containerRef}>
@@ -56,6 +59,7 @@ export const Header = ({ translate, titleComponent }: any) => {
     <motion.div
       style={{
         translateY: translate,
+        willChange: "transform",
       }}
       className="div mx-auto max-w-5xl text-center"
     >
@@ -79,6 +83,7 @@ export const Card = ({
       style={{
         rotateX: rotate,
         scale,
+        willChange: "transform",
         boxShadow:
           "0 0 #0000004d, 0 9px 20px #0000004a, 0 37px 37px #00000042, 0 84px 50px #00000026, 0 149px 60px #0000000a, 0 233px 65px #00000003",
       }}

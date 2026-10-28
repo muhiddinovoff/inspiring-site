@@ -6,13 +6,13 @@ import { staggerItem, staggerParent } from "@/components/motion/reveal"
 import { SectionHeading } from "@/components/sections/section-heading"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
-import { TEACHERS, type Teacher } from "@/data/teachers"
+import { TEACHERS, pick, type Teacher } from "@/data/teachers"
 import { useI18n } from "@/i18n"
 
 export function Teachers() {
-  const { t: tr } = useI18n()
+  const { t: tr, lang } = useI18n()
   const nameOf = (t: Teacher) => t.name || tr.teachers.fallbackName
-  const subjectOf = (t: Teacher) => t.subject || tr.teachers.fallbackSubject
+  const subjectOf = (t: Teacher) => pick(t.subject, lang) || tr.teachers.fallbackSubject
   const [index, setIndex] = useState<number | null>(null)
   const [dir, setDir] = useState(0)
   const go = (step: number) => {
@@ -86,17 +86,19 @@ export function Teachers() {
                   <DialogTitle>{nameOf(t)}</DialogTitle>
                   <p className="mt-1 font-semibold text-brand-ink">
                     {subjectOf(t)}
-                    {t.exp && <span className="text-muted-foreground"> · {tr.teachers.exp(t.exp)}</span>}
+                    {pick(t.exp, lang) && (
+                      <span className="text-muted-foreground"> · {tr.teachers.exp(pick(t.exp, lang))}</span>
+                    )}
                   </p>
                   <DialogDescription className="mt-4 leading-relaxed">
-                    {t.about || tr.teachers.fallbackAbout}
+                    {pick(t.about, lang) || tr.teachers.fallbackAbout}
                   </DialogDescription>
                   {t.wins.length > 0 && (
                     <ul className="mt-5 grid gap-2">
-                      {t.wins.map((w) => (
-                        <li key={w} className="flex gap-3 text-sm">
+                      {t.wins.map((w, i) => (
+                        <li key={i} className="flex gap-3 text-sm">
                           <span className="mt-1.5 size-2 shrink-0 rounded-full bg-accent" />
-                          {w}
+                          {pick(w, lang)}
                         </li>
                       ))}
                     </ul>

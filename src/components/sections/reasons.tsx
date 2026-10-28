@@ -3,9 +3,11 @@ import { motion, useScroll, useTransform } from "framer-motion"
 
 import { staggerItem, staggerParent } from "@/components/motion/reveal"
 import { SectionHeading } from "@/components/sections/section-heading"
-import { PHOTOS, REASONS } from "@/data/site"
+import { PHOTOS } from "@/data/site"
+import { useI18n } from "@/i18n"
 
 export function Reasons() {
+  const { t } = useI18n()
   const ref = useRef<HTMLDivElement>(null)
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] })
   const y = useTransform(scrollYProgress, [0, 1], ["-8%", "8%"])
@@ -16,20 +18,20 @@ export function Reasons() {
         <div ref={ref} className="relative min-h-[22rem] overflow-hidden rounded-3xl bg-brand lg:min-h-full">
           <motion.img
             src={PHOTOS.studying}
-            alt="Daftarga yozayotgan o‘quvchi"
+            alt={t.reasons.photoAlt}
             loading="lazy"
             style={{ y, scale: 1.18 }}
             className="absolute inset-0 h-full w-full object-cover"
             onError={(e) => (e.currentTarget.style.display = "none")}
           />
           <div className="absolute inset-x-4 bottom-4 rounded-2xl bg-card/90 p-5 backdrop-blur md:inset-x-6 md:bottom-6">
-            <p className="font-display text-3xl font-extrabold text-brand-ink">97,7%</p>
-            <p className="mt-1 text-sm text-muted-foreground">ota-ona darslar sifatidan mamnun va bizni boshqalarga tavsiya qiladi</p>
+            <p className="font-display text-3xl font-extrabold text-brand-ink">97{t.decimal}7%</p>
+            <p className="mt-1 text-sm text-muted-foreground">{t.reasons.badge}</p>
           </div>
         </div>
 
         <div>
-          <SectionHeading kicker="Nega Inspiring" title="Ota-onalar bizni nima uchun tanlaydi" />
+          <SectionHeading kicker={t.reasons.kicker} title={t.reasons.title} />
           <motion.ol
             variants={staggerParent}
             initial="hidden"
@@ -37,8 +39,8 @@ export function Reasons() {
             viewport={{ once: true, margin: "0px 0px -10% 0px" }}
             className="mt-10 grid gap-x-8 sm:grid-cols-2"
           >
-            {REASONS.map((r, i) => (
-              <motion.li key={r.title} variants={staggerItem} className="border-t py-6">
+            {t.reasons.items.map((r, i) => (
+              <motion.li key={i} variants={staggerItem} className="border-t py-6">
                 <span className="font-display text-sm font-bold text-brand-ink tabular-nums">0{i + 1}</span>
                 <h3 className="mt-2 text-xl font-bold">{r.title}</h3>
                 <p className="mt-2 text-muted-foreground">{r.text}</p>

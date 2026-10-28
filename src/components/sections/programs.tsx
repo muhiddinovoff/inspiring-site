@@ -4,17 +4,18 @@ import { ArrowRight, Check } from "lucide-react"
 import { staggerItem, staggerParent } from "@/components/motion/reveal"
 import { SectionHeading } from "@/components/sections/section-heading"
 import { Button } from "@/components/ui/button"
-import { PROGRAMS } from "@/data/site"
+import { useI18n } from "@/i18n"
 import { cn } from "@/lib/utils"
 
 export function Programs() {
+  const { t } = useI18n()
   return (
     <section id="dasturlar" className="bg-secondary/60">
       <div className="mx-auto max-w-6xl px-4 py-24 md:px-6 md:py-32">
         <SectionHeading
-          kicker="Dasturlar"
-          title="Farzandingiz sinfiga mos yo‘nalish"
-          text="Narx va jadval sinf hamda filialga qarab belgilanadi. Aniq ma’lumotni menejerimiz aytadi."
+          kicker={t.programs.kicker}
+          title={t.programs.title}
+          text={t.programs.text}
         />
         <motion.div
           variants={staggerParent}
@@ -23,11 +24,11 @@ export function Programs() {
           viewport={{ once: true, margin: "0px 0px -10% 0px" }}
           className="mt-12 grid gap-4 lg:grid-cols-3"
         >
-          {PROGRAMS.map((p) => {
-            const featured = "featured" in p && p.featured
+          {t.programs.items.map((p, i) => {
+            const featured = i === 1
             return (
               <motion.article
-                key={p.title}
+                key={i}
                 variants={staggerItem}
                 whileHover={{ y: -6 }}
                 transition={{ type: "spring", stiffness: 300, damping: 24 }}
@@ -45,7 +46,7 @@ export function Programs() {
                   >
                     {p.grade}
                   </span>
-                  {featured && <span className="text-sm font-semibold text-white/70">Asosiy yo‘nalish</span>}
+                  {featured && <span className="text-sm font-semibold text-white/70">{t.programs.featured}</span>}
                 </div>
                 <h3 className="mt-6 text-2xl font-bold">{p.title}</h3>
                 <p className={cn("mt-3", featured ? "text-white/75" : "text-muted-foreground")}>{p.text}</p>
@@ -66,7 +67,7 @@ export function Programs() {
                 </ul>
                 <Button asChild variant={featured ? "accent" : "outline"} className="group mt-auto">
                   <a href="#ariza">
-                    Ma’lumot olish
+                    {t.common.learnMore}
                     <ArrowRight className="transition-transform duration-300 group-hover:translate-x-1" />
                   </a>
                 </Button>

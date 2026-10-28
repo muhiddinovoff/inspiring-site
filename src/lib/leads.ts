@@ -2,6 +2,7 @@ export type Lead = {
   name: string
   phone: string
   grade?: string
+  lang: string
   source: string
 }
 
@@ -23,8 +24,4 @@ export async function submitLead(lead: Lead): Promise<boolean> {
   } catch {
     return false
   }
-}
-
-export function leadText(lead: Lead) {
-  return `Ariza: ${lead.name}, tel: ${lead.phone}${lead.grade ? `, ${lead.grade}` : ""}`
 }

@@ -2,9 +2,11 @@ import { useEffect, useState } from "react"
 import { AnimatePresence, motion, useScroll, useSpring } from "framer-motion"
 import { Menu, Phone, X } from "lucide-react"
 
+import { LanguageSwitcher } from "@/components/language-switcher"
 import { Logo } from "@/components/logo"
 import { Button } from "@/components/ui/button"
-import { CONTACT, NAV } from "@/data/site"
+import { CONTACT, NAV_IDS } from "@/data/site"
+import { useI18n } from "@/i18n"
 import { cn } from "@/lib/utils"
 
 function useActiveSection(ids: readonly string[]) {
@@ -26,9 +28,8 @@ function useActiveSection(ids: readonly string[]) {
   return active
 }
 
-const NAV_IDS = NAV.map((n) => n.id)
-
 export function Navbar() {
+  const { t } = useI18n()
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
   const active = useActiveSection(NAV_IDS)
@@ -53,47 +54,48 @@ export function Navbar() {
         scrolled || open ? "bg-background/85 shadow-[0_1px_0_var(--color-border)] backdrop-blur-xl" : "bg-transparent"
       )}
     >
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 md:h-[72px] md:px-6">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 md:h-[72px] md:px-6">
         <Logo />
 
-        <nav aria-label="Asosiy menyu" className="hidden items-center gap-1 lg:flex">
-          {NAV.map((item) => (
+        <nav aria-label={t.nav.main} className="hidden items-center gap-0.5 xl:flex">
+          {NAV_IDS.map((id) => (
             <a
-              key={item.id}
-              href={`#${item.id}`}
+              key={id}
+              href={`#${id}`}
               className={cn(
-                "relative rounded-full px-3.5 py-2 text-sm font-semibold transition-colors",
-                active === item.id ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                "relative rounded-full px-3 py-2 text-sm font-semibold whitespace-nowrap transition-colors",
+                active === id ? "text-foreground" : "text-muted-foreground hover:text-foreground"
               )}
             >
-              {active === item.id && (
+              {active === id && (
                 <motion.span
                   layoutId="nav-pill"
                   className="absolute inset-0 -z-10 rounded-full bg-secondary"
                   transition={{ type: "spring", stiffness: 380, damping: 32 }}
                 />
               )}
-              {item.label}
+              {t.nav.items[id]}
             </a>
           ))}
         </nav>
 
         <div className="flex items-center gap-2">
+          <LanguageSwitcher id="lang-top" />
           <a
             href={CONTACT.phoneHref}
-            className="hidden items-center gap-2 rounded-full px-3 py-2 text-sm font-bold tabular-nums transition-colors hover:bg-secondary md:flex"
+            className="hidden items-center gap-2 rounded-full px-3 py-2 text-sm font-bold whitespace-nowrap tabular-nums transition-colors hover:bg-secondary 2xl:flex"
           >
             <Phone className="size-4 text-brand-ink" />
             {CONTACT.phone}
           </a>
           <Button asChild variant="accent" size="sm" className="hidden sm:inline-flex">
-            <a href="#ariza">Ariza qoldirish</a>
+            <a href="#ariza">{t.common.apply}</a>
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            className="lg:hidden"
-            aria-label={open ? "Menyuni yopish" : "Menyuni ochish"}
+            className="xl:hidden"
+            aria-label={open ? t.nav.close : t.nav.open}
             aria-expanded={open}
             onClick={() => setOpen((v) => !v)}
           >
@@ -121,12 +123,12 @@ export function Navbar() {
       <AnimatePresence>
         {open && (
           <motion.nav
-            aria-label="Mobil menyu"
+            aria-label={t.nav.mobile}
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "100dvh", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-            className="overflow-hidden lg:hidden"
+            className="overflow-hidden xl:hidden"
           >
             <motion.ul
               className="flex flex-col gap-1 px-4 pt-4 pb-8"
@@ -134,17 +136,17 @@ export function Navbar() {
               animate="show"
               variants={{ hidden: {}, show: { transition: { staggerChildren: 0.04, delayChildren: 0.1 } } }}
             >
-              {NAV.map((item) => (
+              {NAV_IDS.map((id) => (
                 <motion.li
-                  key={item.id}
+                  key={id}
                   variants={{ hidden: { opacity: 0, x: -16 }, show: { opacity: 1, x: 0 } }}
                 >
                   <a
-                    href={`#${item.id}`}
+                    href={`#${id}`}
                     onClick={() => setOpen(false)}
                     className="block border-b py-4 font-display text-2xl font-semibold"
                   >
-                    {item.label}
+                    {t.nav.items[id]}
                   </a>
                 </motion.li>
               ))}
@@ -153,7 +155,7 @@ export function Navbar() {
                 className="mt-6 grid gap-3"
               >
                 <Button asChild variant="accent" size="lg">
-                  <a href="#ariza" onClick={() => setOpen(false)}>Ariza qoldirish</a>
+                  <a href="#ariza" onClick={() => setOpen(false)}>{t.common.apply}</a>
                 </Button>
                 <Button asChild variant="outline" size="lg">
                   <a href={CONTACT.phoneHref}>

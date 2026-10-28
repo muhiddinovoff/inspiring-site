@@ -41,8 +41,9 @@ function DialogOverlay({
 function DialogContent({
   className,
   children,
+  closeLabel = "Close",
   ...props
-}: React.ComponentProps<typeof DialogPrimitive.Content>) {
+}: React.ComponentProps<typeof DialogPrimitive.Content> & { closeLabel?: string }) {
   return (
     <DialogPortal>
       <DialogOverlay />
@@ -57,7 +58,7 @@ function DialogContent({
         {children}
         <DialogPrimitive.Close className="absolute top-3 right-3 z-10 grid size-10 place-items-center rounded-full bg-card/90 shadow-md backdrop-blur transition-[transform,background-color] hover:rotate-90 hover:bg-secondary focus-visible:ring-[3px] focus-visible:ring-ring/60 outline-none">
           <X className="size-5" />
-          <span className="sr-only">Yopish</span>
+          <span className="sr-only">{closeLabel}</span>
         </DialogPrimitive.Close>
       </DialogPrimitive.Content>
     </DialogPortal>

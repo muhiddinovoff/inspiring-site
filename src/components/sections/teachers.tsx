@@ -7,11 +7,12 @@ import { SectionHeading } from "@/components/sections/section-heading"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
 import { TEACHERS, type Teacher } from "@/data/teachers"
-
-const nameOf = (t: Teacher) => t.name || "Inspiring ustozi"
-const subjectOf = (t: Teacher) => t.subject || "Imtihonga tayyorlov"
+import { useI18n } from "@/i18n"
 
 export function Teachers() {
+  const { t: tr } = useI18n()
+  const nameOf = (t: Teacher) => t.name || tr.teachers.fallbackName
+  const subjectOf = (t: Teacher) => t.subject || tr.teachers.fallbackSubject
   const [index, setIndex] = useState<number | null>(null)
   const [dir, setDir] = useState(0)
   const go = (step: number) => {
@@ -24,9 +25,9 @@ export function Teachers() {
     <section id="ustozlar" className="mx-auto max-w-6xl px-4 py-24 md:px-6 md:py-32">
       <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
         <SectionHeading
-          kicker="Ustozlar"
-          title="Farzandingizga kim dars beradi"
-          text="Imtihon talablarini yaxshi biladigan, yillar davomida o‘quvchilarni nufuzli maktablarga olib borgan ustozlar."
+          kicker={tr.teachers.kicker}
+          title={tr.teachers.title}
+          text={tr.teachers.text}
         />
       </div>
 
@@ -70,7 +71,7 @@ export function Teachers() {
       </motion.ul>
 
       <Dialog open={index !== null} onOpenChange={(o) => !o && setIndex(null)}>
-        <DialogContent className="max-h-[90dvh] overflow-y-auto p-0 md:overflow-hidden">
+        <DialogContent closeLabel={tr.common.close} className="max-h-[90dvh] overflow-y-auto p-0 md:overflow-hidden">
           {t && (
             <AnimatePresence mode="wait" custom={dir} initial={false}>
               <motion.div
@@ -89,10 +90,10 @@ export function Teachers() {
                   <DialogTitle>{nameOf(t)}</DialogTitle>
                   <p className="mt-1 font-semibold text-brand-ink">
                     {subjectOf(t)}
-                    {t.exp && <span className="text-muted-foreground"> · {t.exp} tajriba</span>}
+                    {t.exp && <span className="text-muted-foreground"> · {tr.teachers.exp(t.exp)}</span>}
                   </p>
                   <DialogDescription className="mt-4 leading-relaxed">
-                    {t.about || "Ustoz haqida batafsil ma’lumot tez orada qo‘shiladi. Dars jadvali va guruhlar haqida menejerimizdan so‘rashingiz mumkin."}
+                    {t.about || tr.teachers.fallbackAbout}
                   </DialogDescription>
                   {t.wins.length > 0 && (
                     <ul className="mt-5 grid gap-2">
@@ -107,14 +108,14 @@ export function Teachers() {
                   <div className="mt-auto flex items-center gap-2 pt-8">
                     <DialogClose asChild>
                       <Button asChild variant="accent">
-                        <a href="#ariza">Darsga yozilish</a>
+                        <a href="#ariza">{tr.teachers.enroll}</a>
                       </Button>
                     </DialogClose>
                     <div className="ml-auto flex gap-2">
-                      <Button variant="outline" size="icon" aria-label="Oldingi ustoz" onClick={() => go(-1)}>
+                      <Button variant="outline" size="icon" aria-label={tr.teachers.prev} onClick={() => go(-1)}>
                         <ArrowLeft />
                       </Button>
-                      <Button variant="outline" size="icon" aria-label="Keyingi ustoz" onClick={() => go(1)}>
+                      <Button variant="outline" size="icon" aria-label={tr.teachers.next} onClick={() => go(1)}>
                         <ArrowRight />
                       </Button>
                     </div>

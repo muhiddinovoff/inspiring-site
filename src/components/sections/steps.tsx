@@ -3,9 +3,10 @@ import { motion, useScroll, useSpring } from "framer-motion"
 
 import { Reveal } from "@/components/motion/reveal"
 import { SectionHeading } from "@/components/sections/section-heading"
-import { STEPS } from "@/data/site"
+import { useI18n } from "@/i18n"
 
 export function Steps() {
+  const { t } = useI18n()
   const ref = useRef<HTMLOListElement>(null)
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start 70%", "end 60%"] })
   const fill = useSpring(scrollYProgress, { stiffness: 120, damping: 30 })
@@ -15,9 +16,9 @@ export function Steps() {
       <div className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
         <div className="lg:sticky lg:top-32 lg:self-start">
           <SectionHeading
-            kicker="Qanday ishlaymiz"
-            title="Arizadan maktabga qabulgacha"
-            text="Siz faqat birinchi qadamni qo‘yasiz. Qolgan yo‘lda menejer va ustozlar yoningizda bo‘ladi."
+            kicker={t.steps.kicker}
+            title={t.steps.title}
+            text={t.steps.text}
           />
         </div>
 
@@ -25,8 +26,8 @@ export function Steps() {
           <div aria-hidden className="absolute top-2 bottom-2 left-[19px] w-0.5 rounded-full bg-border">
             <motion.div className="h-full w-full origin-top rounded-full bg-accent" style={{ scaleY: fill }} />
           </div>
-          {STEPS.map((s, i) => (
-            <li key={s.title} className="relative pb-10 pl-16 last:pb-0">
+          {t.steps.items.map((s, i) => (
+            <li key={i} className="relative pb-10 pl-16 last:pb-0">
               <Reveal y={20} delay={0.05}>
                 <span className="absolute top-0 left-0 grid size-10 place-items-center rounded-full border-4 border-background bg-brand font-display text-sm font-bold text-white">
                   {i + 1}

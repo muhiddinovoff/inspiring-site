@@ -1,3 +1,4 @@
+import { useI18n } from "@/i18n"
 import { cn } from "@/lib/utils"
 
 /** Shield emblem redrawn from the supplied logo; `gap` is the thin ring colour between the two green layers. */
@@ -21,8 +22,9 @@ export function Shield({ className, gap = "#0f5f58" }: { className?: string; gap
 }
 
 export function Logo({ className, gap, light }: { className?: string; gap?: string; light?: boolean }) {
+  const { t } = useI18n()
   return (
-    <a href="#top" aria-label="Inspiring Education, bosh sahifa" className={cn("flex items-center gap-2.5", className)}>
+    <a href="#top" aria-label={t.nav.home} className={cn("flex items-center gap-2.5", className)}>
       <Shield className="h-9 w-[30px] shrink-0" gap={gap} />
       <span className={cn("font-display text-[15px] leading-[1.05] font-bold uppercase tracking-wide", light ? "text-white" : "text-foreground")}>
         Inspiring

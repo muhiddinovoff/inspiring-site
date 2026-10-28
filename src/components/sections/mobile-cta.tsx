@@ -4,9 +4,11 @@ import { Phone } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { CONTACT } from "@/data/site"
+import { useI18n } from "@/i18n"
 
 /** Phone-only bottom bar: shows after the hero, hides while the application form itself is on screen. */
 export function MobileCta() {
+  const { t } = useI18n()
   const [pastHero, setPastHero] = useState(false)
   const [formVisible, setFormVisible] = useState(false)
 
@@ -33,13 +35,13 @@ export function MobileCta() {
           transition={{ type: "spring", stiffness: 320, damping: 34 }}
           className="fixed inset-x-0 bottom-0 z-30 flex gap-2 border-t bg-background/90 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-xl md:hidden"
         >
-          <Button asChild variant="outline" size="icon" className="size-12 shrink-0" aria-label={`Qo‘ng‘iroq qilish: ${CONTACT.phone}`}>
+          <Button asChild variant="outline" size="icon" className="size-12 shrink-0" aria-label={`${t.common.call}: ${CONTACT.phone}`}>
             <a href={CONTACT.phoneHref}>
               <Phone />
             </a>
           </Button>
           <Button asChild variant="accent" size="lg" className="h-12 flex-1">
-            <a href="#ariza">Ariza qoldirish</a>
+            <a href="#ariza">{t.common.apply}</a>
           </Button>
         </motion.div>
       )}

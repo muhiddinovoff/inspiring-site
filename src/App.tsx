@@ -14,10 +14,12 @@ import { Stats } from "@/components/sections/stats"
 import { Steps } from "@/components/sections/steps"
 import { Teachers } from "@/components/sections/teachers"
 import { useSmoothScroll } from "@/hooks/use-smooth-scroll"
+import { I18nProvider } from "@/i18n"
 
 export default function App() {
   useSmoothScroll()
   return (
+    <I18nProvider>
     <MotionConfig reducedMotion="user">
       <Navbar />
       <main>
@@ -35,5 +37,6 @@ export default function App() {
       <Footer />
       <MobileCta />
     </MotionConfig>
+    </I18nProvider>
   )
 }

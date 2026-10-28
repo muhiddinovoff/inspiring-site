@@ -8,18 +8,19 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { CONTACT } from "@/data/site"
-import { leadText, submitLead, type Lead } from "@/lib/leads"
+import { useI18n } from "@/i18n"
+import { submitLead, type Lead } from "@/lib/leads"
 import { formatLocal, isCompletePhone, localDigits } from "@/lib/phone"
 import { cn } from "@/lib/utils"
-
-const GRADES = ["1-sinf", "2-sinf", "3-sinf", "4-sinf"]
 
 type Status = "idle" | "sending" | "sent" | "manual"
 
 export function LeadForm() {
+  const { t, lang } = useI18n()
+  const L = t.lead
   const [name, setName] = useState("")
   const [digits, setDigits] = useState("")
-  const [grade, setGrade] = useState<string>()
+  const [grade, setGrade] = useState<number>()
   const [tried, setTried] = useState(false)
   const [status, setStatus] = useState<Status>("idle")
   const [lead, setLead] = useState<Lead | null>(null)
@@ -32,16 +33,18 @@ export function LeadForm() {
     e.preventDefault()
     setTried(true)
     if (!nameOk || !phoneOk) return
-    const l: Lead = { name: name.trim(), phone: `+998${digits}`, grade, source: "sayt" }
+    const l: Lead = { name: name.trim(), phone: `+998${digits}`, grade: grade === undefined ? undefined : `${grade + 1}`, lang, source: "sayt" }
     setLead(l)
     setStatus("sending")
     setStatus((await submitLead(l)) ? "sent" : "manual")
   }
 
+  const text = lead ? L.leadText(lead.name, lead.phone, grade === undefined ? undefined : L.grades[grade]) : ""
+
   async function copy() {
     if (!lead) return
     try {
-      await navigator.clipboard.writeText(leadText(lead))
+      await navigator.clipboard.writeText(text)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {
@@ -62,17 +65,17 @@ export function LeadForm() {
           <SectionHeading
             light
             className="min-w-0"
-            kicker="Qabul doimo ochiq"
-            title="Birinchi qadamni bugun qo‘ying"
-            text="Ism va raqamingizni qoldiring. Menejerimiz o‘zi qo‘ng‘iroq qilib, farzandingizga mos yo‘nalish, narx va jadvalni aytadi."
+            kicker={L.kicker}
+            title={L.title}
+            text={L.text}
           />
           <ul className="mt-10 grid gap-4 text-white/85">
-            {["Bir daqiqa vaqt oladi", "Hech qanday majburiyat yo‘q", "Raqamingiz faqat siz bilan bog‘lanish uchun"].map((t) => (
-              <li key={t} className="flex items-center gap-3">
+            {L.perks.map((p) => (
+              <li key={p} className="flex items-center gap-3">
                 <span className="grid size-6 shrink-0 place-items-center rounded-full bg-accent text-accent-foreground">
                   <Check className="size-3.5" strokeWidth={3} />
                 </span>
-                {t}
+                {p}
               </li>
             ))}
           </ul>
@@ -94,24 +97,24 @@ export function LeadForm() {
                 transition={{ duration: 0.3 }}
                 className="grid gap-5"
               >
-                <h3 className="text-2xl font-bold">Bepul maslahatga yozilish</h3>
+                <h3 className="text-2xl font-bold">{L.formTitle}</h3>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="lead-name">Ismingiz</Label>
+                  <Label htmlFor="lead-name">{L.name}</Label>
                   <Input
                     id="lead-name"
                     autoComplete="name"
-                    placeholder="Masalan, Dilnoza"
+                    placeholder={L.namePlaceholder}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     aria-invalid={tried && !nameOk}
                     aria-describedby={tried && !nameOk ? "lead-name-err" : undefined}
                   />
-                  {tried && !nameOk && <p id="lead-name-err" className="text-sm text-destructive">Ismingizni yozing</p>}
+                  {tried && !nameOk && <p id="lead-name-err" className="text-sm text-destructive">{L.nameError}</p>}
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="lead-phone">Telefon raqami</Label>
+                  <Label htmlFor="lead-phone">{L.phone}</Label>
                   <div className="relative">
                     <span className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 font-semibold text-muted-foreground">+998</span>
                     <Input
@@ -128,24 +131,24 @@ export function LeadForm() {
                     />
                   </div>
                   {tried && !phoneOk && (
-                    <p id="lead-phone-err" className="text-sm text-destructive">Raqamni to‘liq yozing, masalan 90 123 45 67</p>
+                    <p id="lead-phone-err" className="text-sm text-destructive">{L.phoneError}</p>
                   )}
                 </div>
 
                 <fieldset className="grid gap-2">
                   <legend className="mb-2 text-sm font-semibold">
-                    Farzandingiz sinfi <span className="font-normal text-muted-foreground">(ixtiyoriy)</span>
+                    {L.grade} <span className="font-normal text-muted-foreground">{L.optional}</span>
                   </legend>
                   <div className="grid grid-cols-4 gap-2">
-                    {GRADES.map((g) => (
+                    {L.grades.map((g, i) => (
                       <button
-                        key={g}
+                        key={i}
                         type="button"
-                        aria-pressed={grade === g}
-                        onClick={() => setGrade((cur) => (cur === g ? undefined : g))}
+                        aria-pressed={grade === i}
+                        onClick={() => setGrade((cur) => (cur === i ? undefined : i))}
                         className={cn(
-                          "h-11 rounded-xl border text-sm font-semibold transition-all duration-200 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 active:scale-95",
-                          grade === g ? "border-transparent bg-primary text-primary-foreground" : "bg-background hover:bg-secondary"
+                          "h-11 rounded-xl border px-1 text-sm font-semibold transition-all duration-200 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 active:scale-95",
+                          grade === i ? "border-transparent bg-primary text-primary-foreground" : "bg-background hover:bg-secondary"
                         )}
                       >
                         {g}
@@ -157,11 +160,11 @@ export function LeadForm() {
                 <Button type="submit" variant="accent" size="lg" className="group mt-1 w-full" disabled={status === "sending"}>
                   {status === "sending" ? (
                     <>
-                      <Loader2 className="animate-spin" /> Yuborilmoqda
+                      <Loader2 className="animate-spin" /> {L.sending}
                     </>
                   ) : (
                     <>
-                      Ariza qoldirish
+                      {L.submit}
                       <ArrowRight className="transition-transform duration-300 group-hover:translate-x-1" />
                     </>
                   )}
@@ -184,29 +187,29 @@ export function LeadForm() {
                 >
                   <Check className="size-8" strokeWidth={3} />
                 </motion.span>
-                <h3 className="mt-5 text-2xl font-bold">Rahmat, {lead?.name}!</h3>
+                <h3 className="mt-5 text-2xl font-bold">{L.thanks(lead?.name ?? "")}</h3>
                 {status === "sent" ? (
                   <p className="mt-2 text-muted-foreground">
-                    Arizangiz qabul qilindi. Menejerimiz tez orada {CONTACT.phone} raqamidan qo‘ng‘iroq qiladi.
+                    {L.sent(CONTACT.phone)}
                   </p>
                 ) : (
                   <>
                     <p className="mt-2 text-muted-foreground">
-                      Arizani tugatish uchun uni Telegramda bizga yuboring yoki qo‘ng‘iroq qiling.
+                      {L.manual}
                     </p>
-                    <p className="mt-4 rounded-xl bg-secondary p-3 text-sm font-medium select-all">{lead && leadText(lead)}</p>
+                    <p className="mt-4 rounded-xl bg-secondary p-3 text-sm font-medium select-all">{text}</p>
                     <div className="mt-4 grid gap-2 sm:grid-cols-2">
                       <Button asChild variant="accent">
                         <a href={CONTACT.telegram} target="_blank" rel="noreferrer" onClick={copy}>
-                          <Send /> Telegramda yuborish
+                          <Send /> {L.sendTelegram}
                         </a>
                       </Button>
                       <Button variant="outline" onClick={copy}>
-                        {copied ? <Check /> : <Copy />} {copied ? "Nusxalandi" : "Nusxa olish"}
+                        {copied ? <Check /> : <Copy />} {copied ? L.copied : L.copy}
                       </Button>
                     </div>
                     <Button asChild variant="link" className="mt-2 h-auto whitespace-normal">
-                      <a href={CONTACT.phoneHref}>yoki {CONTACT.phone} raqamiga qo‘ng‘iroq qiling</a>
+                      <a href={CONTACT.phoneHref}>{L.orCall(CONTACT.phone)}</a>
                     </Button>
                   </>
                 )}

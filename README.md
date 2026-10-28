@@ -91,6 +91,8 @@ docs/                  qo‘llanmalar va README rasmlari
 Boshqa branch va PR'larda [`ci.yml`](.github/workflows/ci.yml) faqat tekshiradi.
 
 Bir martalik sozlash: **Settings → Pages → Deploy from a branch → `gh-pages` / root**.
+
+Repo **Netlify**'ga ham ulangan: u [`netlify.toml`](netlify.toml) bo‘yicha `main` ni o‘zi build qiladi va har bir PR uchun preview havola beradi. Ariza manzilini Netlify'da **Site configuration → Environment variables → `VITE_LEAD_ENDPOINT`** ga yozing.
 Ariza manzili: **Settings → Secrets and variables → Actions → Variables → `VITE_LEAD_ENDPOINT`** ([batafsil](docs/lead-endpoint.md)).
 
 ## Aloqa

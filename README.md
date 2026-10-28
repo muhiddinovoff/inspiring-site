@@ -87,10 +87,10 @@ docs/                  qo‘llanmalar va README rasmlari
 
 ## Deploy
 
-`main` ga har bir push'da [`deploy.yml`](.github/workflows/deploy.yml) tekshiradi, build qiladi va `gh-pages` branchiga joylaydi. GitHub Pages uni **https://muhiddinovoff.github.io/inspiring-site/** da ko‘rsatadi.
+`main` ga har bir push'da [`deploy.yml`](.github/workflows/deploy.yml) tekshiradi, build qiladi va GitHub Pages'ga chiqaradi: **https://muhiddinovoff.github.io/inspiring-site/**
 Boshqa branch va PR'larda [`ci.yml`](.github/workflows/ci.yml) faqat tekshiradi.
 
-Bir martalik sozlash: **Settings → Pages → Deploy from a branch → `gh-pages` / root**.
+Bir martalik sozlash: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
 
 Repo **Netlify**'ga ham ulangan: u [`netlify.toml`](netlify.toml) bo‘yicha `main` ni o‘zi build qiladi va har bir PR uchun preview havola beradi. Ariza manzilini Netlify'da **Site configuration → Environment variables → `VITE_LEAD_ENDPOINT`** ga yozing.
 Ariza manzili: **Settings → Secrets and variables → Actions → Variables → `VITE_LEAD_ENDPOINT`** ([batafsil](docs/lead-endpoint.md)).

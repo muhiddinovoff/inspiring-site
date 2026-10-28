@@ -39,3 +39,8 @@ Manzil berilmasa, forma ota-onaga arizani Telegram orqali yuborish yoki qo‘ng�
 
 ## Aloqa
 +998 77 256 11 77 · Instagram, Telegram: @inspiringuz
+
+## Avtomatik deploy
+Har bir push'da `.github/workflows/deploy.yml` saytni build qiladi va `gh-pages` branchiga joylaydi.
+Bir martalik sozlash: GitHub → Settings → Pages → Source: **Deploy from a branch**, Branch: **gh-pages / (root)**.
+Ariza manzili uchun: Settings → Secrets and variables → Actions → Variables → `VITE_LEAD_ENDPOINT`.

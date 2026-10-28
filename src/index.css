@@ -1,0 +1,117 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* Follow the OS theme; shadcn's `dark:` utilities key off this variant. */
+@custom-variant dark (@media (prefers-color-scheme: dark));
+
+/* Brand: logo teal #0f5f58 and logo green #0ad67e. Everything else is quiet neutrals so the two brand colours carry the page. */
+:root {
+  --radius: 0.875rem;
+  --background: #fbfaf7;
+  --foreground: #0d2421;
+  --card: #ffffff;
+  --card-foreground: #0d2421;
+  --popover: #ffffff;
+  --popover-foreground: #0d2421;
+  --primary: #0f5f58;
+  --primary-foreground: #ffffff;
+  --secondary: #eef4f1;
+  --secondary-foreground: #0d2421;
+  --muted: #f1f3f0;
+  --muted-foreground: #56706b;
+  --accent: #0ad67e;
+  --accent-foreground: #04302a;
+  --destructive: #c73a3a;
+  --border: #e3e8e4;
+  --input: #d9e1dd;
+  --ring: #0ad67e;
+  --brand-ink: #0f5f58;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #081614;
+    --foreground: #e7f2ef;
+    --card: #0e221f;
+    --card-foreground: #e7f2ef;
+    --popover: #0e221f;
+    --popover-foreground: #e7f2ef;
+    --primary: #0ad67e;
+    --primary-foreground: #04302a;
+    --secondary: #12302c;
+    --secondary-foreground: #e7f2ef;
+    --muted: #0f2724;
+    --muted-foreground: #9ab8b2;
+    --border: #1b3a36;
+    --input: #24463f;
+    --brand-ink: #7ee9b8;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-brand: #0f5f58;
+  --color-brand-deep: #0a3f3a;
+  --color-brand-green: #0ad67e;
+  --color-brand-ink: var(--brand-ink);
+  --radius-sm: calc(var(--radius) - 6px);
+  --radius-md: calc(var(--radius) - 3px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 6px);
+  --font-sans: "Manrope", "Segoe UI", system-ui, sans-serif;
+  --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --animate-accordion-down: accordion-down 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  --animate-accordion-up: accordion-up 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+
+  @keyframes accordion-down {
+    from { height: 0; }
+    to { height: var(--radix-accordion-content-height); }
+  }
+  @keyframes accordion-up {
+    from { height: var(--radix-accordion-content-height); }
+    to { height: 0; }
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/60;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-padding-top: 88px;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "ss01";
+  }
+  h1, h2, h3, h4 {
+    @apply font-display tracking-tight;
+    text-wrap: balance;
+  }
+  ::selection {
+    background: color-mix(in srgb, var(--color-brand-green) 35%, transparent);
+  }
+}
+
+/* Lenis smooth scrolling */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-stopped { overflow: hidden; }

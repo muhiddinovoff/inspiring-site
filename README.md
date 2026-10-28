@@ -1,24 +1,41 @@
 # Inspiring Education sayti
 
-Inspiring Education o‘quv markazining bitta faylli (`index.html`) veb-sayti.
+Inspiring Education o‘quv markazining veb-sayti. Vite, React, TypeScript, Tailwind CSS v4 va shadcn/ui tuzilmasida yozilgan, animatsiyalar Framer Motion va Lenis bilan qilingan.
 
-## Tarkib
-- `index.html`: to‘liq sayt (HTML, CSS, JS, ustozlar rasmlari ichiga joylangan)
-- `drafts/dizayn-variantlari.html`: A, B, C dizayn variantlari (arxiv)
-- `docs/logo.png`: logotip
+## Ishga tushirish
+```bash
+npm install
+npm run dev      # http://localhost:5173
+npm run build    # tayyor sayt dist/ papkasida
+npm run preview  # build natijasini ko‘rish
+```
 
-## Bo‘limlar
-Bosh ekran, raqamlar, natijalar (2025–2026), markaz haqida, nega biz, ustozlar (bosilsa oyna ochiladi), yo‘l xaritasi, dasturlar, savollar, 10 ta filial, ariza formasi.
+## Tuzilma
+```
+src/
+  components/
+    ui/          shadcn komponentlari (button, input, label, accordion, dialog, container-scroll-animation)
+    sections/    sahifa bo‘limlari (hero, results, teachers, branches, lead-form ...)
+    motion/      Reveal va CountUp animatsiya yordamchilari
+  data/
+    site.ts      barcha matnlar, raqamlar, filiallar, savollar
+    teachers.ts  ustozlar ma’lumoti
+  lib/           utils (cn), telefon formati, arizani yuborish
+  hooks/         silliq skroll (Lenis)
+public/teachers/ ustozlar rasmlari
+```
+`components.json` shadcn CLI uchun sozlangan, shuning uchun yangi komponentlar `npx shadcn@latest add <nom>` bilan `src/components/ui` ga tushadi.
 
-## Ustozlar ma’lumotini to‘ldirish
-`index.html` ichida `TEACHERS` massivini toping. Har bir ustoz uchun maydonlarni yozing:
-`name`, `role`, `exp`, `about`, `wins` (ro‘yxat).
+## Ma’lumotni o‘zgartirish
+- Matnlar, natijalar, filiallar, savol-javoblar: `src/data/site.ts`
+- Ustozlar: `src/data/teachers.ts`. Har biriga `name`, `subject`, `exp`, `about`, `wins` yozing. Rasmlar `public/teachers/ustoz-N.jpg`.
 
 ## Ariza formasi
-Hozirgi nusxa Claude artifact ichida ishlaydi va arizalarni sahifa bazasiga yozadi. O‘z hostingingizda ishlashi uchun forma `fetch` orqali Telegram bot, CRM yoki Google Sheets'ga ulanishi kerak (`wire()` funksiyasi, `index.html` oxirida).
+`.env.example` faylini `.env.local` deb nusxalang va `VITE_LEAD_ENDPOINT` ga JSON POST qabul qiladigan URL yozing (Google Apps Script, Telegram bot, CRM). Forma `{ name, phone, grade, source, createdAt }` yuboradi.
+Manzil berilmasa, forma ota-onaga arizani Telegram orqali yuborish yoki qo‘ng‘iroq qilishni taklif qiladi.
 
 ## Joylash
-Statik hosting (GitHub Pages, Netlify, Cloudflare Pages) yetarli. Domen: masalan inspiring.uz.
+`npm run build` dan keyin `dist/` papkasini istalgan statik hostingga qo‘ying (Netlify, Cloudflare Pages, GitHub Pages). `base: './'` sababli sayt pastki papkada ham ishlaydi.
 
 ## Aloqa
 +998 77 256 11 77 · Instagram, Telegram: @inspiringuz

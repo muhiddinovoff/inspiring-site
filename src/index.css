@@ -126,6 +126,8 @@
   }
   html {
     -webkit-text-size-adjust: 100%;
+    /* No grey/blue flash on tap: every control has its own pressed and focus states. */
+    -webkit-tap-highlight-color: transparent;
     scroll-padding-top: 88px;
   }
   body {
@@ -138,6 +140,10 @@
   h4 {
     @apply font-display tracking-tight;
     text-wrap: balance;
+  }
+  /* Focus rings are for keyboard users; a click or tap that happens to focus something leaves no outline. */
+  :focus:not(:focus-visible) {
+    outline: none;
   }
   ::selection {
     background: color-mix(in srgb, var(--color-brand-green) 35%, transparent);
@@ -297,6 +303,15 @@ html.lenis body {
   height: 10px;
   border-radius: 9999px;
   background: #0ad67e;
+}
+.leaflet-marker-icon:focus-visible {
+  outline: none;
+}
+.leaflet-marker-icon:focus-visible .map-pin::before {
+  box-shadow: 0 0 0 4px rgb(10 214 126 / 0.6);
+}
+.leaflet-container:focus:not(:focus-visible) {
+  outline: none;
 }
 .map-pin.is-active {
   transform: scale(1.3);

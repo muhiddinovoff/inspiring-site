@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { TEACHERS, pick, type Teacher } from "@/data/teachers"
 import { ringOffset, useCarousel } from "@/hooks/use-carousel"
 import { useI18n } from "@/i18n"
+import { mouseMoved } from "@/lib/pointer"
 import { cn } from "@/lib/utils"
 
 const SPRING = { type: "spring", stiffness: 240, damping: 30, mass: 0.9 } as const
@@ -61,8 +62,10 @@ function TeacherCard({ teacher, offset, expanded, dimmed, sizes, onOpen, onFocus
   const wrapped = Math.abs(offset - last.current) > 1
   last.current = offset
 
-  // Hover intent: a pointer just passing over the card on its way down the page doesn't throw it open.
+  // Hover intent: opens only after the mouse has really moved over the card for a moment. A card scrolled
+  // under a resting cursor, or a pointer just passing by, leaves it shut.
   const intent = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const mouse = useRef<{ x: number; y: number } | null>(null)
   useEffect(() => () => clearTimeout(intent.current), [])
 
   const detailsW = sizes.open - sizes.openPhoto
@@ -87,13 +90,16 @@ function TeacherCard({ teacher, offset, expanded, dimmed, sizes, onOpen, onFocus
         initial={false}
         animate={{ width: expanded ? sizes.open : sizes.w }}
         transition={SPRING}
-        onPointerEnter={(e) => {
-          if (!active || e.pointerType !== "mouse") return
+        onPointerEnter={(e) => void mouseMoved(e, mouse)}
+        onPointerMove={(e) => {
+          if (!mouseMoved(e, mouse) || !active || expanded || intent.current) return
           intent.current = setTimeout(() => onOpen(true), 220)
         }}
         onPointerLeave={(e) => {
           if (e.pointerType !== "mouse") return
+          mouse.current = null
           clearTimeout(intent.current)
+          intent.current = undefined
           onOpen(false)
         }}
         onClick={() => (active ? onOpen(!expanded) : onFocus())}
@@ -217,11 +223,12 @@ export function Teachers() {
   const sizes = useSizes()
   // Which card is open. Auto-rotation waits while one is, and moving on (swipe, arrows, dots) closes it.
   const [open, setOpen] = useState<number | null>(null)
-  const { active, go, goTo, bind, playing, togglePlay } = useCarousel<HTMLDivElement>({
+  const { active, go, goTo, bind, inView, playing, togglePlay } = useCarousel<HTMLDivElement>({
     count: TEACHERS.length,
     paused: open !== null,
   })
-  if (open !== null && open !== active) setOpen(null)
+  // A card tapped open and then scrolled away from (phones have no "pointer leave") closes, so rotation resumes.
+  if (open !== null && (open !== active || !inView)) setOpen(null)
   const expanded = open === active
 
   return (

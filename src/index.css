@@ -124,6 +124,11 @@
   * {
     @apply border-border outline-ring/60;
   }
+  html,
+  body {
+    /* Nothing may widen the page sideways. Safari let the parents' message wall's spill-over columns do so. */
+    overflow-x: clip;
+  }
   html {
     -webkit-text-size-adjust: 100%;
     /* No grey/blue flash on tap: every control has its own pressed and focus states. */
@@ -348,6 +353,10 @@ html.lenis body {
 }
 .leaflet-container {
   font-family: var(--font-sans);
+}
+/* Dark theme: the light OSM tiles inverted into a calm dark map (hues turned back so water stays blue). */
+.map-dark .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.88) saturate(0.7);
 }
 .leaflet-container .leaflet-control-attribution {
   margin: 0 0.5rem 0.4rem 0;

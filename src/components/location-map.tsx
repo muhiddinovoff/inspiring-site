@@ -48,11 +48,9 @@ const youIcon = L.divIcon({
   iconAnchor: [11, 11],
 })
 
-// CARTO's OpenStreetMap basemaps: no key, and calmer than the default OSM style. Dark tiles in the dark theme.
-const TILES = {
-  light: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
-  dark: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-}
+// OpenStreetMap's own tiles: free, no key or account (CARTO's now ask for one). OSM has no dark style, so the
+// dark theme darkens the same tiles with a CSS filter (`.map-dark` in index.css).
+const TILES = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
 const isDark = () => {
   const theme = document.documentElement.dataset.theme
   return theme ? theme === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches
@@ -78,13 +76,13 @@ export default function LocationMap({ pins, frame, origin, selected, onSelect, o
     if (!el.current) return
     const m = L.map(el.current, { scrollWheelZoom: false, dragging: !touch, zoomSnap: 0.25, zoomControl: false })
     m.attributionControl.setPrefix(false)
-    const tiles = L.tileLayer(isDark() ? TILES.dark : TILES.light, {
+    L.tileLayer(TILES, {
       maxZoom: 19,
-      subdomains: "abcd",
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(m)
-    const retheme = () => tiles.setUrl(isDark() ? TILES.dark : TILES.light)
+    const container = el.current
+    const retheme = () => container.classList.toggle("map-dark", isDark())
+    retheme()
     const themeWatch = new MutationObserver(retheme)
     themeWatch.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] })
     const mq = window.matchMedia("(prefers-color-scheme: dark)")

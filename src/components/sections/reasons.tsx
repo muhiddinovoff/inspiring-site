@@ -1,4 +1,4 @@
-import { useRef, useState } from "react"
+import { memo, useMemo, useRef, useState } from "react"
 import { AnimatePresence, motion, useMotionValueEvent, useReducedMotion, useScroll } from "framer-motion"
 
 import { Reveal } from "@/components/motion/reveal"
@@ -34,7 +34,8 @@ function buildWall(messages: { name: string; text: string }[], reasons: { title:
   let m = 0
   let r = 0
   for (let k = 0; k < COUNT; k++) {
-    const at = 0.06 + rnd(k, 1) * 0.78
+    // About a third of the wall is already up when the section arrives, so it never opens on an empty screen.
+    const at = -0.4 + rnd(k, 1) * 1.1
     const typing = rnd(k, 2) < 0.3
     // The centre's four reasons are its replies, spread through the first columns so phones see them too.
     if (k % 4 === 1 && r < reasons.length) {
@@ -75,7 +76,7 @@ function TypingDots({ sent, label }: { sent: boolean; label: string }) {
   )
 }
 
-function Bubble({ item, status }: { item: Item; status: "hidden" | "typing" | "shown" }) {
+const Bubble = memo(function Bubble({ item, status }: { item: Item; status: "hidden" | "typing" | "shown" }) {
   const { t } = useI18n()
   const shown = status === "shown"
   const from = rnd(item.k, 6) < 0.5 ? -1 : 1
@@ -97,7 +98,7 @@ function Bubble({ item, status }: { item: Item; status: "hidden" | "typing" | "s
         style={{ transformOrigin: item.sent ? "100% 100%" : "0% 100%" }}
         className={cn("flex max-w-[92%] flex-col", item.sent ? "items-end" : "items-start")}
       >
-        <span className={cn("mb-1 flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground")}>
+        <span className={cn("mb-1 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground")}>
           {!item.sent && (
             <span
               aria-hidden
@@ -113,7 +114,7 @@ function Bubble({ item, status }: { item: Item; status: "hidden" | "typing" | "s
           {item.text}
         </p>
         {item.label && (
-          <span className="mt-1 mr-1 text-[10.5px] font-medium text-muted-foreground">
+          <span className="mt-1 mr-1 text-[11.5px] font-medium text-muted-foreground">
             {t.reasons.chat[item.label]}
           </span>
         )}
@@ -123,7 +124,7 @@ function Bubble({ item, status }: { item: Item; status: "hidden" | "typing" | "s
       </AnimatePresence>
     </li>
   )
-}
+})
 
 export function Reasons() {
   const { t } = useI18n()
@@ -135,19 +136,36 @@ export function Reasons() {
   useMotionValueEvent(scrollYProgress, "change", (v) => setStep(Math.round(v * 200) / 200))
   const progress = still ? 1 : step
 
-  const wall = buildWall(t.reasons.chat.messages, t.reasons.items, t.reasons.chat.us)
+  const { messages, us } = t.reasons.chat
+  const wall = useMemo(() => buildWall(messages, t.reasons.items, us), [messages, t.reasons.items, us])
 
   return (
     <section
       ref={ref}
       id="nega"
       aria-labelledby="nega-title"
-      className={cn("chat-wall relative bg-background", still ? "h-svh min-h-[40rem]" : "h-[320svh]")}
+      className={cn("chat-wall relative bg-background", still ? "h-svh min-h-[40rem]" : "h-[200svh]")}
     >
-      <div className="sticky top-0 h-svh min-h-[40rem] overflow-hidden">
+      {/* Phones: heading on top, the wall fills the rest. Larger screens: the wall fills the screen around a centred card. */}
+      <div className="sticky top-0 flex h-svh min-h-[40rem] flex-col overflow-hidden">
+        <div className="relative z-20 shrink-0 px-5 pt-20 pb-4 md:pointer-events-none md:absolute md:inset-0 md:grid md:place-items-center md:p-5">
+          <Reveal className="mx-auto max-w-xl text-center md:pointer-events-auto md:rounded-[2rem] md:bg-background/75 md:px-12 md:py-12 md:shadow-[0_40px_120px_-30px_rgb(15_95_88/0.45)] md:ring-1 md:ring-border/70 md:backdrop-blur-2xl md:backdrop-saturate-150">
+            <p className="text-xs font-bold tracking-[0.14em] text-brand-ink uppercase md:text-sm">
+              {t.reasons.kicker}
+            </p>
+            <h2 id="nega-title" className="mt-2 text-3xl leading-[1.05] font-extrabold md:mt-3 md:text-6xl">
+              {t.reasons.title}
+            </h2>
+            <p className="mt-2 text-sm text-muted-foreground md:mt-5 md:text-lg">
+              <span className="font-display text-lg font-extrabold text-brand-ink md:text-2xl">97{t.decimal}7%</span>{" "}
+              {t.reasons.badge}
+            </p>
+          </Reveal>
+        </div>
+
         <ul
           aria-label={t.reasons.chat.aria}
-          className="absolute inset-0 columns-2 gap-3 px-3 pt-20 [column-fill:auto] md:columns-3 md:gap-5 md:px-6 md:pt-24 lg:columns-4 xl:columns-5"
+          className="relative min-h-0 flex-1 columns-2 gap-3 px-3 pt-2 [column-fill:auto] md:absolute md:inset-0 md:columns-3 md:gap-5 md:px-6 md:pt-24 lg:columns-4 xl:columns-5"
         >
           {wall.map((item) => {
             const status =
@@ -155,19 +173,6 @@ export function Reasons() {
             return <Bubble key={item.k} item={item} status={status} />
           })}
         </ul>
-
-        <div className="pointer-events-none absolute inset-0 grid place-items-center px-5">
-          <Reveal className="pointer-events-auto max-w-xl rounded-[2rem] bg-background/75 px-6 py-8 text-center shadow-[0_40px_120px_-30px_rgb(15_95_88/0.45)] ring-1 ring-border/70 backdrop-blur-2xl backdrop-saturate-150 md:px-12 md:py-12">
-            <p className="text-sm font-bold tracking-[0.14em] text-brand-ink uppercase">{t.reasons.kicker}</p>
-            <h2 id="nega-title" className="mt-3 text-4xl leading-[1.05] font-extrabold md:text-6xl">
-              {t.reasons.title}
-            </h2>
-            <p className="mt-5 text-lg text-muted-foreground">
-              <span className="font-display text-2xl font-extrabold text-brand-ink">97{t.decimal}7%</span>{" "}
-              {t.reasons.badge}
-            </p>
-          </Reveal>
-        </div>
       </div>
     </section>
   )

@@ -20,6 +20,8 @@ const ru: Dict = {
     prev: "Назад",
     next: "Вперёд",
     carousel: "карусель",
+    pause: "Пауза",
+    play: "Продолжить",
     slide: (i: number, n: number) => `${i} из ${n}`,
   },
   theme: {
@@ -31,6 +33,7 @@ const ru: Dict = {
   nav: {
     items: {
       natijalar: "Результаты",
+      nega: "Почему мы",
       ustozlar: "Преподаватели",
       dasturlar: "Программы",
       yol: "Как мы работаем",
@@ -163,7 +166,6 @@ const ru: Dict = {
     fallbackSubject: "Подготовка к экзаменам",
     labels: { subject: "Предмет", exp: "Опыт", wins: "Достижения", about: "Коротко" },
     contact: "Связаться",
-    hint: "Наведите или нажмите, чтобы узнать больше",
     // Shown until a teacher's own experience, achievements and bio are filled in src/data/teachers.ts.
     placeholder: {
       exp: "Lorem ipsum",
@@ -244,6 +246,8 @@ const ru: Dict = {
     title: "Выберите филиал рядом с домом",
     text: "10 филиалов: 7 в Ташкенте и по одному в Самарканде, Термезе и Навои. Нажмите на адрес, чтобы открыть карту.",
     filter: "Город",
+    listTitle: "Все адреса",
+    showAll: (n: number) => `Показать все (${n})`,
     all: "Все",
     landmark: "Ориентир",
     cities: { tashkent: "Ташкент", samarkand: "Самарканд", termez: "Термез", navoi: "Навои" },
@@ -283,9 +287,6 @@ const ru: Dict = {
     },
   },
   location: {
-    kicker: "Локация",
-    title: "Какой филиал ближе к вам?",
-    text: "Найдём ближайший к вам филиал и проложим к нему маршрут.",
     promptTitle: "Найти ближайший филиал?",
     promptText:
       "Для этого нужна ваша геолокация: она используется только чтобы посчитать расстояние до филиалов, остаётся на этом устройстве и никуда не отправляется.",
@@ -305,6 +306,8 @@ const ru: Dict = {
     swipe: "Листайте, чтобы увидеть другие филиалы",
     you: "Вы здесь",
     map: "Карта филиалов",
+    unlockMap: "Нажмите, чтобы двигать карту",
+    lockMap: "Готово",
   },
   lead: {
     kicker: "Приём открыт круглый год",

@@ -1,10 +1,10 @@
-import { Suspense, lazy, useEffect, useState } from "react"
+import { lazy, useEffect, useState } from "react"
 import { AnimatePresence, motion, type PanInfo } from "framer-motion"
 import { Clock, LocateFixed, MapPin, Navigation, Phone } from "lucide-react"
 
 import { CarouselControls } from "@/components/carousel-controls"
+import { LazySection } from "@/components/lazy-section"
 import { EASE, Reveal } from "@/components/motion/reveal"
-import { SectionHeading } from "@/components/sections/section-heading"
 import { Button } from "@/components/ui/button"
 import { CENTERS, CITY_CENTERS } from "@/data/centers"
 import type { City } from "@/data/site"
@@ -184,7 +184,11 @@ function CenterCard({ c, rank, geo }: { c: Sorted[number]; rank: number; geo: Re
   )
 }
 
-export default function Location() {
+/**
+ * The "nearest branch" finder at the top of the branches section: asks for the visitor's location (or a city),
+ * sorts the centres by distance and shows them on a map with swipeable cards.
+ */
+export function BranchFinder() {
   const { t } = useI18n()
   const geo = useGeolocation()
   const [index, setIndex] = useState(0)
@@ -211,82 +215,79 @@ export default function Location() {
   }
 
   return (
-    <section id="lokatsiya" className="mx-auto max-w-6xl px-4 py-24 md:px-6 md:py-32">
-      <SectionHeading kicker={t.location.kicker} title={t.location.title} text={t.location.text} />
+    <Reveal className="grid gap-5 lg:grid-cols-[1.25fr_1fr] lg:gap-6">
+      <div className="relative isolate h-80 overflow-hidden rounded-[2rem] border bg-secondary shadow-[0_30px_60px_-40px_rgb(15_95_88/0.5)] md:h-[28rem] lg:h-[34rem]">
+        {/* Leaflet (≈150 kB) is fetched only when the map is about to scroll into view. */}
+        <LazySection minHeight="100%">
+          <LocationMap
+            pins={CENTERS.map((c) => ({ ...c, name: t.branches.items[c.id].name }))}
+            origin={geo.origin}
+            selected={current?.id ?? null}
+            onSelect={(id) => {
+              const i = sorted.findIndex((c) => c.id === id)
+              if (i >= 0) {
+                setDir(i > index ? 1 : -1)
+                setIndex(i)
+              }
+            }}
+            labels={t.location}
+          />
+        </LazySection>
+      </div>
 
-      <Reveal className="mt-10 grid gap-5 lg:grid-cols-[1.25fr_1fr] lg:gap-6">
-        <div className="relative isolate h-80 overflow-hidden rounded-[2rem] border bg-secondary shadow-[0_30px_60px_-40px_rgb(15_95_88/0.5)] md:h-[28rem] lg:h-[34rem]">
-          <Suspense fallback={<div className="h-full w-full animate-pulse bg-secondary" />}>
-            <LocationMap
-              pins={CENTERS.map((c) => ({ ...c, name: t.branches.items[c.id].name }))}
-              origin={geo.origin}
-              selected={current?.id ?? null}
-              onSelect={(id) => {
-                const i = sorted.findIndex((c) => c.id === id)
-                if (i >= 0) {
-                  setDir(i > index ? 1 : -1)
-                  setIndex(i)
-                }
-              }}
-              you={t.location.you}
-            />
-          </Suspense>
-        </div>
-
-        <div className="flex min-h-[26rem] flex-col">
-          <AnimatePresence mode="wait" initial={false}>
-            {!current ? (
-              <Prompt key="prompt" geo={geo} />
-            ) : (
-              <motion.div
-                key="cards"
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, ease: EASE }}
-                className="flex flex-1 flex-col"
-              >
-                <div className="relative flex-1" aria-live="polite">
-                  {/* Two cards peeking from behind hint that there are more to swipe through. */}
-                  <div className="absolute inset-x-6 top-6 -bottom-3 rounded-[2rem] border bg-card/60" />
-                  <div className="absolute inset-x-3 top-3 -bottom-1.5 rounded-[2rem] border bg-card/80" />
-                  <AnimatePresence mode="popLayout" initial={false} custom={dir}>
-                    <motion.div
-                      key={current.id}
-                      custom={dir}
-                      variants={{
-                        enter: (d: number) => ({ opacity: 0, x: d * 120, rotate: d * 4, scale: 0.96 }),
-                        center: { opacity: 1, x: 0, rotate: 0, scale: 1 },
-                        exit: (d: number) => ({ opacity: 0, x: d * -120, rotate: d * -4, scale: 0.96 }),
-                      }}
-                      initial="enter"
-                      animate="center"
-                      exit="exit"
-                      transition={SPRING}
-                      drag="x"
-                      dragConstraints={{ left: 0, right: 0 }}
-                      dragElastic={0.55}
-                      onDragEnd={onDragEnd}
-                      style={{ touchAction: "pan-y" }}
-                      className="relative h-full cursor-grab active:cursor-grabbing"
-                    >
-                      <CenterCard c={current} rank={index} geo={geo} />
-                    </motion.div>
-                  </AnimatePresence>
-                </div>
-                <p className="mt-6 text-center text-sm text-muted-foreground">
-                  {t.location.swipe} · {index + 1} / {sorted.length}
-                </p>
-                <div className="mt-3 flex items-center justify-center gap-3">
-                  <CarouselControls count={sorted.length} current={index} onPrev={() => go(-1)} onNext={() => go(1)} />
-                  <Button variant="ghost" size="sm" onClick={geo.choose}>
-                    {t.location.pickCity}
-                  </Button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </Reveal>
-    </section>
+      <div className="flex min-h-[26rem] flex-col">
+        <AnimatePresence mode="wait" initial={false}>
+          {!current ? (
+            <Prompt key="prompt" geo={geo} />
+          ) : (
+            <motion.div
+              key="cards"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: EASE }}
+              className="flex flex-1 flex-col"
+            >
+              <div className="relative flex-1" aria-live="polite">
+                {/* Two cards peeking from behind hint that there are more to swipe through. */}
+                <div className="absolute inset-x-6 top-6 -bottom-3 rounded-[2rem] border bg-card/60" />
+                <div className="absolute inset-x-3 top-3 -bottom-1.5 rounded-[2rem] border bg-card/80" />
+                <AnimatePresence mode="popLayout" initial={false} custom={dir}>
+                  <motion.div
+                    key={current.id}
+                    custom={dir}
+                    variants={{
+                      enter: (d: number) => ({ opacity: 0, x: d * 120, rotate: d * 4, scale: 0.96 }),
+                      center: { opacity: 1, x: 0, rotate: 0, scale: 1 },
+                      exit: (d: number) => ({ opacity: 0, x: d * -120, rotate: d * -4, scale: 0.96 }),
+                    }}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={SPRING}
+                    drag="x"
+                    dragConstraints={{ left: 0, right: 0 }}
+                    dragElastic={0.55}
+                    onDragEnd={onDragEnd}
+                    style={{ touchAction: "pan-y" }}
+                    className="relative h-full cursor-grab active:cursor-grabbing"
+                  >
+                    <CenterCard c={current} rank={index} geo={geo} />
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+              <p className="mt-6 text-center text-sm text-muted-foreground">
+                {t.location.swipe} · {index + 1} / {sorted.length}
+              </p>
+              <div className="mt-3 flex items-center justify-center gap-3">
+                <CarouselControls count={sorted.length} current={index} onPrev={() => go(-1)} onNext={() => go(1)} />
+                <Button variant="ghost" size="sm" onClick={geo.choose}>
+                  {t.location.pickCity}
+                </Button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </Reveal>
   )
 }

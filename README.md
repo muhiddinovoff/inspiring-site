@@ -22,6 +22,7 @@
 
 - **Uch tilda** — o‘zbek, rus, ingliz, har biri o‘z manzilida: [`/`](https://muhiddinovoff.github.io/inspiring-site/), [`/ru/`](https://muhiddinovoff.github.io/inspiring-site/ru/), [`/en/`](https://muhiddinovoff.github.io/inspiring-site/en/). Til tepadagi UZ / RU / EN tugmasi bilan almashadi va eslab qolinadi; har bir til sahifasining sarlavhasi, tavsifi va Telegram preview'i o‘sha tilda.
 - **Silliq animatsiyalar** — Lenis inersion skroll, bosh ekrandagi 3D “ekran” (scroll animatsiya), sanab ko‘tariladigan raqamlar, skroll bilan to‘ladigan yo‘l xaritasi, parallax.
+- **Matnlarni to‘ldirish** — ustozlar, ota-onalar fikrlari, filial koordinatalari qayerda turishi: [qo‘llanma](docs/content.md).
 - **Ariza formasi** — ikki maydon, `+998` telefon maskasi, sinf tanlash; Google Sheets / Telegram'ga ulanadi ([qo‘llanma](docs/lead-endpoint.md)).
 - **3 xil ko‘rinish** — Yorug‘, Tun va Aralash (qurilma sozlamasiga qarab o‘zi almashadi). Tugma tepada, tanlov eslab qolinadi, almashganda sahifa silliq o‘tadi.
 - **Qulaylik** — bosiladigan telefon va xarita havolalari, shahar bo‘yicha filial filtri, mobil pastki panel.

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { motion } from "framer-motion"
-import { ArrowRight } from "lucide-react"
+import { ArrowRight, Plus } from "lucide-react"
 
 import { CarouselControls } from "@/components/carousel-controls"
 import { Reveal } from "@/components/motion/reveal"
@@ -61,8 +61,13 @@ function TeacherCard({ teacher, offset, expanded, dimmed, sizes, onOpen, onFocus
   const wrapped = Math.abs(offset - last.current) > 1
   last.current = offset
 
+  // Hover intent: a pointer just passing over the card on its way down the page doesn't throw it open.
+  const intent = useRef<ReturnType<typeof setTimeout>>(undefined)
+  useEffect(() => () => clearTimeout(intent.current), [])
+
   const detailsW = sizes.open - sizes.openPhoto
-  const blur = active ? 0 : dimmed ? 6 : side === 1 ? 2 : 5
+  // Neighbours stay sharp so faces read; only the open card's neighbours and the outer pair go soft.
+  const blur = active ? 0 : dimmed ? 6 : side === 1 ? 0 : 3
 
   return (
     <motion.li
@@ -70,7 +75,7 @@ function TeacherCard({ teacher, offset, expanded, dimmed, sizes, onOpen, onFocus
       animate={{
         x: offset * sizes.step,
         scale: active ? 1 : dimmed ? 0.78 : side === 1 ? 0.88 : 0.76,
-        opacity: active ? 1 : far ? 0 : dimmed ? 0.4 : side === 1 ? 0.75 : 0.35,
+        opacity: active ? 1 : far ? 0 : dimmed ? 0.4 : side === 1 ? 0.9 : 0.45,
         filter: `blur(${blur}px)`,
       }}
       transition={wrapped ? { x: { duration: 0 }, scale: { duration: 0 }, default: SPRING } : SPRING}
@@ -82,8 +87,15 @@ function TeacherCard({ teacher, offset, expanded, dimmed, sizes, onOpen, onFocus
         initial={false}
         animate={{ width: expanded ? sizes.open : sizes.w }}
         transition={SPRING}
-        onPointerEnter={(e) => active && e.pointerType === "mouse" && onOpen(true)}
-        onPointerLeave={(e) => e.pointerType === "mouse" && onOpen(false)}
+        onPointerEnter={(e) => {
+          if (!active || e.pointerType !== "mouse") return
+          intent.current = setTimeout(() => onOpen(true), 220)
+        }}
+        onPointerLeave={(e) => {
+          if (e.pointerType !== "mouse") return
+          clearTimeout(intent.current)
+          onOpen(false)
+        }}
         onClick={() => (active ? onOpen(!expanded) : onFocus())}
         onKeyDown={(e) => {
           if (e.key !== "Enter" && e.key !== " ") return
@@ -121,6 +133,16 @@ function TeacherCard({ teacher, offset, expanded, dimmed, sizes, onOpen, onFocus
                 expanded && "scale-[1.04]",
               )}
             />
+            {/* Says "there's more here" on the centred card, in place of an instruction line. */}
+            <span
+              aria-hidden
+              className={cn(
+                "absolute top-3 right-3 grid size-9 place-items-center rounded-full bg-white/90 text-[#0d2421] shadow-md backdrop-blur transition-[opacity,transform] duration-500 ease-[cubic-bezier(.22,1,.36,1)]",
+                active && !expanded ? "scale-100 opacity-100" : "scale-75 opacity-0",
+              )}
+            >
+              <Plus className="size-4" />
+            </span>
           </div>
           <div className="flex flex-1 flex-col justify-center px-4">
             <h3 className="truncate font-display text-base font-bold md:text-lg">{name}</h3>
@@ -195,7 +217,10 @@ export function Teachers() {
   const sizes = useSizes()
   // Which card is open. Auto-rotation waits while one is, and moving on (swipe, arrows, dots) closes it.
   const [open, setOpen] = useState<number | null>(null)
-  const { active, go, goTo, bind } = useCarousel<HTMLDivElement>({ count: TEACHERS.length, paused: open !== null })
+  const { active, go, goTo, bind, playing, togglePlay } = useCarousel<HTMLDivElement>({
+    count: TEACHERS.length,
+    paused: open !== null,
+  })
   if (open !== null && open !== active) setOpen(null)
   const expanded = open === active
 
@@ -232,14 +257,15 @@ export function Teachers() {
             })}
           </ul>
         </motion.div>
-        <p className="mt-6 text-center text-sm text-muted-foreground">{tr.teachers.hint}</p>
         <CarouselControls
-          className="mt-4"
+          className="mt-8"
           count={TEACHERS.length}
           current={active}
           onPrev={() => go(-1)}
           onNext={() => go(1)}
           onDot={goTo}
+          playing={playing}
+          onTogglePlay={togglePlay}
           prevLabel={tr.teachers.prev}
           nextLabel={tr.teachers.next}
         />

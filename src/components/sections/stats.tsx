@@ -31,9 +31,9 @@ function StatCard({ i, offset }: { i: number; offset: number }) {
       aria-hidden={!active}
       initial={false}
       animate={{
-        x: `${offset * 78}%`,
+        x: `${offset * 76}%`,
         scale: active ? 1 : far ? 0.7 : 0.84,
-        opacity: active ? 1 : far ? 0 : 0.45,
+        opacity: active ? 1 : far ? 0 : 0.55,
         filter: active ? "blur(0px)" : far ? "blur(8px)" : "blur(4px)",
       }}
       transition={wrapped ? { x: { duration: 0 }, scale: { duration: 0 }, default: SPRING } : SPRING}
@@ -58,7 +58,7 @@ function StatCard({ i, offset }: { i: number; offset: number }) {
         <div>
           <p
             className={cn(
-              "font-display text-6xl leading-none font-extrabold md:text-7xl",
+              "font-display text-6xl leading-none font-extrabold md:text-8xl",
               i === 0 ? "text-[#7ee9b8]" : "text-brand-ink",
             )}
           >
@@ -83,23 +83,24 @@ function StatCard({ i, offset }: { i: number; offset: number }) {
 
 export function Stats() {
   const { t } = useI18n()
-  const { active, go, goTo, bind } = useCarousel<HTMLDivElement>({ count: SLOTS.length })
+  const { active, go, goTo, bind, playing, togglePlay } = useCarousel<HTMLDivElement>({ count: SLOTS.length })
   const current = SLOTS[active]
 
   return (
-    <section aria-label={t.stats.aria} className="overflow-x-clip py-16 md:py-24">
+    <section aria-label={t.stats.aria} className="overflow-x-clip pt-12 pb-4 md:pt-20 md:pb-8">
       <Reveal>
         <motion.div
           {...bind}
           role="region"
           aria-roledescription={t.common.carousel}
           aria-label={t.stats.aria}
-          className="relative mx-auto h-[19rem] w-[min(78vw,26rem)] cursor-grab rounded-[2rem] outline-none select-none focus-visible:ring-[3px] focus-visible:ring-ring/60 active:cursor-grabbing md:h-[22rem]"
+          className="relative mx-auto h-[19rem] w-[min(76vw,32rem)] cursor-grab rounded-[2rem] outline-none select-none focus-visible:ring-[3px] focus-visible:ring-ring/60 active:cursor-grabbing md:h-[25rem]"
         >
           {SLOTS.map((stat, slot) => (
             <StatCard key={slot} i={stat} offset={ringOffset(slot, active, SLOTS.length)} />
           ))}
-          <p aria-live="polite" className="sr-only">
+          {/* Announced only once the visitor has paused it; a rotating carousel announcing every slide is just noise. */}
+          <p aria-live={playing ? "off" : "polite"} className="sr-only">
             {t.stats.items[current].label}
           </p>
         </motion.div>
@@ -112,6 +113,8 @@ export function Stats() {
         onPrev={() => go(-1)}
         onNext={() => go(1)}
         onDot={(i) => goTo(active - (active % STATS.length) + i)}
+        playing={playing}
+        onTogglePlay={togglePlay}
       />
     </section>
   )

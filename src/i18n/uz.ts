@@ -18,6 +18,8 @@ const uz = {
     prev: "Oldingi",
     next: "Keyingi",
     carousel: "karusel",
+    pause: "To‘xtatish",
+    play: "Davom ettirish",
     slide: (i: number, n: number) => `${n} tadan ${i}-si`,
   },
   theme: {
@@ -29,6 +31,7 @@ const uz = {
   nav: {
     items: {
       natijalar: "Natijalar",
+      nega: "Nega biz",
       ustozlar: "Ustozlar",
       dasturlar: "Dasturlar",
       yol: "Qanday ishlaymiz",
@@ -161,7 +164,6 @@ const uz = {
     fallbackSubject: "Imtihonga tayyorlov",
     labels: { subject: "Fan", exp: "Tajriba", wins: "Yutuqlar", about: "Qisqacha" },
     contact: "Bog‘lanish",
-    hint: "Batafsil ko‘rish uchun ustiga olib boring yoki bosing",
     // Shown until a teacher's own experience, achievements and bio are filled in src/data/teachers.ts.
     placeholder: {
       exp: "Lorem ipsum",
@@ -248,6 +250,8 @@ const uz = {
     title: "Uyingizga yaqin filialni tanlang",
     text: "10 ta filial: Toshkentda 7 ta, Samarqand, Termiz va Navoiyda bittadan. Manzilni bossangiz, xarita ochiladi.",
     filter: "Shahar",
+    listTitle: "Barcha manzillar",
+    showAll: (n: number) => `Hammasini ko‘rsatish (${n})`,
     all: "Hammasi",
     landmark: "Mo‘ljal",
     cities: { tashkent: "Toshkent", samarkand: "Samarqand", termez: "Termiz", navoi: "Navoiy" },
@@ -287,9 +291,6 @@ const uz = {
     },
   },
   location: {
-    kicker: "Lokatsiya",
-    title: "Sizga eng yaqin filial qaysi?",
-    text: "Joylashuvingizga qarab eng yaqin filialni topamiz va unga yo‘l ko‘rsatamiz.",
     promptTitle: "Eng yaqin filialni topaylikmi?",
     promptText:
       "Buning uchun joylashuvingiz kerak: u faqat filiallargacha masofani hisoblashga ishlatiladi, shu qurilmada qoladi va hech qayerga yuborilmaydi.",
@@ -309,6 +310,8 @@ const uz = {
     swipe: "Boshqa filiallarni ko‘rish uchun suring",
     you: "Siz shu yerdasiz",
     map: "Filiallar xaritasi",
+    unlockMap: "Xaritani surish uchun bosing",
+    lockMap: "Tayyor",
   },
   lead: {
     kicker: "Qabul doimo ochiq",

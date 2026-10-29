@@ -112,9 +112,7 @@ export function Hero() {
   // The headline is in from the start; scrolling only lets it sink back a touch while the children come forward.
   const headScale = useTransform(p, [0, 1], [1, 0.95])
   const headY = useTransform(p, [0, 1], ["0%", "6%"])
-  const headOpacity = useTransform(p, [0.55, 1], [1, 0.75])
-  // The lead has done its job once the children start coming forward; fade it before it reaches their faces.
-  const leadOpacity = useTransform(p, [0.05, 0.35], [1, 0])
+  const leadOpacity = useTransform(p, [0, 0.3], [1, 0])
 
   return (
     <section
@@ -129,7 +127,7 @@ export function Hero() {
           className="pointer-events-none absolute inset-x-0 bottom-0 h-[80%] bg-[radial-gradient(55%_60%_at_50%_100%,color-mix(in_srgb,var(--color-brand-green)_26%,transparent),transparent_75%)]"
         />
 
-        <div className="relative z-30 flex justify-center px-4 pt-[calc(5.25rem+env(safe-area-inset-top))] md:pt-28">
+        <div className="relative z-30 flex flex-col items-center px-4 pt-[calc(5.25rem+env(safe-area-inset-top))] md:pt-28">
           <motion.p
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -142,12 +140,22 @@ export function Hero() {
             </span>
             {t.hero.badge}
           </motion.p>
+          {/* The lead sits up here, under the badge, so nothing covers the children. Short screens skip it. */}
+          <motion.p
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.9, ease: EASE, delay: 0.9 }}
+            style={{ opacity: leadOpacity }}
+            className="mt-3 max-w-xl text-center text-sm leading-snug text-muted-foreground md:mt-4 md:text-base [@media(max-height:700px)]:hidden"
+          >
+            {t.hero.lead(RESULTS_TOTAL)}
+          </motion.p>
         </div>
 
         {/* Headline: sits behind the children, its bottom line tucked behind their heads */}
         <motion.h1
           id="hero-title"
-          style={{ scale: headScale, y: headY, opacity: headOpacity, bottom: "calc(var(--kh) * var(--hb))" }}
+          style={{ scale: headScale, y: headY, bottom: "calc(var(--kh) * var(--hb))" }}
           className="absolute inset-x-0 z-0 mx-auto max-w-[17ch] origin-bottom px-4 text-center text-[clamp(2.6rem,min(11vw,9.5svh),7.25rem)] leading-[0.98] font-extrabold tracking-[-0.035em] sm:max-w-[20ch]"
         >
           {words.map(({ w, accent }, i) => (
@@ -168,32 +176,26 @@ export function Hero() {
             <Kid key={i} i={i} progress={p} still={still} />
           ))}
           {/* Soft side edges. Painted over the children instead of a mask-image, which re-rasterised every frame. */}
-          <div className="absolute inset-y-0 -left-[2%] z-[11] w-[11%] bg-gradient-to-r from-background from-20% to-transparent" />
-          <div className="absolute inset-y-0 -right-[2%] z-[11] w-[11%] bg-gradient-to-l from-background from-20% to-transparent" />
+          <div className="absolute inset-y-0 -left-[2%] z-[11] w-[11%] bg-gradient-to-r from-background from-20% to-transparent [mask-image:linear-gradient(to_bottom,transparent_25%,black_45%)]" />
+          <div className="absolute inset-y-0 -right-[2%] z-[11] w-[11%] bg-gradient-to-l from-background from-20% to-transparent [mask-image:linear-gradient(to_bottom,transparent_25%,black_45%)]" />
         </div>
 
-        {/* Bottom: the lead line and actions over a soft fade, so they read on top of the blazers.
-            Phones get their actions from the fixed bottom bar (MobileCta) instead. */}
+        {/* Bottom: only a short fade to hide where the photo is cut, so the children stay vivid; the actions sit
+            on it. Phones get their actions from the fixed bottom bar (MobileCta) instead. */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.9, ease: EASE, delay: 1 }}
-          className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-background via-background/85 to-transparent px-5 pt-20 pb-[calc(5.5rem+env(safe-area-inset-bottom))] text-center md:pt-28 md:pb-8"
+          className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex h-28 items-end justify-center bg-gradient-to-t from-background from-15% to-transparent px-5 pb-[env(safe-area-inset-bottom)] md:h-36 md:pb-8"
         >
-          <motion.p
-            style={{ opacity: leadOpacity }}
-            className="mx-auto max-w-xl text-[0.95rem] leading-snug font-medium text-foreground/80 md:text-lg"
-          >
-            {t.hero.lead(RESULTS_TOTAL)}
-          </motion.p>
-          <div className="mt-5 hidden justify-center gap-3 md:flex">
+          <div className="pointer-events-auto hidden justify-center gap-3 md:flex">
             <Button asChild variant="accent" size="lg" className="group">
               <a href="#ariza">
                 {t.hero.cta}
                 <ArrowRight className="transition-transform duration-300 group-hover:translate-x-1" />
               </a>
             </Button>
-            <Button asChild variant="outline" size="lg" className="bg-card/80 backdrop-blur">
+            <Button asChild variant="outline" size="lg" className="bg-card/90">
               <a href={CONTACT.phoneHref}>
                 <Phone /> {CONTACT.phone}
               </a>

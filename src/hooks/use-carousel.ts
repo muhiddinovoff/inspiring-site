@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useInView, useReducedMotion, type PanInfo } from "framer-motion"
 
+import { mouseMoved } from "@/lib/pointer"
+
 const TOUCH_RESUME = 2500
 
 type Options = { count: number; interval?: number; paused?: boolean }
@@ -27,6 +29,7 @@ export function useCarousel<T extends HTMLElement>({ count, interval = 3500, pau
   const [stopped, setStopped] = useState(false)
   const resume = useRef<ReturnType<typeof setTimeout>>(undefined)
   const dragged = useRef(false)
+  const mouse = useRef<{ x: number; y: number } | null>(null)
 
   const go = useCallback((step: number) => setActive((a) => (((a + step) % count) + count) % count), [count])
   const goTo = useCallback((i: number) => setActive(i), [])
@@ -50,8 +53,15 @@ export function useCarousel<T extends HTMLElement>({ count, interval = 3500, pau
   const bind = {
     ref,
     tabIndex: 0,
-    onPointerEnter: (e: React.PointerEvent) => e.pointerType === "mouse" && setHover(true),
-    onPointerLeave: (e: React.PointerEvent) => e.pointerType === "mouse" && setHover(false),
+    // Paused only while the mouse is really being moved over it: when the page scrolls the carousel under a
+    // resting cursor, the browser reports a hover too, and the carousel would never move for that visitor.
+    onPointerEnter: (e: React.PointerEvent) => void mouseMoved(e, mouse),
+    onPointerMove: (e: React.PointerEvent) => mouseMoved(e, mouse) && setHover(true),
+    onPointerLeave: (e: React.PointerEvent) => {
+      if (e.pointerType !== "mouse") return
+      mouse.current = null
+      setHover(false)
+    },
     onPointerDown: (e: React.PointerEvent) => {
       if (e.pointerType === "mouse") return
       clearTimeout(resume.current)
@@ -83,5 +93,5 @@ export function useCarousel<T extends HTMLElement>({ count, interval = 3500, pau
     style: { touchAction: "pan-y" } as const,
   }
 
-  return { active, go, goTo, bind, playing: !stopped, togglePlay: () => setStopped((v) => !v) }
+  return { active, go, goTo, bind, inView, playing: !stopped, togglePlay: () => setStopped((v) => !v) }
 }

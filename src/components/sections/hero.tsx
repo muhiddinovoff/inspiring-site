@@ -114,7 +114,9 @@ export function Hero() {
   // The headline is in from the start; scrolling only lets it sink back a touch while the children come forward.
   const headScale = useTransform(p, [0, 1], [1, 0.95])
   const headY = useTransform(p, [0, 1], ["0%", "6%"])
-  const headOpacity = useTransform(p, [0.55, 1], [1, 0.55])
+  const headOpacity = useTransform(p, [0.55, 1], [1, 0.75])
+  // The lead has done its job once the children start coming forward; fade it before it reaches their faces.
+  const leadOpacity = useTransform(p, [0.05, 0.35], [1, 0])
 
   return (
     <section
@@ -177,9 +179,12 @@ export function Hero() {
           transition={{ duration: 0.9, ease: EASE, delay: 1 }}
           className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-background via-background/85 to-transparent px-5 pt-20 pb-[calc(5.5rem+env(safe-area-inset-bottom))] text-center md:pt-28 md:pb-8"
         >
-          <p className="mx-auto max-w-xl text-[0.95rem] leading-snug font-medium text-foreground/80 md:text-lg">
+          <motion.p
+            style={{ opacity: leadOpacity }}
+            className="mx-auto max-w-xl text-[0.95rem] leading-snug font-medium text-foreground/80 md:text-lg"
+          >
             {t.hero.lead(RESULTS_TOTAL)}
-          </p>
+          </motion.p>
           <div className="mt-5 hidden justify-center gap-3 md:flex">
             <Button asChild variant="accent" size="lg" className="group">
               <a href="#ariza">

@@ -1,4 +1,7 @@
+import { lazy } from "react"
 import { MotionConfig } from "framer-motion"
+
+import { LazySection } from "@/components/lazy-section"
 
 import { Branches } from "@/components/sections/branches"
 import { Faq } from "@/components/sections/faq"
@@ -18,6 +21,9 @@ import { useSmoothScroll } from "@/hooks/use-smooth-scroll"
 import { ThemeProvider } from "@/hooks/use-theme"
 import { I18nProvider } from "@/i18n"
 
+// Below the fold and heavy (map library): fetched only when the visitor scrolls near it.
+const Location = lazy(() => import("@/components/sections/location"))
+
 export default function App() {
   useSmoothScroll()
   return (
@@ -36,6 +42,9 @@ export default function App() {
             <Steps />
             <Faq />
             <Branches />
+            <LazySection minHeight="56rem" id="lokatsiya">
+              <Location />
+            </LazySection>
             <LeadForm />
           </main>
           <Footer />

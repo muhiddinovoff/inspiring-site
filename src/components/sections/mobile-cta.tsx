@@ -13,7 +13,12 @@ export function MobileCta() {
   const [formVisible, setFormVisible] = useState(false)
 
   useEffect(() => {
-    const onScroll = () => setPastHero(window.scrollY > window.innerHeight * 0.8)
+    // The hero is pinned for a few screens, so wait until its bottom edge has actually gone by.
+    const hero = document.getElementById("top")
+    const onScroll = () =>
+      setPastHero(
+        hero ? hero.getBoundingClientRect().bottom < window.innerHeight * 0.4 : window.scrollY > window.innerHeight,
+      )
     onScroll()
     window.addEventListener("scroll", onScroll, { passive: true })
     const form = document.getElementById("ariza")

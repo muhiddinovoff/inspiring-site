@@ -48,8 +48,3 @@ export const SCHOOL_MAP = "Toshkent, Chilonzor tumani, 1-Katta Chilonzor MFY, 6-
 export function mapLink(address: string) {
   return `https://yandex.uz/maps/?text=${encodeURIComponent(`Inspiring Education, ${address}`)}`
 }
-
-/** Unsplash stock photo for the "Why us" section. */
-export const PHOTOS = {
-  studying: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1200&q=80",
-}

@@ -20,8 +20,14 @@ export default defineConfig({
         // Split rarely-changing libraries out so a content edit doesn't bust their cache.
         codeSplitting: {
           groups: [
-            { name: "react", test: /node_modules[\\/](react|react-dom|scheduler)[\\/]/ },
-            { name: "motion", test: /node_modules[\\/](framer-motion|motion-dom|motion-utils|lenis)[\\/]/ },
+            { name: "react", test: /node_modules[\\/](react|react-dom|scheduler)[\\/]/, priority: 3 },
+            {
+              name: "motion",
+              test: /node_modules[\\/](framer-motion|motion-dom|motion-utils|lenis)[\\/]/,
+              priority: 3,
+            },
+            // Only the location section's map needs Leaflet; keep it out of the shared vendor chunk.
+            { name: "leaflet", test: /node_modules[\\/]leaflet[\\/]/, priority: 2 },
             { name: "vendor", test: /node_modules[\\/]/ },
           ],
         },

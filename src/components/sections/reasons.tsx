@@ -236,7 +236,7 @@ export function Reasons() {
 
         <ul
           aria-label={t.reasons.chat.aria}
-          className="relative min-h-0 flex-1 columns-2 gap-3 px-3 pt-2 [column-fill:auto] md:absolute md:inset-0 md:columns-3 md:gap-5 md:px-6 md:pt-24 lg:columns-4 xl:columns-5"
+          className="relative min-h-0 flex-1 columns-2 gap-3 overflow-hidden px-3 pt-2 [column-fill:auto] md:absolute md:inset-0 md:columns-3 md:gap-5 md:px-6 md:pt-24 lg:columns-4 xl:columns-5"
         >
           {wall.map((item) => {
             const at = atOf(item)

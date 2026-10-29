@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 
 import { useI18n } from "@/i18n"
 import { cn } from "@/lib/utils"
@@ -10,9 +10,6 @@ type Props = {
   onNext: () => void
   /** Without it, the dots are left out. */
   onDot?: (i: number) => void
-  /** With both, a pause / play button for the auto-rotation goes after the arrows. */
-  playing?: boolean
-  onTogglePlay?: () => void
   prevLabel?: string
   nextLabel?: string
   className?: string
@@ -23,7 +20,7 @@ const arrow =
 
 /** Previous / next arrows with optional position dots between them. */
 export function CarouselControls(props: Props) {
-  const { count, current, onPrev, onNext, onDot, playing, onTogglePlay, prevLabel, nextLabel, className } = props
+  const { count, current, onPrev, onNext, onDot, prevLabel, nextLabel, className } = props
   const { t } = useI18n()
   return (
     <div className={cn("flex items-center justify-center gap-4", className)}>
@@ -54,17 +51,6 @@ export function CarouselControls(props: Props) {
       <button type="button" onClick={onNext} aria-label={nextLabel ?? t.common.next} className={arrow}>
         <ChevronRight className="size-5" />
       </button>
-      {onTogglePlay && (
-        <button
-          type="button"
-          onClick={onTogglePlay}
-          aria-label={playing ? t.common.pause : t.common.play}
-          aria-pressed={!playing}
-          className={cn(arrow, "size-9 text-muted-foreground")}
-        >
-          {playing ? <Pause className="size-4" /> : <Play className="size-4" />}
-        </button>
-      )}
     </div>
   )
 }

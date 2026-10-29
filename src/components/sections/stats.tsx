@@ -1,43 +1,37 @@
-import { useRef } from "react"
-import { motion } from "framer-motion"
+import { motion, useTransform, type MotionValue } from "framer-motion"
 import { GraduationCap, HeartHandshake, MapPin, Send, type LucideIcon } from "lucide-react"
 
 import { CarouselControls } from "@/components/carousel-controls"
 import { CountUp } from "@/components/motion/count-up"
 import { Reveal } from "@/components/motion/reveal"
 import { STATS } from "@/data/site"
-import { ringOffset, useCarousel } from "@/hooks/use-carousel"
+import { ringOffset, useScrollCarousel } from "@/hooks/use-carousel"
 import { useI18n } from "@/i18n"
 import { cn } from "@/lib/utils"
 
 const ICONS: LucideIcon[] = [GraduationCap, HeartHandshake, MapPin, Send]
 /** Four stats are too few for a seamless ring (a card would visibly fly across), so the ring holds them twice. */
 const SLOTS = [...STATS.keys(), ...STATS.keys()]
-const SPRING = { type: "spring", stiffness: 260, damping: 32, mass: 0.9 } as const
 
-function StatCard({ i, offset }: { i: number; offset: number }) {
+type CardProps = { slot: number; i: number; pos: MotionValue<number>; active: boolean }
+
+/** Where a card sits follows the scroll continuously: centred and sharp, smaller, fainter and blurred to the sides. */
+function StatCard({ slot, i, pos, active }: CardProps) {
   const { t } = useI18n()
   const s = STATS[i]
   const Icon = ICONS[i]
-  const active = offset === 0
-  const far = Math.abs(offset) > 1
-  // A card that wraps from one end of the ring to the other jumps there while hidden instead of sweeping across.
-  const last = useRef(offset)
-  const wrapped = Math.abs(offset - last.current) > 1
-  last.current = offset
+  const d = useTransform(pos, (p) => ringOffset(slot, p, SLOTS.length))
+  const a = useTransform(d, (v) => Math.min(Math.abs(v), 2))
+  const x = useTransform(d, (v) => `${v * 76}%`)
+  const scale = useTransform(a, [0, 1, 2], [1, 0.84, 0.7])
+  const opacity = useTransform(a, [0, 1, 2], [1, 0.55, 0])
+  const filter = useTransform(a, (v) => (v < 0.02 ? "none" : `blur(${v * 4}px)`))
+  const zIndex = useTransform(a, (v) => 10 - Math.round(v * 2))
 
   return (
     <motion.div
       aria-hidden={!active}
-      initial={false}
-      animate={{
-        x: `${offset * 76}%`,
-        scale: active ? 1 : far ? 0.7 : 0.84,
-        opacity: active ? 1 : far ? 0 : 0.55,
-        filter: active ? "blur(0px)" : far ? "blur(8px)" : "blur(4px)",
-      }}
-      transition={wrapped ? { x: { duration: 0 }, scale: { duration: 0 }, default: SPRING } : SPRING}
-      style={{ zIndex: 10 - Math.abs(offset) }}
+      style={{ x, scale, opacity, filter, zIndex }}
       className="absolute inset-0 will-change-[transform,opacity,filter]"
     >
       <div
@@ -58,7 +52,7 @@ function StatCard({ i, offset }: { i: number; offset: number }) {
         <div>
           <p
             className={cn(
-              "font-display text-6xl leading-none font-extrabold md:text-8xl",
+              "font-display text-[min(12vw,3.75rem)] leading-none font-extrabold whitespace-nowrap md:text-8xl",
               i === 0 ? "text-[#7ee9b8]" : "text-brand-ink",
             )}
           >
@@ -83,39 +77,39 @@ function StatCard({ i, offset }: { i: number; offset: number }) {
 
 export function Stats() {
   const { t } = useI18n()
-  const { active, go, goTo, bind, playing, togglePlay } = useCarousel<HTMLDivElement>({ count: SLOTS.length })
-  const current = SLOTS[active]
+  const { pos, active, go, goTo, section, bind } = useScrollCarousel<HTMLElement>({ count: STATS.length })
 
   return (
-    <section aria-label={t.stats.aria} className="overflow-x-clip pt-12 pb-4 md:pt-20 md:pb-8">
-      <Reveal>
-        <motion.div
-          {...bind}
-          role="region"
-          aria-roledescription={t.common.carousel}
-          aria-label={t.stats.aria}
-          className="relative mx-auto h-[19rem] w-[min(76vw,32rem)] cursor-grab rounded-[2rem] outline-none select-none focus-visible:ring-[3px] focus-visible:ring-ring/60 active:cursor-grabbing md:h-[25rem]"
-        >
-          {SLOTS.map((stat, slot) => (
-            <StatCard key={slot} i={stat} offset={ringOffset(slot, active, SLOTS.length)} />
-          ))}
-          {/* Announced only once the visitor has paused it; a rotating carousel announcing every slide is just noise. */}
-          <p aria-live={playing ? "off" : "polite"} className="sr-only">
-            {t.stats.items[current].label}
-          </p>
-        </motion.div>
-      </Reveal>
+    <section {...section} aria-label={t.stats.aria} className="relative">
+      {/* Pinned while the page scrolls past: each stat takes its turn in the centre. */}
+      <div className="sticky top-0 flex h-svh flex-col items-center justify-center overflow-x-clip pt-16">
+        <p className="mb-8 text-sm font-bold tracking-[0.14em] text-brand-ink uppercase md:mb-10">{t.stats.aria}</p>
+        <Reveal className="w-full">
+          <motion.div
+            {...bind}
+            role="region"
+            aria-roledescription={t.common.carousel}
+            aria-label={t.stats.aria}
+            className="relative mx-auto h-[19rem] w-[min(76vw,32rem)] cursor-grab rounded-[2rem] outline-none select-none focus-visible:ring-[3px] focus-visible:ring-ring/60 active:cursor-grabbing md:h-[25rem]"
+          >
+            {SLOTS.map((stat, slot) => (
+              <StatCard key={slot} slot={slot} i={stat} pos={pos} active={slot === active} />
+            ))}
+            <p aria-live="polite" className="sr-only">
+              {t.stats.items[active].label}
+            </p>
+          </motion.div>
+        </Reveal>
 
-      <CarouselControls
-        className="mt-8"
-        count={STATS.length}
-        current={current}
-        onPrev={() => go(-1)}
-        onNext={() => go(1)}
-        onDot={(i) => goTo(active - (active % STATS.length) + i)}
-        playing={playing}
-        onTogglePlay={togglePlay}
-      />
+        <CarouselControls
+          className="mt-8"
+          count={STATS.length}
+          current={active}
+          onPrev={() => go(-1)}
+          onNext={() => go(1)}
+          onDot={goTo}
+        />
+      </div>
     </section>
   )
 }

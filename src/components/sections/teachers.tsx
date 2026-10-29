@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { motion } from "framer-motion"
+import { motion, useInView, useSpring, useTransform, type MotionValue } from "framer-motion"
 import { ArrowRight, Plus } from "lucide-react"
 
 import { CarouselControls } from "@/components/carousel-controls"
@@ -7,7 +7,7 @@ import { Reveal } from "@/components/motion/reveal"
 import { SectionHeading } from "@/components/sections/section-heading"
 import { Button } from "@/components/ui/button"
 import { TEACHERS, pick, type Teacher } from "@/data/teachers"
-import { ringOffset, useCarousel } from "@/hooks/use-carousel"
+import { ringOffset, useScrollCarousel } from "@/hooks/use-carousel"
 import { useI18n } from "@/i18n"
 import { mouseMoved } from "@/lib/pointer"
 import { cn } from "@/lib/utils"
@@ -39,15 +39,19 @@ function useSizes() {
 
 type CardProps = {
   teacher: Teacher
+  i: number
+  /** Carousel position (follows the scroll) and how far the centre card is open (0–1), shared by all cards. */
+  pos: MotionValue<number>
+  openness: MotionValue<number>
+  /** Whole-card distance from the centre card. */
   offset: number
   expanded: boolean
-  dimmed: boolean
   sizes: ReturnType<typeof useSizes>
   onOpen: (open: boolean) => void
   onFocus: () => void
 }
 
-function TeacherCard({ teacher, offset, expanded, dimmed, sizes, onOpen, onFocus }: CardProps) {
+function TeacherCard({ teacher, i, pos, openness, offset, expanded, sizes, onOpen, onFocus }: CardProps) {
   const { t: tr, lang } = useI18n()
   const name = teacher.name || tr.teachers.fallbackName
   const subject = pick(teacher.subject, lang) || tr.teachers.fallbackSubject
@@ -56,11 +60,6 @@ function TeacherCard({ teacher, offset, expanded, dimmed, sizes, onOpen, onFocus
   const wins = teacher.wins.length ? teacher.wins.map((w) => pick(w, lang)) : tr.teachers.placeholder.wins
   const active = offset === 0
   const far = Math.abs(offset) > 2
-  const side = Math.abs(offset)
-  // A card wrapping round from one end of the ring to the other jumps there instead of sweeping across.
-  const last = useRef(offset)
-  const wrapped = Math.abs(offset - last.current) > 1
-  last.current = offset
 
   // Hover intent: opens only after the mouse has really moved over the card for a moment. A card scrolled
   // under a resting cursor, or a pointer just passing by, leaves it shut.
@@ -69,20 +68,30 @@ function TeacherCard({ teacher, offset, expanded, dimmed, sizes, onOpen, onFocus
   useEffect(() => () => clearTimeout(intent.current), [])
 
   const detailsW = sizes.open - sizes.openPhoto
-  // Neighbours stay sharp so faces read; only the open card's neighbours and the outer pair go soft.
-  const blur = active ? 0 : dimmed ? 6 : side === 1 ? 0 : 3
+
+  // Place follows the scroll continuously. Neighbours stay sharp so faces read; the outer pair goes soft, and
+  // while the centre card is open its neighbours step back: smaller, fainter, blurred.
+  const step = useRef(sizes.step)
+  step.current = sizes.step
+  const d = useTransform(pos, (p) => ringOffset(i, p, TEACHERS.length))
+  const x = useTransform(d, (v) => v * step.current)
+  const look = useTransform([d, openness], ([dv, e]: number[]) => {
+    const a = Math.min(Math.abs(dv), 3)
+    const dim = e * Math.min(a, 1)
+    const scale = (a <= 1 ? 1 - 0.12 * a : a <= 2 ? 0.88 - 0.12 * (a - 1) : 0.76 - 0.06 * (a - 2)) * (1 - 0.1 * dim)
+    const opacity =
+      (a <= 1 ? 1 - 0.1 * a : a <= 2 ? 0.9 - 0.45 * (a - 1) : Math.max(0, 0.45 - 0.75 * (a - 2))) * (1 - 0.55 * dim)
+    const blur = (a <= 1 ? 0 : 3 * Math.min(a - 1, 1)) + 6 * dim
+    return { scale, opacity, blur, z: 20 - Math.round(a * 3) }
+  })
+  const scale = useTransform(look, (l) => l.scale)
+  const opacity = useTransform(look, (l) => l.opacity)
+  const filter = useTransform(look, (l) => (l.blur < 0.05 ? "none" : `blur(${l.blur}px)`))
+  const zIndex = useTransform(look, (l) => l.z)
 
   return (
     <motion.li
-      initial={false}
-      animate={{
-        x: offset * sizes.step,
-        scale: active ? 1 : dimmed ? 0.78 : side === 1 ? 0.88 : 0.76,
-        opacity: active ? 1 : far ? 0 : dimmed ? 0.4 : side === 1 ? 0.9 : 0.45,
-        filter: `blur(${blur}px)`,
-      }}
-      transition={wrapped ? { x: { duration: 0 }, scale: { duration: 0 }, default: SPRING } : SPRING}
-      style={{ zIndex: active ? 20 : 10 - side }}
+      style={{ x, scale, opacity, filter, zIndex }}
       className="absolute top-0 left-1/2 will-change-transform"
       aria-hidden={far || undefined}
     >
@@ -221,62 +230,64 @@ function TeacherCard({ teacher, offset, expanded, dimmed, sizes, onOpen, onFocus
 export function Teachers() {
   const { t: tr } = useI18n()
   const sizes = useSizes()
-  // Which card is open. Auto-rotation waits while one is, and moving on (swipe, arrows, dots) closes it.
+  const { pos, active, go, goTo, section, bind } = useScrollCarousel<HTMLElement>({ count: TEACHERS.length })
+  const inView = useInView(section.ref, { amount: 0.15 })
+  // Which card is open. Scrolling on to the next teacher, or away from the section, closes it.
   const [open, setOpen] = useState<number | null>(null)
-  const { active, go, goTo, bind, inView, playing, togglePlay } = useCarousel<HTMLDivElement>({
-    count: TEACHERS.length,
-    paused: open !== null,
-  })
-  // A card tapped open and then scrolled away from (phones have no "pointer leave") closes, so rotation resumes.
   if (open !== null && (open !== active || !inView)) setOpen(null)
   const expanded = open === active
+  const openness = useSpring(0, SPRING)
+  useEffect(() => openness.set(expanded ? 1 : 0), [expanded, openness])
 
   return (
-    <section id="ustozlar" className="overflow-x-clip py-24 md:py-32">
-      <div className="mx-auto max-w-6xl px-4 md:px-6">
-        <SectionHeading kicker={tr.teachers.kicker} title={tr.teachers.title} text={tr.teachers.text} />
-      </div>
+    <section {...section} id="ustozlar" className="relative">
+      {/* Pinned while the page scrolls past: each teacher takes a turn in the centre. */}
+      <div className="sticky top-0 flex h-svh flex-col justify-center overflow-x-clip pt-16">
+        <div className="mx-auto w-full max-w-6xl px-4 md:px-6">
+          <SectionHeading kicker={tr.teachers.kicker} title={tr.teachers.title} text={tr.teachers.text} />
+        </div>
 
-      <Reveal className="mt-12">
-        <motion.div
-          {...bind}
-          role="region"
-          aria-roledescription={tr.common.carousel}
-          aria-label={tr.teachers.kicker}
-          className="relative mx-auto cursor-grab outline-none select-none focus-visible:ring-[3px] focus-visible:ring-ring/60 active:cursor-grabbing"
-          style={{ ...bind.style, height: sizes.photoH + NAME_H }}
-        >
-          <ul>
-            {TEACHERS.map((teacher, i) => {
-              const offset = ringOffset(i, active, TEACHERS.length)
-              return (
-                <TeacherCard
-                  key={teacher.img}
-                  teacher={teacher}
-                  offset={offset}
-                  expanded={expanded && offset === 0}
-                  dimmed={expanded && offset !== 0}
-                  sizes={sizes}
-                  onOpen={(o) => setOpen(o ? i : null)}
-                  onFocus={() => goTo(i)}
-                />
-              )
-            })}
-          </ul>
-        </motion.div>
-        <CarouselControls
-          className="mt-8"
-          count={TEACHERS.length}
-          current={active}
-          onPrev={() => go(-1)}
-          onNext={() => go(1)}
-          onDot={goTo}
-          playing={playing}
-          onTogglePlay={togglePlay}
-          prevLabel={tr.teachers.prev}
-          nextLabel={tr.teachers.next}
-        />
-      </Reveal>
+        <Reveal className="mt-8 md:mt-10">
+          <motion.div
+            {...bind}
+            role="region"
+            aria-roledescription={tr.common.carousel}
+            aria-label={tr.teachers.kicker}
+            className="relative mx-auto cursor-grab outline-none select-none focus-visible:ring-[3px] focus-visible:ring-ring/60 active:cursor-grabbing"
+            style={{ ...bind.style, height: sizes.photoH + NAME_H }}
+          >
+            <ul>
+              {TEACHERS.map((teacher, i) => {
+                const offset = ringOffset(i, active, TEACHERS.length)
+                return (
+                  <TeacherCard
+                    key={teacher.img}
+                    teacher={teacher}
+                    i={i}
+                    pos={pos}
+                    openness={openness}
+                    offset={offset}
+                    expanded={expanded && offset === 0}
+                    sizes={sizes}
+                    onOpen={(o) => setOpen(o ? i : null)}
+                    onFocus={() => goTo(i)}
+                  />
+                )
+              })}
+            </ul>
+          </motion.div>
+          <CarouselControls
+            className="mt-6 md:mt-8"
+            count={TEACHERS.length}
+            current={active}
+            onPrev={() => go(-1)}
+            onNext={() => go(1)}
+            onDot={goTo}
+            prevLabel={tr.teachers.prev}
+            nextLabel={tr.teachers.next}
+          />
+        </Reveal>
+      </div>
     </section>
   )
 }

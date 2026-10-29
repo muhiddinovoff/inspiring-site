@@ -1,75 +1,63 @@
-import { useCallback, useEffect, useRef, useState } from "react"
-import { useInView, useReducedMotion, type PanInfo } from "framer-motion"
+import { useRef, useState } from "react"
+import { useMotionValueEvent, useScroll, useSpring, useTransform, type PanInfo } from "framer-motion"
 
-import { mouseMoved } from "@/lib/pointer"
+import { scrollToY } from "@/lib/scroll"
 
-const TOUCH_RESUME = 2500
-
-type Options = { count: number; interval?: number; paused?: boolean }
-
-/** Signed shortest distance from `active` to `i` on a ring of `n` slots, in [-n/2, n/2). */
-export const ringOffset = (i: number, active: number, n: number) => {
-  const d = (((i - active) % n) + n) % n
+/** Signed shortest distance from position `p` to slot `i` on a ring of `n` slots, in [-n/2, n/2). Works for fractions. */
+export const ringOffset = (i: number, p: number, n: number) => {
+  const d = (((i - p) % n) + n) % n
   return d >= n / 2 ? d - n : d
 }
 
+/** Screen heights of scrolling per card. Lower is faster. */
+const PER_CARD = 0.45
+
 /**
- * State for an endless, centred carousel: the active slot, stepping, auto-rotation that pauses on hover, for a
- * moment after a touch, and while off screen, plus swipe and arrow-key handlers to spread on the viewport.
- * With reduced motion it still rotates (the site's MotionConfig turns the slide into a plain swap), just slower.
+ * Scroll position → carousel position: moves card by card with a short rest on each, so every card can be read.
+ * `v` is the section's scroll progress (0–1); the result runs from 0 (first card) to `count - 1` (last).
  */
-export function useCarousel<T extends HTMLElement>({ count, interval = 3500, paused = false }: Options) {
-  const ref = useRef<T>(null)
-  const inView = useInView(ref, { amount: 0.3 })
-  const reduce = useReducedMotion()
+function stepped(v: number, count: number) {
+  if (count < 2) return 0
+  const t = Math.min(Math.max(v, 0), 1) * (count - 1)
+  const k = Math.min(Math.floor(t), count - 2)
+  const f = (t - k - 0.2) / 0.6
+  const e = f <= 0 ? 0 : f >= 1 ? 1 : f * f * (3 - 2 * f)
+  return k + e
+}
+
+/**
+ * A carousel driven by the page scroll: its section is pinned while the visitor scrolls past, and the cards turn
+ * one by one until each has had its turn in the centre. Arrows, dots, keys and swipes scroll the page to a card.
+ * Spread `section` on the tall section and `bind` on the visible carousel.
+ */
+export function useScrollCarousel<S extends HTMLElement>({ count }: { count: number }) {
+  const ref = useRef<S>(null)
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] })
+  const target = useTransform(scrollYProgress, (v) => stepped(v, count))
+  // Springing the stepped value keeps a hard flick or swipe from snapping the cards.
+  const pos = useSpring(target, { stiffness: 140, damping: 28, mass: 0.6, restDelta: 0.0005 })
   const [active, setActive] = useState(0)
-  const [hover, setHover] = useState(false)
-  const [touchHold, setTouchHold] = useState(false)
-  // Visitor's own pause button; nothing restarts the rotation until they press it again.
-  const [stopped, setStopped] = useState(false)
-  const resume = useRef<ReturnType<typeof setTimeout>>(undefined)
+  useMotionValueEvent(pos, "change", (v) => setActive(Math.min(count - 1, Math.max(0, Math.round(v)))))
   const dragged = useRef(false)
-  const mouse = useRef<{ x: number; y: number } | null>(null)
 
-  const go = useCallback((step: number) => setActive((a) => (((a + step) % count) + count) % count), [count])
-  const goTo = useCallback((i: number) => setActive(i), [])
+  /** Scrolls the page to where card `i` sits in the centre. */
+  const goTo = (i: number) => {
+    const el = ref.current
+    if (!el) return
+    const top = el.getBoundingClientRect().top + window.scrollY
+    const range = el.offsetHeight - window.innerHeight
+    scrollToY(top + (count > 1 ? (range * i) / (count - 1) : 0))
+  }
+  // Past the last card, "next" wraps round to the first (and back), like the ring the cards sit on.
+  const go = (step: number) => goTo((((active + step) % count) + count) % count)
 
-  const running = inView && !hover && !touchHold && !paused && !stopped
-  const every = reduce ? interval * 1.6 : interval
-  useEffect(() => {
-    if (!running) return
-    const id = setInterval(() => !document.hidden && go(1), every)
-    return () => clearInterval(id)
-  }, [running, every, go, active])
-
-  useEffect(() => () => clearTimeout(resume.current), [])
-
-  const release = (e: React.PointerEvent) => {
-    if (e.pointerType === "mouse") return
-    clearTimeout(resume.current)
-    resume.current = setTimeout(() => setTouchHold(false), TOUCH_RESUME)
+  const section = {
+    ref,
+    style: { height: `calc(100svh + ${(count - 1) * PER_CARD * 100}svh)` },
   }
 
   const bind = {
-    ref,
     tabIndex: 0,
-    // Paused only while the mouse is really being moved over it: when the page scrolls the carousel under a
-    // resting cursor, the browser reports a hover too, and the carousel would never move for that visitor.
-    onPointerEnter: (e: React.PointerEvent) => void mouseMoved(e, mouse),
-    onPointerMove: (e: React.PointerEvent) => mouseMoved(e, mouse) && setHover(true),
-    onPointerLeave: (e: React.PointerEvent) => {
-      if (e.pointerType !== "mouse") return
-      mouse.current = null
-      setHover(false)
-    },
-    onPointerDown: (e: React.PointerEvent) => {
-      if (e.pointerType === "mouse") return
-      clearTimeout(resume.current)
-      setTouchHold(true)
-    },
-    // A finger that starts a page scroll on the carousel ends in pointercancel, not pointerup: both resume.
-    onPointerUp: release,
-    onPointerCancel: release,
     onKeyDown: (e: React.KeyboardEvent) => {
       if (e.key === "ArrowRight") go(1)
       else if (e.key === "ArrowLeft") go(-1)
@@ -93,5 +81,5 @@ export function useCarousel<T extends HTMLElement>({ count, interval = 3500, pau
     style: { touchAction: "pan-y" } as const,
   }
 
-  return { active, go, goTo, bind, inView, playing: !stopped, togglePlay: () => setStopped((v) => !v) }
+  return { pos, active, go, goTo, section, bind }
 }

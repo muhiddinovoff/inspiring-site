@@ -20,8 +20,6 @@ const ru: Dict = {
     prev: "Назад",
     next: "Вперёд",
     carousel: "карусель",
-    pause: "Пауза",
-    play: "Продолжить",
     slide: (i: number, n: number) => `${i} из ${n}`,
   },
   theme: {

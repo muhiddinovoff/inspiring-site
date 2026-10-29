@@ -1,4 +1,4 @@
-import { memo, useMemo, useRef, useState } from "react"
+import { memo, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { AnimatePresence, motion, useMotionValueEvent, useReducedMotion, useScroll } from "framer-motion"
 
 import { Reveal } from "@/components/motion/reveal"
@@ -76,15 +76,24 @@ function TypingDots({ sent, label }: { sent: boolean; label: string }) {
   )
 }
 
-const Bubble = memo(function Bubble({ item, status }: { item: Item; status: "hidden" | "typing" | "shown" }) {
+type Fly = { dx: number; dy: number }
+type BubbleProps = {
+  item: Item
+  status: "hidden" | "typing" | "shown"
+  fly: Fly | undefined
+  liRef: (el: HTMLLIElement | null) => void
+}
+
+/** Hidden, a bubble waits small and invisible at the heading in the middle; shown, it flies out to its own spot. */
+const Bubble = memo(function Bubble({ item, status, fly, liRef }: BubbleProps) {
   const { t } = useI18n()
   const shown = status === "shown"
-  const from = rnd(item.k, 6) < 0.5 ? -1 : 1
   const rest = (rnd(item.k, 7) - 0.5) * 3
   const avatar = item.title ? "bg-brand text-white" : AVATAR_TINTS[item.k % AVATAR_TINTS.length]
 
   return (
     <li
+      ref={liRef}
       className={cn("relative mb-3 break-inside-avoid flex-col", TIER(item.k), item.sent ? "items-end" : "items-start")}
     >
       <motion.div
@@ -92,11 +101,11 @@ const Bubble = memo(function Bubble({ item, status }: { item: Item; status: "hid
         animate={
           shown
             ? { opacity: 1, x: 0, y: 0, rotate: rest, scale: 1 }
-            : { opacity: 0, x: from * 70, y: 40 + rnd(item.k, 8) * 40, rotate: from * 8, scale: 0.8 }
+            : { opacity: 0, x: fly?.dx ?? 0, y: fly?.dy ?? 0, rotate: (rnd(item.k, 6) - 0.5) * 30, scale: 0.2 }
         }
-        transition={SPRING}
-        style={{ transformOrigin: item.sent ? "100% 100%" : "0% 100%" }}
-        className={cn("flex max-w-[92%] flex-col", item.sent ? "items-end" : "items-start")}
+        transition={shown ? { ...SPRING, delay: rnd(item.k, 9) * 0.12 } : { duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+        style={{ transformOrigin: "50% 50%" }}
+        className={cn("flex max-w-[92%] flex-col will-change-transform", item.sent ? "items-end" : "items-start")}
       >
         <span className={cn("mb-1 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground")}>
           {!item.sent && (
@@ -131,13 +140,72 @@ export function Reasons() {
   const ref = useRef<HTMLElement>(null)
   const still = useReducedMotion() ?? false
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] })
-  // Quantised so the wall only re-renders when something can actually change.
-  const [step, setStep] = useState(0)
-  useMotionValueEvent(scrollYProgress, "change", (v) => setStep(Math.round(v * 200) / 200))
-  const progress = still ? 1 : step
 
   const { messages, us } = t.reasons.chat
   const wall = useMemo(() => buildWall(messages, t.reasons.items, us), [messages, t.reasons.items, us])
+
+  // Where each bubble flies out from (the heading) and when: nearest the heading first, so the wall spreads
+  // outwards from the middle like a wave. Measured from the real layout, again whenever it reflows.
+  const heading = useRef<HTMLDivElement>(null)
+  const lis = useRef(new Map<number, HTMLLIElement>())
+  const [plan, setPlan] = useState(() => new Map<number, Fly & { at: number }>())
+  useLayoutEffect(() => {
+    const stage = heading.current?.parentElement
+    if (!stage) return
+    const measure = () => {
+      const h = heading.current!.getBoundingClientRect()
+      const ox = h.left + h.width / 2
+      const oy = h.top + h.height / 2
+      const box = stage.getBoundingClientRect()
+      const spots = [...lis.current].flatMap(([k, el]) => {
+        const r = el.getBoundingClientRect()
+        // Hidden on this screen size, or spilled past the clipped edge: never seen, so not in the queue.
+        if (!r.width || r.left >= box.right - 8 || r.top >= box.bottom - 8) return []
+        const dx = ox - (r.left + r.width / 2)
+        const dy = oy - (r.top + r.height / 2)
+        return [{ k, dx, dy, dist: Math.hypot(dx, dy) }]
+      })
+      spots.sort((a, b) => a.dist - b.dist)
+      const last = Math.max(spots.length - 1, 1)
+      setPlan(new Map(spots.map((s, rank) => [s.k, { dx: s.dx, dy: s.dy, at: -0.1 + (rank / last) * 0.8 }])))
+    }
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(stage)
+    return () => ro.disconnect()
+  }, [wall])
+
+  const atOf = (item: Item) => plan.get(item.k)?.at ?? (plan.size ? 2 : item.at)
+  // Re-render only when the scroll crosses a moment where some bubble changes state, not on every frame.
+  const marks = useMemo(
+    () =>
+      wall
+        .flatMap((it) => {
+          const at = plan.get(it.k)?.at ?? (plan.size ? 2 : it.at)
+          return it.typing ? [at, at - 0.07] : [at]
+        })
+        .sort((a, b) => a - b),
+    [wall, plan],
+  )
+  const crossed = (v: number) => marks.filter((m) => v >= m).length
+  const [progress, setProgress] = useState(0)
+  const lastCrossed = useRef(-1)
+  useMotionValueEvent(scrollYProgress, "change", (v) => {
+    const c = crossed(v)
+    if (c === lastCrossed.current) return
+    lastCrossed.current = c
+    setProgress(v)
+  })
+  const p = still ? 1 : progress
+  // Stable ref callbacks, one per bubble, so the memoised bubbles don't re-render for a new function each time.
+  const liRefs = useMemo(
+    () =>
+      wall.map((item) => (el: HTMLLIElement | null) => {
+        if (el) lis.current.set(item.k, el)
+        else lis.current.delete(item.k)
+      }),
+    [wall],
+  )
 
   return (
     <section
@@ -148,8 +216,11 @@ export function Reasons() {
     >
       {/* Phones: heading on top, the wall fills the rest. Larger screens: the wall fills the screen around a centred card. */}
       <div className="sticky top-0 flex h-svh min-h-[40rem] flex-col overflow-hidden">
-        <div className="relative z-20 shrink-0 px-5 pt-20 pb-4 md:pointer-events-none md:absolute md:inset-0 md:grid md:place-items-center md:p-5">
-          <Reveal className="mx-auto max-w-xl text-center md:pointer-events-auto md:rounded-[2rem] md:bg-background/75 md:px-12 md:py-12 md:shadow-[0_40px_120px_-30px_rgb(15_95_88/0.45)] md:ring-1 md:ring-border/70 md:backdrop-blur-2xl md:backdrop-saturate-150">
+        <div
+          ref={heading}
+          className="relative z-20 shrink-0 px-5 pt-20 pb-4 md:pointer-events-none md:absolute md:inset-0 md:grid md:place-items-center md:p-5"
+        >
+          <Reveal className="mx-auto max-w-xl text-center md:pointer-events-auto md:rounded-[2rem] md:bg-background/75 md:px-12 md:py-12 md:shadow-[0_40px_120px_-30px_rgb(15_95_88/0.45)] md:ring-1 md:ring-border/70 md:backdrop-blur-xl">
             <p className="text-xs font-bold tracking-[0.14em] text-brand-ink uppercase md:text-sm">
               {t.reasons.kicker}
             </p>
@@ -168,9 +239,9 @@ export function Reasons() {
           className="relative min-h-0 flex-1 columns-2 gap-3 px-3 pt-2 [column-fill:auto] md:absolute md:inset-0 md:columns-3 md:gap-5 md:px-6 md:pt-24 lg:columns-4 xl:columns-5"
         >
           {wall.map((item) => {
-            const status =
-              progress >= item.at ? "shown" : item.typing && progress >= item.at - 0.07 ? "typing" : "hidden"
-            return <Bubble key={item.k} item={item} status={status} />
+            const at = atOf(item)
+            const status = p >= at ? "shown" : item.typing && p >= at - 0.07 ? "typing" : "hidden"
+            return <Bubble key={item.k} item={item} status={status} fly={plan.get(item.k)} liRef={liRefs[item.k]} />
           })}
         </ul>
       </div>

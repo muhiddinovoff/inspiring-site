@@ -37,7 +37,14 @@ export function useScrollCarousel<S extends HTMLElement>({ count }: { count: num
   // Springing the stepped value keeps a hard flick or swipe from snapping the cards.
   const pos = useSpring(target, { stiffness: 140, damping: 28, mass: 0.6, restDelta: 0.0005 })
   const [active, setActive] = useState(0)
-  useMotionValueEvent(pos, "change", (v) => setActive(Math.min(count - 1, Math.max(0, Math.round(v)))))
+  // pos changes every frame while scrolling; only a new centred card is worth a React render.
+  const shown = useRef(0)
+  useMotionValueEvent(pos, "change", (v) => {
+    const next = Math.min(count - 1, Math.max(0, Math.round(v)))
+    if (next === shown.current) return
+    shown.current = next
+    setActive(next)
+  })
   const dragged = useRef(false)
 
   /** Scrolls the page to where card `i` sits in the centre. */

@@ -18,8 +18,6 @@ const uz = {
     prev: "Oldingi",
     next: "Keyingi",
     carousel: "karusel",
-    pause: "To‘xtatish",
-    play: "Davom ettirish",
     slide: (i: number, n: number) => `${n} tadan ${i}-si`,
   },
   theme: {

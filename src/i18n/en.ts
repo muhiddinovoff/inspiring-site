@@ -20,8 +20,6 @@ const en: Dict = {
     prev: "Previous",
     next: "Next",
     carousel: "carousel",
-    pause: "Pause",
-    play: "Play",
     slide: (i: number, n: number) => `${i} of ${n}`,
   },
   theme: {

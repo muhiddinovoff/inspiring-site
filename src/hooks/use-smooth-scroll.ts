@@ -1,6 +1,8 @@
 import { useEffect } from "react"
 import Lenis from "lenis"
 
+import { setLenis } from "@/lib/scroll"
+
 /** Inertial page scrolling. Skipped entirely for people who ask the OS for reduced motion. */
 export function useSmoothScroll() {
   useEffect(() => {
@@ -10,12 +12,14 @@ export function useSmoothScroll() {
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       anchors: { offset: -80 },
     })
+    setLenis(lenis)
     let raf = requestAnimationFrame(function loop(time) {
       lenis.raf(time)
       raf = requestAnimationFrame(loop)
     })
     return () => {
       cancelAnimationFrame(raf)
+      setLenis(null)
       lenis.destroy()
     }
   }, [])

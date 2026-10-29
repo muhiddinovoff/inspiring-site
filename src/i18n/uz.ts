@@ -307,6 +307,10 @@ const uz = {
     map: "Filiallar xaritasi",
     unlockMap: "Xaritani surish uchun bosing",
     lockMap: "Tayyor",
+    zoomIn: "Yaqinlashtirish",
+    zoomOut: "Uzoqlashtirish",
+    fitAll: "Barcha filiallar",
+    locateMe: "Mening joylashuvim",
   },
   lead: {
     kicker: "Qabul doimo ochiq",

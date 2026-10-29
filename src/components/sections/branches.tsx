@@ -241,6 +241,7 @@ export function Branches() {
                 setSelected(id)
                 setAll(true)
               }}
+              onLocate={geo.locate}
               labels={t.location}
             />
           </LazySection>

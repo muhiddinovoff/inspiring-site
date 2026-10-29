@@ -60,13 +60,14 @@ npm run dev        # http://localhost:5173
 | `npm run preview` | build natijasini ko‘rish |
 | `npm run check` | lint + format + test + build (push'dan oldin) |
 | `npm run format` | kodni formatlash |
+| `npm run cutout` | bosh ekrandagi o‘quvchilar rasmidan fonni olib tashlaydi (`scripts/cutout.py`; avval `pip install "rembg[cpu]" pillow numpy`) |
 
 ## Tuzilma
 
 ```
 src/
 ├── components/
-│   ├── ui/            shadcn komponentlari (button, dialog, accordion, container-scroll-animation …)
+│   ├── ui/            shadcn komponentlari (button, dialog, accordion …)
 │   ├── sections/      sahifa bo‘limlari (hero, results, teachers, branches, lead-form …)
 │   └── motion/        Reveal, CountUp animatsiya yordamchilari
 ├── i18n/              uz.ts · ru.ts · en.ts tarjimalar va til konteksti

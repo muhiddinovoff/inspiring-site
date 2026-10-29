@@ -15,6 +15,10 @@ const uz = {
     call: "Qo‘ng‘iroq qilish",
     language: "Til",
     skip: "Asosiy mazmunga o‘tish",
+    prev: "Oldingi",
+    next: "Keyingi",
+    carousel: "karusel",
+    slide: (i: number, n: number) => `${n} tadan ${i}-si`,
   },
   theme: {
     label: "Ko‘rinish",
@@ -46,8 +50,6 @@ const uz = {
     lead: (n: number) =>
       `Prezident va ixtisoslashtirilgan maktablarga tayyorlov. 2025–2026-yilda ${n} dan ortiq o‘quvchimiz orzusidagi maktabga qabul qilindi.`,
     cta: "Bepul maslahat olish",
-    boardKicker: "2025–2026 natijalari",
-    boardText: "o‘quvchi nufuzli maktablarga qabul qilindi",
     photoAlt: "Prezident maktabi formasidagi Inspiring Education o‘quvchilari",
   },
   stats: {
@@ -94,8 +96,44 @@ const uz = {
   reasons: {
     kicker: "Nega Inspiring",
     title: "Ota-onalar bizni nima uchun tanlaydi",
-    photoAlt: "Daftarga yozayotgan o‘quvchi",
     badge: "ota-ona darslar sifatidan mamnun va bizni boshqalarga tavsiya qiladi",
+    // Placeholder parent messages: replace the names and texts with real ones (same list in every language).
+    chat: {
+      aria: "Ota-onalar xabarlari",
+      delivered: "Yetkazildi",
+      read: "O‘qildi",
+      typing: "yozmoqda",
+      us: "Inspiring Education",
+      messages: [
+        { name: "Dilnoza M.", text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit." },
+        {
+          name: "Shahzod A.",
+          text: "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam!",
+        },
+        { name: "Malika R.", text: "Duis aute irure dolor in reprehenderit." },
+        {
+          name: "Javohir T.",
+          text: "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim.",
+        },
+        { name: "Nodira K.", text: "Nemo enim ipsam voluptatem quia voluptas sit aspernatur." },
+        {
+          name: "Bekzod U.",
+          text: "Quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+        },
+        { name: "Gulnora S.", text: "Ut enim ad minima veniam, quis nostrum." },
+        { name: "Sardor X.", text: "Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur." },
+        { name: "Kamola Y.", text: "At vero eos et accusamus et iusto odio dignissimos." },
+        {
+          name: "Rustam N.",
+          text: "Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus.",
+        },
+        { name: "Zarina O.", text: "Temporibus autem quibusdam et aut officiis debitis." },
+        {
+          name: "Aziz E.",
+          text: "Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias.",
+        },
+      ],
+    },
     items: [
       {
         title: "Imtihonni biladigan ustozlar",
@@ -121,10 +159,16 @@ const uz = {
     text: "Imtihon talablarini yaxshi biladigan, yillar davomida o‘quvchilarni nufuzli maktablarga olib borgan ustozlar.",
     fallbackName: "Inspiring ustozi",
     fallbackSubject: "Imtihonga tayyorlov",
-    fallbackAbout:
-      "Ustoz haqida batafsil ma’lumot tez orada qo‘shiladi. Dars jadvali va guruhlar haqida menejerimizdan so‘rashingiz mumkin.",
-    exp: (e: string) => `${e} tajriba`,
-    enroll: "Darsga yozilish",
+    labels: { subject: "Fan", exp: "Tajriba", wins: "Yutuqlar", about: "Qisqacha" },
+    contact: "Bog‘lanish",
+    hint: "Batafsil ko‘rish uchun ustiga olib boring yoki bosing",
+    // Shown until a teacher's own experience, achievements and bio are filled in src/data/teachers.ts.
+    placeholder: {
+      exp: "Lorem ipsum",
+      wins: ["Lorem ipsum dolor sit amet", "Consectetur adipiscing elit", "Sed do eiusmod tempor"],
+      about:
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+    },
     prev: "Oldingi ustoz",
     next: "Keyingi ustoz",
   },
@@ -241,6 +285,30 @@ const uz = {
       address: "Chilonzor tumani, 1-Katta Chilonzor MFY, 6-uy",
       landmark: "Toshkent shahar Prokuraturasi yaqinida",
     },
+  },
+  location: {
+    kicker: "Lokatsiya",
+    title: "Sizga eng yaqin filial qaysi?",
+    text: "Joylashuvingizga qarab eng yaqin filialni topamiz va unga yo‘l ko‘rsatamiz.",
+    promptTitle: "Eng yaqin filialni topaylikmi?",
+    promptText:
+      "Buning uchun joylashuvingiz kerak: u faqat filiallargacha masofani hisoblashga ishlatiladi, shu qurilmada qoladi va hech qayerga yuborilmaydi.",
+    allow: "Ruxsat berish",
+    locating: "Joylashuv aniqlanmoqda…",
+    pickCity: "Shahar tanlash",
+    denied: "Joylashuvga ruxsat berilmadi. Shaharni tanlang, filiallarni unga yaqinligi bo‘yicha ko‘rsatamiz.",
+    unavailable: "Joylashuvni aniqlab bo‘lmadi. Shaharni tanlang.",
+    retry: "Qayta urinish",
+    nearest: "Eng yaqin",
+    away: (d: string) => `${d} uzoqlikda`,
+    fromCity: (d: string, city: string) => `${city} markazidan ${d}`,
+    directions: "Yo‘nalish ochish",
+    appleMaps: "Apple Maps",
+    hours: "Ish vaqti",
+    days: "Du–Sha",
+    swipe: "Boshqa filiallarni ko‘rish uchun suring",
+    you: "Siz shu yerdasiz",
+    map: "Filiallar xaritasi",
   },
   lead: {
     kicker: "Qabul doimo ochiq",

@@ -17,6 +17,10 @@ const en: Dict = {
     call: "Call",
     language: "Language",
     skip: "Skip to content",
+    prev: "Previous",
+    next: "Next",
+    carousel: "carousel",
+    slide: (i: number, n: number) => `${i} of ${n}`,
   },
   theme: {
     label: "Theme",
@@ -48,8 +52,6 @@ const en: Dict = {
     lead: (n: number) =>
       `Preparation for Presidential and specialized schools. In 2025–2026, more than ${n} of our students were admitted to the school of their dreams.`,
     cta: "Get a free consultation",
-    boardKicker: "2025–2026 results",
-    boardText: "students admitted to top schools",
     photoAlt: "Inspiring Education students in Presidential School uniforms",
   },
   stats: {
@@ -96,8 +98,44 @@ const en: Dict = {
   reasons: {
     kicker: "Why Inspiring",
     title: "Why parents choose us",
-    photoAlt: "A student writing in a notebook",
     badge: "of parents are happy with lesson quality and recommend us to others",
+    // Placeholder parent messages: replace the names and texts with real ones (same list in every language).
+    chat: {
+      aria: "Messages from parents",
+      delivered: "Delivered",
+      read: "Read",
+      typing: "typing",
+      us: "Inspiring Education",
+      messages: [
+        { name: "Dilnoza M.", text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit." },
+        {
+          name: "Shahzod A.",
+          text: "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam!",
+        },
+        { name: "Malika R.", text: "Duis aute irure dolor in reprehenderit." },
+        {
+          name: "Javohir T.",
+          text: "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim.",
+        },
+        { name: "Nodira K.", text: "Nemo enim ipsam voluptatem quia voluptas sit aspernatur." },
+        {
+          name: "Bekzod U.",
+          text: "Quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+        },
+        { name: "Gulnora S.", text: "Ut enim ad minima veniam, quis nostrum." },
+        { name: "Sardor X.", text: "Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur." },
+        { name: "Kamola Y.", text: "At vero eos et accusamus et iusto odio dignissimos." },
+        {
+          name: "Rustam N.",
+          text: "Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus.",
+        },
+        { name: "Zarina O.", text: "Temporibus autem quibusdam et aut officiis debitis." },
+        {
+          name: "Aziz E.",
+          text: "Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias.",
+        },
+      ],
+    },
     items: [
       {
         title: "Teachers who know the exam",
@@ -123,10 +161,16 @@ const en: Dict = {
     text: "Teachers who know the exam requirements inside out and have guided students into top schools for years.",
     fallbackName: "Inspiring teacher",
     fallbackSubject: "Exam preparation",
-    fallbackAbout:
-      "A full profile of this teacher is coming soon. Our manager can tell you about schedules and groups.",
-    exp: (e: string) => `${e} experience`,
-    enroll: "Enroll",
+    labels: { subject: "Subject", exp: "Experience", wins: "Achievements", about: "About" },
+    contact: "Get in touch",
+    hint: "Hover or tap to see more",
+    // Shown until a teacher's own experience, achievements and bio are filled in src/data/teachers.ts.
+    placeholder: {
+      exp: "Lorem ipsum",
+      wins: ["Lorem ipsum dolor sit amet", "Consectetur adipiscing elit", "Sed do eiusmod tempor"],
+      about:
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+    },
     prev: "Previous teacher",
     next: "Next teacher",
   },
@@ -240,6 +284,30 @@ const en: Dict = {
       address: "Chilanzar district, 1-Katta Chilanzar, bldg 6",
       landmark: "near the Tashkent City Prosecutor’s Office",
     },
+  },
+  location: {
+    kicker: "Location",
+    title: "Which branch is nearest to you?",
+    text: "We’ll find the branch closest to you and show you the way there.",
+    promptTitle: "Find your nearest branch?",
+    promptText:
+      "For that we need your location. It’s only used to work out the distance to each branch, stays on this device and is never sent anywhere.",
+    allow: "Allow",
+    locating: "Finding your location…",
+    pickCity: "Choose a city",
+    denied: "Location access was not allowed. Choose a city and we’ll sort the branches by distance from it.",
+    unavailable: "We couldn’t find your location. Choose a city instead.",
+    retry: "Try again",
+    nearest: "Nearest",
+    away: (d: string) => `${d} away`,
+    fromCity: (d: string, city: string) => `${d} from central ${city}`,
+    directions: "Get directions",
+    appleMaps: "Apple Maps",
+    hours: "Opening hours",
+    days: "Mon–Sat",
+    swipe: "Swipe to see other branches",
+    you: "You are here",
+    map: "Map of branches",
   },
   lead: {
     kicker: "Enrollment open all year",

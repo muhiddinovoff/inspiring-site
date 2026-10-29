@@ -17,6 +17,10 @@ const ru: Dict = {
     call: "Позвонить",
     language: "Язык",
     skip: "Перейти к содержанию",
+    prev: "Назад",
+    next: "Вперёд",
+    carousel: "карусель",
+    slide: (i: number, n: number) => `${i} из ${n}`,
   },
   theme: {
     label: "Тема",
@@ -48,8 +52,6 @@ const ru: Dict = {
     lead: (n: number) =>
       `Подготовка в Президентские и специализированные школы. В 2025–2026 году более ${n} наших учеников поступили в школу своей мечты.`,
     cta: "Бесплатная консультация",
-    boardKicker: "Результаты 2025–2026",
-    boardText: "учеников поступили в престижные школы",
     photoAlt: "Ученики Inspiring Education в форме Президентской школы",
   },
   stats: {
@@ -96,8 +98,44 @@ const ru: Dict = {
   reasons: {
     kicker: "Почему Inspiring",
     title: "Почему родители выбирают нас",
-    photoAlt: "Ученица пишет в тетради",
     badge: "родителей довольны качеством занятий и рекомендуют нас другим",
+    // Placeholder parent messages: replace the names and texts with real ones (same list in every language).
+    chat: {
+      aria: "Сообщения родителей",
+      delivered: "Доставлено",
+      read: "Прочитано",
+      typing: "печатает",
+      us: "Inspiring Education",
+      messages: [
+        { name: "Dilnoza M.", text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit." },
+        {
+          name: "Shahzod A.",
+          text: "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam!",
+        },
+        { name: "Malika R.", text: "Duis aute irure dolor in reprehenderit." },
+        {
+          name: "Javohir T.",
+          text: "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim.",
+        },
+        { name: "Nodira K.", text: "Nemo enim ipsam voluptatem quia voluptas sit aspernatur." },
+        {
+          name: "Bekzod U.",
+          text: "Quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+        },
+        { name: "Gulnora S.", text: "Ut enim ad minima veniam, quis nostrum." },
+        { name: "Sardor X.", text: "Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur." },
+        { name: "Kamola Y.", text: "At vero eos et accusamus et iusto odio dignissimos." },
+        {
+          name: "Rustam N.",
+          text: "Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus.",
+        },
+        { name: "Zarina O.", text: "Temporibus autem quibusdam et aut officiis debitis." },
+        {
+          name: "Aziz E.",
+          text: "Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias.",
+        },
+      ],
+    },
     items: [
       {
         title: "Преподаватели, которые знают экзамен",
@@ -123,10 +161,16 @@ const ru: Dict = {
     text: "Преподаватели, которые хорошо знают требования экзаменов и годами приводят учеников в престижные школы.",
     fallbackName: "Преподаватель Inspiring",
     fallbackSubject: "Подготовка к экзаменам",
-    fallbackAbout:
-      "Подробная информация о преподавателе скоро появится. О расписании и группах можно узнать у нашего менеджера.",
-    exp: (e: string) => `опыт ${e}`,
-    enroll: "Записаться",
+    labels: { subject: "Предмет", exp: "Опыт", wins: "Достижения", about: "Коротко" },
+    contact: "Связаться",
+    hint: "Наведите или нажмите, чтобы узнать больше",
+    // Shown until a teacher's own experience, achievements and bio are filled in src/data/teachers.ts.
+    placeholder: {
+      exp: "Lorem ipsum",
+      wins: ["Lorem ipsum dolor sit amet", "Consectetur adipiscing elit", "Sed do eiusmod tempor"],
+      about:
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+    },
     prev: "Предыдущий преподаватель",
     next: "Следующий преподаватель",
   },
@@ -237,6 +281,30 @@ const ru: Dict = {
       address: "Чиланзарский район, МСГ 1-Катта Чиланзар, дом 6",
       landmark: "рядом с Прокуратурой г. Ташкента",
     },
+  },
+  location: {
+    kicker: "Локация",
+    title: "Какой филиал ближе к вам?",
+    text: "Найдём ближайший к вам филиал и проложим к нему маршрут.",
+    promptTitle: "Найти ближайший филиал?",
+    promptText:
+      "Для этого нужна ваша геолокация: она используется только чтобы посчитать расстояние до филиалов, остаётся на этом устройстве и никуда не отправляется.",
+    allow: "Разрешить",
+    locating: "Определяем местоположение…",
+    pickCity: "Выбрать город",
+    denied: "Доступ к геолокации не дан. Выберите город, и мы покажем филиалы по близости к нему.",
+    unavailable: "Не удалось определить местоположение. Выберите город.",
+    retry: "Попробовать снова",
+    nearest: "Ближайший",
+    away: (d: string) => `в ${d} от вас`,
+    fromCity: (d: string, city: string) => `${d} от центра города ${city}`,
+    directions: "Проложить маршрут",
+    appleMaps: "Apple Maps",
+    hours: "Часы работы",
+    days: "Пн–Сб",
+    swipe: "Листайте, чтобы увидеть другие филиалы",
+    you: "Вы здесь",
+    map: "Карта филиалов",
   },
   lead: {
     kicker: "Приём открыт круглый год",

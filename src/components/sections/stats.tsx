@@ -7,8 +7,10 @@ import { Reveal } from "@/components/motion/reveal"
 import { STATS } from "@/data/site"
 import { ringOffset, useScrollCarousel } from "@/hooks/use-carousel"
 import { useI18n } from "@/i18n"
+import { richEffects } from "@/lib/device"
 import { cn } from "@/lib/utils"
 
+const RICH = richEffects()
 const ICONS: LucideIcon[] = [GraduationCap, HeartHandshake, MapPin, Send]
 /** Four stats are too few for a seamless ring (a card would visibly fly across), so the ring holds them twice. */
 const SLOTS = [...STATS.keys(), ...STATS.keys()]
@@ -25,14 +27,14 @@ function StatCard({ slot, i, pos, active }: CardProps) {
   const x = useTransform(d, (v) => `${v * 76}%`)
   const scale = useTransform(a, [0, 1, 2], [1, 0.84, 0.7])
   const opacity = useTransform(a, [0, 1, 2], [1, 0.55, 0])
-  const filter = useTransform(a, (v) => (v < 0.02 ? "none" : `blur(${v * 4}px)`))
+  const filter = useTransform(a, (v) => (v < 0.02 || !RICH ? "none" : `blur(${v * 4}px)`))
   const zIndex = useTransform(a, (v) => 10 - Math.round(v * 2))
 
   return (
     <motion.div
       aria-hidden={!active}
       style={{ x, scale, opacity, filter, zIndex }}
-      className="absolute inset-0 will-change-[transform,opacity,filter]"
+      className="absolute inset-0 will-change-[transform,opacity]"
     >
       <div
         className={cn(

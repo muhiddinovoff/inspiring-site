@@ -10,21 +10,29 @@ import { CONTACT, NAV_IDS } from "@/data/site"
 import { useI18n } from "@/i18n"
 import { cn } from "@/lib/utils"
 
+/**
+ * The section crossing a line 40% down the screen. Watched with an IntersectionObserver rather than measured on
+ * every scroll event: those measurements forced a layout per frame and made the whole page stutter on phones.
+ */
 function useActiveSection(ids: readonly string[]) {
   const [active, setActive] = useState<string | null>(null)
   useEffect(() => {
-    const onScroll = () => {
-      const line = window.innerHeight * 0.4
-      let current: string | null = null
-      for (const id of ids) {
-        const el = document.getElementById(id)
-        if (el && el.getBoundingClientRect().top <= line && el.getBoundingClientRect().bottom > line) current = id
-      }
-      setActive(current)
+    const inBand = new Set<string>()
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) inBand.add(e.target.id)
+          else inBand.delete(e.target.id)
+        }
+        setActive(ids.find((id) => inBand.has(id)) ?? null)
+      },
+      { rootMargin: "-40% 0px -59% 0px" },
+    )
+    for (const id of ids) {
+      const el = document.getElementById(id)
+      if (el) io.observe(el)
     }
-    onScroll()
-    window.addEventListener("scroll", onScroll, { passive: true })
-    return () => window.removeEventListener("scroll", onScroll)
+    return () => io.disconnect()
   }, [ids])
   return active
 }
@@ -52,7 +60,10 @@ export function Navbar() {
     <header
       className={cn(
         "fixed inset-x-0 top-0 z-40 pt-[env(safe-area-inset-top)] transition-[background-color,box-shadow,backdrop-filter] duration-300",
-        scrolled || open ? "bg-background/85 shadow-[0_1px_0_var(--color-border)] backdrop-blur-xl" : "bg-transparent",
+        // Phones get a near-solid bar: a backdrop blur over moving content is repainted every scroll frame.
+        scrolled || open
+          ? "bg-background/95 shadow-[0_1px_0_var(--color-border)] md:bg-background/85 md:backdrop-blur-xl"
+          : "bg-transparent",
       )}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-4 sm:gap-4 md:h-[72px] md:px-6">

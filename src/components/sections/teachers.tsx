@@ -9,11 +9,13 @@ import { Button } from "@/components/ui/button"
 import { TEACHERS, pick, type Teacher } from "@/data/teachers"
 import { ringOffset, useScrollCarousel } from "@/hooks/use-carousel"
 import { useI18n } from "@/i18n"
+import { richEffects } from "@/lib/device"
 import { mouseMoved } from "@/lib/pointer"
 import { cn } from "@/lib/utils"
 
 const SPRING = { type: "spring", stiffness: 240, damping: 30, mass: 0.9 } as const
 const NAME_H = 68
+const RICH = richEffects()
 
 /** Card sizes in px. The photo keeps its height when a card opens; on phones it narrows to make room for the details. */
 function useSizes() {
@@ -86,7 +88,7 @@ function TeacherCard({ teacher, i, pos, openness, offset, expanded, sizes, onOpe
   })
   const scale = useTransform(look, (l) => l.scale)
   const opacity = useTransform(look, (l) => l.opacity)
-  const filter = useTransform(look, (l) => (l.blur < 0.05 ? "none" : `blur(${l.blur}px)`))
+  const filter = useTransform(look, (l) => (l.blur < 0.05 || !RICH ? "none" : `blur(${l.blur}px)`))
   const zIndex = useTransform(look, (l) => l.z)
 
   return (

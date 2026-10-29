@@ -1,4 +1,4 @@
-import { useRef } from "react"
+import { useEffect, useRef } from "react"
 import { motion, useReducedMotion, useScroll, useSpring, useTransform, type MotionValue } from "framer-motion"
 import { ArrowRight, Phone } from "lucide-react"
 
@@ -47,11 +47,23 @@ type WordProps = { i: number; accent?: boolean; still: boolean; children: string
 
 type KidProps = { i: number; progress: MotionValue<number>; still: boolean }
 
-/** One child: rises in on load, then grows a touch with the scroll; the ones standing in front grow more. */
+/**
+ * One child: rises in on load, then (parallax) drifts up and slightly outwards and grows a touch with the scroll,
+ * the ones standing in front more. All on the image itself: one small composited layer per child.
+ */
 function Kid({ i, progress, still }: KidProps) {
   const { t } = useI18n()
   const k = KIDS[i]
   const depth = depthOf(i)
+  const delay = 0.15 + Math.abs(i - MIDDLE) * 0.07
+  // Entrance offset (in % of the image) springing to 0, added to the scroll drift so the two never fight.
+  const rise = useSpring(still ? 0 : 14, { stiffness: 70, damping: 18 })
+  useEffect(() => {
+    const id = setTimeout(() => rise.set(0), delay * 1000)
+    return () => clearTimeout(id)
+  }, [rise, delay])
+  const y = useTransform([progress, rise], ([p, r]: number[]) => `${r - p * (1.5 + depth * 6)}%`)
+  const x = useTransform(progress, (p) => `${p * (i - MIDDLE) * 0.8}%`)
   const scale = useTransform(progress, [0, 1], [1, 1 + depth * 0.05])
   const src = (w: number) => asset(`hero/cutouts/kid-${i + 1}-${w}.webp`)
   return (
@@ -65,33 +77,19 @@ function Kid({ i, progress, still }: KidProps) {
       fetchPriority={depth > 0.7 ? "high" : "auto"}
       decoding="async"
       draggable={false}
-      initial={still ? false : { opacity: 0, y: "14%" }}
-      animate={{ opacity: 1, y: "0%" }}
-      transition={{ type: "spring", stiffness: 70, damping: 18, delay: 0.15 + Math.abs(i - MIDDLE) * 0.07 }}
+      initial={still ? false : { opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.8, ease: EASE, delay }}
       style={{
         left: `${k.x}%`,
         top: `${k.y}%`,
         width: `${k.w}%`,
-        scale: still ? 1 : scale,
+        zIndex: Math.round(depth * 10),
+        ...(still ? {} : { x, y, scale }),
         transformOrigin: "50% 100%",
       }}
-      className="absolute h-auto select-none"
+      className="absolute h-auto will-change-transform select-none"
     />
-  )
-}
-
-/**
- * Parallax: each child drifts up and slightly outwards with the scroll, the ones in front further.
- * A wrapper so the drift and the entrance animation on the image don't fight over the same `y`.
- */
-function KidLayer({ i, progress, still }: KidProps) {
-  const depth = depthOf(i)
-  const y = useTransform(progress, [0, 1], ["0%", `${-(1 + depth * 4)}%`])
-  const x = useTransform(progress, [0, 1], ["0%", `${(i - MIDDLE) * 0.25}%`])
-  return (
-    <motion.div style={still ? { zIndex: 0 } : { y, x, zIndex: Math.round(depth * 10) }} className="absolute inset-0">
-      <Kid i={i} progress={progress} still={still} />
-    </motion.div>
   )
 }
 
@@ -163,12 +161,15 @@ export function Hero() {
 
         {/* The children, in front of the headline. Sunk a little below the edge so the drift never shows their cut-off hems. */}
         <div
-          className="pointer-events-none absolute bottom-[calc(var(--kh)*-0.06)] left-1/2 z-10 w-[var(--kw)] -translate-x-1/2 [mask-image:linear-gradient(to_right,transparent,black_7%,black_93%,transparent)]"
+          className="pointer-events-none absolute bottom-[calc(var(--kh)*-0.06)] left-1/2 z-10 w-[var(--kw)] -translate-x-1/2"
           style={{ aspectRatio: `${HERO_CUTOUTS.width} / ${HERO_CUTOUTS.height}` }}
         >
           {KIDS.map((_, i) => (
-            <KidLayer key={i} i={i} progress={p} still={still} />
+            <Kid key={i} i={i} progress={p} still={still} />
           ))}
+          {/* Soft side edges. Painted over the children instead of a mask-image, which re-rasterised every frame. */}
+          <div className="absolute inset-y-0 -left-[2%] z-[11] w-[11%] bg-gradient-to-r from-background from-20% to-transparent" />
+          <div className="absolute inset-y-0 -right-[2%] z-[11] w-[11%] bg-gradient-to-l from-background from-20% to-transparent" />
         </div>
 
         {/* Bottom: the lead line and actions over a soft fade, so they read on top of the blazers.

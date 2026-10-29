@@ -6,33 +6,23 @@ import { Button } from "@/components/ui/button"
 import { CONTACT } from "@/data/site"
 import { useI18n } from "@/i18n"
 
-/** Phone-only bottom bar: shows after the hero, hides while the application form itself is on screen. */
+/** Phone-only bottom bar: always there (the hero leaves its actions to it), hidden while the form itself is on screen. */
 export function MobileCta() {
   const { t } = useI18n()
-  const [pastHero, setPastHero] = useState(false)
   const [formVisible, setFormVisible] = useState(false)
 
   useEffect(() => {
-    // The hero is pinned for a few screens, so wait until its bottom edge has actually gone by.
-    const hero = document.getElementById("top")
-    const onScroll = () =>
-      setPastHero(
-        hero ? hero.getBoundingClientRect().bottom < window.innerHeight * 0.4 : window.scrollY > window.innerHeight,
-      )
-    onScroll()
-    window.addEventListener("scroll", onScroll, { passive: true })
     const form = document.getElementById("ariza")
     const io = new IntersectionObserver(([e]) => setFormVisible(e.isIntersecting), { threshold: 0.15 })
     if (form) io.observe(form)
     return () => {
-      window.removeEventListener("scroll", onScroll)
       io.disconnect()
     }
   }, [])
 
   return (
     <AnimatePresence>
-      {pastHero && !formVisible && (
+      {!formVisible && (
         <motion.div
           initial={{ y: "110%" }}
           animate={{ y: 0 }}

@@ -8,7 +8,7 @@ export const CONTACT = {
   handle: "@inspiringuz",
 }
 
-export const NAV_IDS = ["natijalar", "ustozlar", "dasturlar", "yol", "savollar", "filiallar"] as const
+export const NAV_IDS = ["natijalar", "nega", "ustozlar", "dasturlar", "yol", "savollar", "filiallar"] as const
 export type NavId = (typeof NAV_IDS)[number]
 
 /** 2025–2026 o‘quv yili natijalari, kattasidan kichigiga. Matnlari i18n `results.items` da shu tartibda. */

@@ -1,5 +1,6 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import L from "leaflet"
+import { Hand, X } from "lucide-react"
 import "leaflet/dist/leaflet.css"
 
 import type { LatLng } from "@/lib/geo"
@@ -10,7 +11,7 @@ type Props = {
   origin: LatLng | null
   selected: number | null
   onSelect: (id: number) => void
-  you: string
+  labels: { you: string; map: string; unlockMap: string; lockMap: string }
 }
 
 const pinIcon = (active: boolean) =>
@@ -29,11 +30,15 @@ const youIcon = L.divIcon({
 const reduceMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches
 
 /** Leaflet + OpenStreetMap: a pin per centre, a blue dot for the visitor, and a flight to the selected centre. */
-export default function LocationMap({ pins, origin, selected, onSelect, you }: Props) {
+export default function LocationMap({ pins, origin, selected, onSelect, labels }: Props) {
+  const { you } = labels
   const el = useRef<HTMLDivElement>(null)
   const map = useRef<L.Map | null>(null)
   const markers = useRef(new Map<number, L.Marker>())
   const youMarker = useRef<L.Marker | null>(null)
+  const [touch] = useState(() => window.matchMedia("(pointer: coarse)").matches)
+  // On touch screens one finger scrolls the page, so the map only takes drags after a tap on it ("unlocked").
+  const [unlocked, setUnlocked] = useState(false)
   const select = useRef(onSelect)
   useEffect(() => {
     select.current = onSelect
@@ -42,8 +47,6 @@ export default function LocationMap({ pins, origin, selected, onSelect, you }: P
   // Map and centre pins, once.
   useEffect(() => {
     if (!el.current) return
-    // On touch screens one finger scrolls the page; the zoom buttons and the cards below move the map.
-    const touch = window.matchMedia("(pointer: coarse)").matches
     const m = L.map(el.current, { scrollWheelZoom: false, dragging: !touch, zoomSnap: 0.25 })
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
@@ -98,5 +101,46 @@ export default function LocationMap({ pins, origin, selected, onSelect, you }: P
     }
   }, [selected, origin])
 
-  return <div ref={el} className="h-full w-full" role="region" aria-label="OpenStreetMap" />
+  useEffect(() => {
+    const m = map.current
+    if (!m || !touch) return
+    if (unlocked) m.dragging.enable()
+    else m.dragging.disable()
+  }, [touch, unlocked])
+
+  // Scrolling the map away locks it again, so it can't trap the page next time a thumb lands on it.
+  useEffect(() => {
+    if (!unlocked || !el.current) return
+    const io = new IntersectionObserver(([e]) => !e.isIntersecting && setUnlocked(false), { threshold: 0.2 })
+    io.observe(el.current)
+    return () => io.disconnect()
+  }, [unlocked])
+
+  return (
+    <div className="relative h-full w-full">
+      <div ref={el} className="h-full w-full" role="region" aria-label={labels.map} />
+      {touch && !unlocked && (
+        <button
+          type="button"
+          onClick={() => setUnlocked(true)}
+          className="absolute inset-0 z-[1000] flex items-end justify-center bg-transparent pb-4"
+        >
+          <span className="inline-flex items-center gap-2 rounded-full bg-background/90 px-4 py-2 text-sm font-semibold shadow-lg backdrop-blur">
+            <Hand className="size-4" />
+            {labels.unlockMap}
+          </span>
+        </button>
+      )}
+      {touch && unlocked && (
+        <button
+          type="button"
+          onClick={() => setUnlocked(false)}
+          className="absolute top-3 right-3 z-[1000] inline-flex items-center gap-1.5 rounded-full bg-background/90 px-3 py-2 text-sm font-semibold shadow-lg backdrop-blur"
+        >
+          <X className="size-4" />
+          {labels.lockMap}
+        </button>
+      )}
+    </div>
+  )
 }

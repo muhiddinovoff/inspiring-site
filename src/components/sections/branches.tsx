@@ -1,18 +1,24 @@
 import { useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
-import { MapPin, Navigation, School } from "lucide-react"
+import { ChevronDown, MapPin, Navigation, School } from "lucide-react"
+
+import { BranchFinder } from "@/components/branch-finder"
 
 import { Reveal } from "@/components/motion/reveal"
 import { SectionHeading } from "@/components/sections/section-heading"
+import { Button } from "@/components/ui/button"
 import { BRANCHES, SCHOOL_MAP, mapLink, type City } from "@/data/site"
 import { useI18n } from "@/i18n"
 import { cn } from "@/lib/utils"
 
 const FILTERS: ("all" | City)[] = ["all", "tashkent", "samarkand", "termez", "navoi"]
+/** Phones show this many addresses until "show all": the finder above already surfaces the nearest ones. */
+const PHONE_LIMIT = 4
 
 export function Branches() {
   const { t } = useI18n()
   const [city, setCity] = useState<(typeof FILTERS)[number]>("all")
+  const [all, setAll] = useState(false)
   const list = BRANCHES.map((b, i) => ({ ...b, ...t.branches.items[i], key: i })).filter(
     (b) => city === "all" || b.city === city,
   )
@@ -21,7 +27,12 @@ export function Branches() {
     <section id="filiallar" className="mx-auto max-w-6xl px-4 py-24 md:px-6 md:py-32">
       <SectionHeading kicker={t.branches.kicker} title={t.branches.title} text={t.branches.text} />
 
-      <Reveal delay={0.05} className="-mx-4 mt-10 [scrollbar-width:none] overflow-x-auto px-4">
+      <div className="mt-10">
+        <BranchFinder />
+      </div>
+
+      <h3 className="mt-16 text-2xl font-bold md:text-3xl">{t.branches.listTitle}</h3>
+      <Reveal delay={0.05} className="-mx-4 mt-5 [scrollbar-width:none] overflow-x-auto px-4">
         <div
           role="tablist"
           aria-label={t.branches.filter}
@@ -59,9 +70,10 @@ export function Branches() {
 
       <motion.ul layout className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <AnimatePresence mode="popLayout" initial={false}>
-          {list.map((b) => (
+          {list.map((b, i) => (
             <motion.li
               key={b.key}
+              className={cn(!all && i >= PHONE_LIMIT && "max-sm:hidden")}
               layout
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -97,6 +109,12 @@ export function Branches() {
           ))}
         </AnimatePresence>
       </motion.ul>
+      {!all && list.length > PHONE_LIMIT && (
+        <Button variant="outline" size="lg" className="mt-4 w-full sm:hidden" onClick={() => setAll(true)}>
+          {t.branches.showAll(list.length)}
+          <ChevronDown />
+        </Button>
+      )}
 
       <Reveal className="mt-6">
         <a

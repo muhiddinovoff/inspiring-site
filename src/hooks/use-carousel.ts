@@ -23,13 +23,15 @@ export function useCarousel<T extends HTMLElement>({ count, interval = 3500, pau
   const [active, setActive] = useState(0)
   const [hover, setHover] = useState(false)
   const [touchHold, setTouchHold] = useState(false)
+  // Visitor's own pause button; nothing restarts the rotation until they press it again.
+  const [stopped, setStopped] = useState(false)
   const resume = useRef<ReturnType<typeof setTimeout>>(undefined)
   const dragged = useRef(false)
 
   const go = useCallback((step: number) => setActive((a) => (((a + step) % count) + count) % count), [count])
   const goTo = useCallback((i: number) => setActive(i), [])
 
-  const running = inView && !hover && !touchHold && !paused
+  const running = inView && !hover && !touchHold && !paused && !stopped
   const every = reduce ? interval * 1.6 : interval
   useEffect(() => {
     if (!running) return
@@ -81,5 +83,5 @@ export function useCarousel<T extends HTMLElement>({ count, interval = 3500, pau
     style: { touchAction: "pan-y" } as const,
   }
 
-  return { active, go, goTo, bind }
+  return { active, go, goTo, bind, playing: !stopped, togglePlay: () => setStopped((v) => !v) }
 }

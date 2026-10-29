@@ -20,6 +20,8 @@ const en: Dict = {
     prev: "Previous",
     next: "Next",
     carousel: "carousel",
+    pause: "Pause",
+    play: "Play",
     slide: (i: number, n: number) => `${i} of ${n}`,
   },
   theme: {
@@ -31,6 +33,7 @@ const en: Dict = {
   nav: {
     items: {
       natijalar: "Results",
+      nega: "Why us",
       ustozlar: "Teachers",
       dasturlar: "Programs",
       yol: "How it works",
@@ -163,7 +166,6 @@ const en: Dict = {
     fallbackSubject: "Exam preparation",
     labels: { subject: "Subject", exp: "Experience", wins: "Achievements", about: "About" },
     contact: "Get in touch",
-    hint: "Hover or tap to see more",
     // Shown until a teacher's own experience, achievements and bio are filled in src/data/teachers.ts.
     placeholder: {
       exp: "Lorem ipsum",
@@ -247,6 +249,8 @@ const en: Dict = {
     title: "Pick a branch near you",
     text: "10 branches: 7 in Tashkent and one each in Samarkand, Termez and Navoi. Tap an address to open the map.",
     filter: "City",
+    listTitle: "All addresses",
+    showAll: (n: number) => `Show all (${n})`,
     all: "All",
     landmark: "Landmark",
     cities: { tashkent: "Tashkent", samarkand: "Samarkand", termez: "Termez", navoi: "Navoi" },
@@ -286,9 +290,6 @@ const en: Dict = {
     },
   },
   location: {
-    kicker: "Location",
-    title: "Which branch is nearest to you?",
-    text: "We’ll find the branch closest to you and show you the way there.",
     promptTitle: "Find your nearest branch?",
     promptText:
       "For that we need your location. It’s only used to work out the distance to each branch, stays on this device and is never sent anywhere.",
@@ -308,6 +309,8 @@ const en: Dict = {
     swipe: "Swipe to see other branches",
     you: "You are here",
     map: "Map of branches",
+    unlockMap: "Tap to move the map",
+    lockMap: "Done",
   },
   lead: {
     kicker: "Enrollment open all year",

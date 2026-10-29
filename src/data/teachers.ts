@@ -9,7 +9,7 @@ export type Localized = Record<Lang, string>
  * - name: ism-familiya (barcha tillarda bir xil)
  * - subject, exp, about: uch tilda, masalan { uz: "Matematika", ru: "Математика", en: "Mathematics" }
  * - wins: yutuqlar, har biri uch tilda
- * Bo‘sh maydonlar saytda yashiriladi yoki umumiy matn bilan almashtiriladi.
+ * Bo‘sh maydonlar o‘rniga vaqtincha umumiy yoki "Lorem ipsum" matn chiqadi (src/i18n: teachers.fallback*, teachers.placeholder).
  */
 export type Teacher = {
   name: string
@@ -20,16 +20,58 @@ export type Teacher = {
   img: string
 }
 
-const empty = (): Localized => ({ uz: "", ru: "", en: "" })
-
-export const TEACHERS: Teacher[] = [1, 2, 3, 4, 5, 6].map((n) => ({
-  name: "",
-  subject: empty(),
-  exp: empty(),
-  about: empty(),
-  wins: [],
-  img: asset(`teachers/ustoz-${n}.jpg`),
-}))
+// Bittadan to‘ldiring. Yangi ustoz: rasmni public/teachers/ ga qo‘yib, shu ro‘yxatga yana bitta yozuv qo‘shing.
+// Yutuq misoli: wins: [{ uz: "50+ o‘quvchi Prezident maktabiga", ru: "50+ учеников в Президентские школы", en: "50+ students into Presidential schools" }]
+export const TEACHERS: Teacher[] = [
+  {
+    name: "",
+    subject: { uz: "", ru: "", en: "" },
+    exp: { uz: "", ru: "", en: "" },
+    about: { uz: "", ru: "", en: "" },
+    wins: [],
+    img: asset("teachers/ustoz-1.jpg"),
+  },
+  {
+    name: "",
+    subject: { uz: "", ru: "", en: "" },
+    exp: { uz: "", ru: "", en: "" },
+    about: { uz: "", ru: "", en: "" },
+    wins: [],
+    img: asset("teachers/ustoz-2.jpg"),
+  },
+  {
+    name: "",
+    subject: { uz: "", ru: "", en: "" },
+    exp: { uz: "", ru: "", en: "" },
+    about: { uz: "", ru: "", en: "" },
+    wins: [],
+    img: asset("teachers/ustoz-3.jpg"),
+  },
+  {
+    name: "",
+    subject: { uz: "", ru: "", en: "" },
+    exp: { uz: "", ru: "", en: "" },
+    about: { uz: "", ru: "", en: "" },
+    wins: [],
+    img: asset("teachers/ustoz-4.jpg"),
+  },
+  {
+    name: "",
+    subject: { uz: "", ru: "", en: "" },
+    exp: { uz: "", ru: "", en: "" },
+    about: { uz: "", ru: "", en: "" },
+    wins: [],
+    img: asset("teachers/ustoz-5.jpg"),
+  },
+  {
+    name: "",
+    subject: { uz: "", ru: "", en: "" },
+    exp: { uz: "", ru: "", en: "" },
+    about: { uz: "", ru: "", en: "" },
+    wins: [],
+    img: asset("teachers/ustoz-6.jpg"),
+  },
+]
 
 /** Picks the text for `lang`, falling back to Uzbek. */
 export const pick = (text: Localized, lang: Lang) => text[lang] || text.uz

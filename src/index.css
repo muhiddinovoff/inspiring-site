@@ -280,8 +280,8 @@ html.lenis body {
 .map-pin {
   position: relative;
   display: block;
-  width: 36px;
-  height: 46px;
+  width: 40px;
+  height: 50px;
   color: #0f5f58;
   transform-origin: 50% 100%;
   filter: drop-shadow(0 6px 8px rgb(13 36 33 / 0.35));
@@ -349,8 +349,16 @@ html.lenis body {
 .leaflet-container {
   font-family: var(--font-sans);
 }
-.leaflet-bar a {
-  color: var(--foreground);
+.leaflet-container .leaflet-control-attribution {
+  margin: 0 0.5rem 0.4rem 0;
+  padding: 0.1rem 0.45rem;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--background) 80%, transparent);
+  color: var(--muted-foreground);
+  font-size: 0.65rem;
+}
+.leaflet-container .leaflet-control-attribution a {
+  color: inherit;
 }
 .map-you {
   display: block;

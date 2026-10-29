@@ -306,6 +306,10 @@ const en: Dict = {
     map: "Map of branches",
     unlockMap: "Tap to move the map",
     lockMap: "Done",
+    zoomIn: "Zoom in",
+    zoomOut: "Zoom out",
+    fitAll: "All branches",
+    locateMe: "My location",
   },
   lead: {
     kicker: "Enrollment open all year",

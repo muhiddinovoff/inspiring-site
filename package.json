@@ -16,6 +16,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build && node scripts/localize-html.ts",
     "preview": "vite preview",
+    "server": "node server/index.ts",
+    "bot:setup": "node server/bot-setup.ts",
     "lint": "oxlint --deny-warnings",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

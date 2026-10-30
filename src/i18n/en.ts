@@ -322,12 +322,24 @@ const en: Dict = {
   lead: {
     kicker: "Enrollment open all year",
     title: "Take the first step today",
-    text: "Leave your name and number. Our manager will call you back with the right track, price and schedule for your child.",
+    text: "Leave your name, surname and number. Our manager will call you and tell you the right track, price and schedule.",
     perks: ["Takes one minute", "No obligation", "Your number is only used to contact you"],
     formTitle: "Book a free consultation",
-    name: "Your name",
-    namePlaceholder: "e.g. Dilnoza",
-    nameError: "Please enter your name",
+    firstName: "First name",
+    firstNamePlaceholder: "e.g. Dilnoza",
+    firstNameError: "Please enter your first name",
+    lastName: "Last name",
+    lastNamePlaceholder: "e.g. Karimova",
+    lastNameError: "Please enter your last name",
+    location: {
+      add: "Also send my location",
+      optional: "(optional)",
+      adding: "Finding your location…",
+      added: (branch: string, d: string) => `Location added · nearest branch: ${branch}, ${d}`,
+      remove: "Remove location",
+      denied: "Location wasn’t allowed — no problem, your request will still be sent.",
+      hint: "So we can suggest your nearest branch. Sent only to our manager, with your request.",
+    },
     phone: "Phone number",
     phoneError: "Enter the full number, e.g. 90 123 45 67",
     submit: "Apply now",
@@ -339,7 +351,8 @@ const en: Dict = {
     copy: "Copy",
     copied: "Copied",
     orCall: (phone: string) => `or call ${phone}`,
-    leadText: (name: string, phone: string) => `Request: ${name}, phone: ${phone}`,
+    leadText: (first: string, last: string, phone: string, map?: string) =>
+      `Request: ${first} ${last}, phone: ${phone}${map ? `, location: ${map}` : ""}`,
   },
   footer: {
     about:

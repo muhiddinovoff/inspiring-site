@@ -1,4 +1,5 @@
 import { useI18n } from "@/i18n"
+import { asset } from "@/lib/site-root"
 import { cn } from "@/lib/utils"
 
 /** Shield emblem redrawn from the supplied logo; `gap` is the thin ring colour between the two green layers. */
@@ -21,32 +22,38 @@ export function Shield({ className, gap = "#0f5f58" }: { className?: string; gap
   )
 }
 
-/** `compact` hides the wordmark on very narrow phones (under 380px) so the header controls still fit. */
-export function Logo({
-  className,
-  gap,
-  light,
-  compact,
-}: {
-  className?: string
-  gap?: string
-  light?: boolean
-  compact?: boolean
-}) {
+// The official logo artwork (built from assets/brand by scripts/brand.py), 640x157.
+const LOGO = { w: 640, h: 157 }
+
+/**
+ * The official horizontal logo. `light` (dark backgrounds, e.g. the footer) always uses the white wordmark;
+ * otherwise it follows the site theme. `compact` shows just the emblem on very narrow phones (under 380px)
+ * so the header controls still fit.
+ */
+export function Logo({ className, light, compact }: { className?: string; light?: boolean; compact?: boolean }) {
   const { t } = useI18n()
+  const img = (file: string, extra: string) => (
+    <img
+      src={asset(`brand/${file}`)}
+      alt=""
+      width={LOGO.w}
+      height={LOGO.h}
+      decoding="async"
+      draggable={false}
+      className={cn("h-full w-auto select-none", extra)}
+    />
+  )
   return (
-    <a href="#top" aria-label={t.nav.home} className={cn("flex items-center gap-2.5", className)}>
-      <Shield className="h-9 w-[30px] shrink-0" gap={gap} />
-      <span
-        className={cn(
-          "font-display text-[15px] leading-[1.05] font-bold tracking-wide uppercase",
-          light ? "text-white" : "text-foreground",
-          compact && "max-[379px]:sr-only",
-        )}
-      >
-        Inspiring
-        <span className="block">Education</span>
-      </span>
+    <a href="#top" aria-label={t.nav.home} className={cn("flex h-9 shrink-0 items-center md:h-10", className)}>
+      {light ? (
+        img("logo-light.png", cn(compact && "max-[379px]:hidden"))
+      ) : (
+        <>
+          {img("logo.png", cn("dark:hidden", compact && "max-[379px]:hidden"))}
+          {img("logo-light.png", cn("hidden dark:block", compact && "max-[379px]:!hidden"))}
+        </>
+      )}
+      {compact && <Shield className="hidden h-full w-auto max-[379px]:block" />}
     </a>
   )
 }

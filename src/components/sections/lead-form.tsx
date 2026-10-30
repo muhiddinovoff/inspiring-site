@@ -1,48 +1,99 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
-import { ArrowRight, Check, Copy, Loader2, Phone, Send } from "lucide-react"
+import { ArrowRight, Check, Copy, Loader2, MapPin, Phone, Send, X } from "lucide-react"
 
 import { Shield } from "@/components/logo"
 import { SectionHeading } from "@/components/sections/section-heading"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { CENTERS } from "@/data/centers"
 import { CONTACT } from "@/data/site"
 import { useI18n } from "@/i18n"
+import { byDistance, formatKm } from "@/lib/geo"
 import { submitLead, type Lead } from "@/lib/leads"
 import { formatLocal, isCompletePhone, localDigits } from "@/lib/phone"
 
 type Status = "idle" | "sending" | "sent" | "manual"
+type Geo = { state: "off" | "locating" | "denied" } | { state: "on"; location: NonNullable<Lead["location"]> }
+
+/**
+ * The visitor's location for the application, only with their permission: asked when they press the button, or
+ * taken straight away if they already allowed this site (they can still remove it).
+ */
+function useLeadLocation() {
+  const [geo, setGeo] = useState<Geo>({ state: "off" })
+  const locate = () => {
+    if (!("geolocation" in navigator)) return setGeo({ state: "denied" })
+    setGeo({ state: "locating" })
+    navigator.geolocation.getCurrentPosition(
+      (p) =>
+        setGeo({
+          state: "on",
+          location: { lat: p.coords.latitude, lng: p.coords.longitude, accuracy: Math.round(p.coords.accuracy) },
+        }),
+      () => setGeo({ state: "denied" }),
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 5 * 60_000 },
+    )
+  }
+  useEffect(() => {
+    let cancelled = false
+    navigator.permissions
+      ?.query({ name: "geolocation" })
+      .then((p) => !cancelled && p.state === "granted" && locate())
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [])
+  return { geo, locate, clear: () => setGeo({ state: "off" }) }
+}
 
 export function LeadForm() {
   const { t, lang } = useI18n()
   const L = t.lead
-  const [name, setName] = useState("")
+  const [firstName, setFirstName] = useState("")
+  const [lastName, setLastName] = useState("")
+  const [website, setWebsite] = useState("")
+  const { geo, locate, clear } = useLeadLocation()
   const [digits, setDigits] = useState("")
   const [tried, setTried] = useState(false)
   const [status, setStatus] = useState<Status>("idle")
   const [lead, setLead] = useState<Lead | null>(null)
   const [copied, setCopied] = useState(false)
 
-  const nameOk = name.trim().length >= 2
+  const firstOk = firstName.trim().length >= 2
+  const lastOk = lastName.trim().length >= 2
+  const nearest =
+    geo.state === "on"
+      ? byDistance(CENTERS, geo.location).map((c) => ({ ...c, name: t.branches.items[c.id].name }))[0]
+      : undefined
   const phoneOk = isCompletePhone(digits)
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
     setTried(true)
-    if (!nameOk || !phoneOk) return
+    if (!firstOk || !lastOk || !phoneOk) return
     const l: Lead = {
-      name: name.trim(),
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
       phone: `+998${digits}`,
       lang,
       source: "sayt",
+      page: window.location.href,
+      website,
+      ...(geo.state === "on" ? { location: geo.location } : {}),
+      ...(nearest ? { nearest: { name: nearest.name, km: Math.round(nearest.km * 100) / 100 } } : {}),
     }
     setLead(l)
     setStatus("sending")
     setStatus((await submitLead(l)) ? "sent" : "manual")
   }
 
-  const text = lead ? L.leadText(lead.name, lead.phone) : ""
+  const mapLink = lead?.location
+    ? `https://www.google.com/maps/search/?api=1&query=${lead.location.lat.toFixed(6)},${lead.location.lng.toFixed(6)}`
+    : undefined
+  const text = lead ? L.leadText(lead.firstName, lead.lastName, lead.phone, mapLink) : ""
 
   async function copy() {
     if (!lead) return
@@ -102,22 +153,41 @@ export function LeadForm() {
               >
                 <h3 className="text-2xl font-bold">{L.formTitle}</h3>
 
-                <div className="grid gap-2">
-                  <Label htmlFor="lead-name">{L.name}</Label>
-                  <Input
-                    id="lead-name"
-                    autoComplete="name"
-                    placeholder={L.namePlaceholder}
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    aria-invalid={tried && !nameOk}
-                    aria-describedby={tried && !nameOk ? "lead-name-err" : undefined}
-                  />
-                  {tried && !nameOk && (
-                    <p id="lead-name-err" className="text-sm text-destructive">
-                      {L.nameError}
-                    </p>
-                  )}
+                <div className="grid gap-5 sm:grid-cols-2 sm:gap-3">
+                  <div className="grid content-start gap-2">
+                    <Label htmlFor="lead-first">{L.firstName}</Label>
+                    <Input
+                      id="lead-first"
+                      autoComplete="given-name"
+                      placeholder={L.firstNamePlaceholder}
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      aria-invalid={tried && !firstOk}
+                      aria-describedby={tried && !firstOk ? "lead-first-err" : undefined}
+                    />
+                    {tried && !firstOk && (
+                      <p id="lead-first-err" className="text-sm text-destructive">
+                        {L.firstNameError}
+                      </p>
+                    )}
+                  </div>
+                  <div className="grid content-start gap-2">
+                    <Label htmlFor="lead-last">{L.lastName}</Label>
+                    <Input
+                      id="lead-last"
+                      autoComplete="family-name"
+                      placeholder={L.lastNamePlaceholder}
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      aria-invalid={tried && !lastOk}
+                      aria-describedby={tried && !lastOk ? "lead-last-err" : undefined}
+                    />
+                    {tried && !lastOk && (
+                      <p id="lead-last-err" className="text-sm text-destructive">
+                        {L.lastNameError}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 <div className="grid gap-2">
@@ -145,6 +215,56 @@ export function LeadForm() {
                     </p>
                   )}
                 </div>
+
+                {/* Location: optional, only with permission. */}
+                <div className="grid gap-1.5" aria-live="polite">
+                  {geo.state === "on" ? (
+                    <div className="flex items-center gap-3 rounded-xl bg-secondary px-3.5 py-2.5 text-sm">
+                      <MapPin className="size-4 shrink-0 text-brand-ink" />
+                      <span className="min-w-0 flex-1 font-medium">
+                        {nearest ? L.location.added(nearest.name, formatKm(nearest.km, t.decimal)) : L.location.add}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={clear}
+                        aria-label={L.location.remove}
+                        className="grid size-7 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
+                      >
+                        <X className="size-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={locate}
+                      disabled={geo.state === "locating"}
+                      className="flex w-fit items-center gap-2 rounded-xl border border-dashed px-3.5 py-2.5 text-sm font-semibold text-brand-ink transition-colors outline-none hover:bg-secondary focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:opacity-70"
+                    >
+                      {geo.state === "locating" ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <MapPin className="size-4" />
+                      )}
+                      {geo.state === "locating" ? L.location.adding : L.location.add}
+                      <span className="font-normal text-muted-foreground">{L.location.optional}</span>
+                    </button>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    {geo.state === "denied" ? L.location.denied : L.location.hint}
+                  </p>
+                </div>
+
+                {/* Honeypot: hidden from people and screen readers; bots that fill every field give themselves away. */}
+                <input
+                  type="text"
+                  name="website"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden
+                  value={website}
+                  onChange={(e) => setWebsite(e.target.value)}
+                  className="absolute -left-[9999px] h-px w-px opacity-0"
+                />
 
                 <Button
                   type="submit"
@@ -182,7 +302,7 @@ export function LeadForm() {
                 >
                   <Check className="size-8" strokeWidth={3} />
                 </motion.span>
-                <h3 className="mt-5 text-2xl font-bold">{L.thanks(lead?.name ?? "")}</h3>
+                <h3 className="mt-5 text-2xl font-bold">{L.thanks(lead?.firstName ?? "")}</h3>
                 {status === "sent" ? (
                   <p className="mt-2 text-muted-foreground">{L.sent(CONTACT.phone)}</p>
                 ) : (

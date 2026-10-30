@@ -112,6 +112,8 @@ After=network-online.target
 
 [Service]
 WorkingDirectory=$APP
+# Node gives each address only 250 ms by default, so slow links to Telegram fail with ETIMEDOUT now and then.
+Environment=NODE_OPTIONS=--network-family-autoselection-attempt-timeout=2000
 ExecStart=$NODE_DIR/bin/node server/index.ts
 Restart=always
 RestartSec=3

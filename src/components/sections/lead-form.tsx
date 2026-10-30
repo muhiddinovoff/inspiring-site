@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
-import { ArrowRight, Check, Copy, Loader2, MapPin, Phone, Send, X } from "lucide-react"
+import { ArrowRight, Check, Loader2, MapPin, Phone, RotateCw, Send, TriangleAlert, X } from "lucide-react"
 
 import { Shield } from "@/components/logo"
 import { SectionHeading } from "@/components/sections/section-heading"
@@ -14,7 +14,7 @@ import { byDistance, formatKm } from "@/lib/geo"
 import { submitLead, type Lead } from "@/lib/leads"
 import { formatLocal, isCompletePhone, localDigits } from "@/lib/phone"
 
-type Status = "idle" | "sending" | "sent" | "manual"
+type Status = "idle" | "sending" | "sent" | "failed"
 type Geo = { state: "off" | "locating" | "denied" } | { state: "on"; location: NonNullable<Lead["location"]> }
 
 /**
@@ -60,7 +60,6 @@ export function LeadForm() {
   const [tried, setTried] = useState(false)
   const [status, setStatus] = useState<Status>("idle")
   const [lead, setLead] = useState<Lead | null>(null)
-  const [copied, setCopied] = useState(false)
 
   const firstOk = firstName.trim().length >= 2
   const lastOk = lastName.trim().length >= 2
@@ -87,23 +86,14 @@ export function LeadForm() {
     }
     setLead(l)
     setStatus("sending")
-    setStatus((await submitLead(l)) ? "sent" : "manual")
+    setStatus((await submitLead(l)) ? "sent" : "failed")
   }
 
-  const mapLink = lead?.location
-    ? `https://www.google.com/maps/search/?api=1&query=${lead.location.lat.toFixed(6)},${lead.location.lng.toFixed(6)}`
-    : undefined
-  const text = lead ? L.leadText(lead.firstName, lead.lastName, lead.phone, mapLink) : ""
-
-  async function copy() {
+  // A failed send keeps what was typed, so "try again" is one tap.
+  async function retry() {
     if (!lead) return
-    try {
-      await navigator.clipboard.writeText(text)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch {
-      /* clipboard blocked: the text is still visible and selectable */
-    }
+    setStatus("sending")
+    setStatus((await submitLead(lead)) ? "sent" : "failed")
   }
 
   return (
@@ -294,33 +284,40 @@ export function LeadForm() {
                 transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                 className="py-6 text-center"
               >
-                <motion.span
-                  initial={{ scale: 0, rotate: -30 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  transition={{ type: "spring", stiffness: 260, damping: 16, delay: 0.1 }}
-                  className="mx-auto grid size-16 place-items-center rounded-2xl bg-accent text-accent-foreground"
-                >
-                  <Check className="size-8" strokeWidth={3} />
-                </motion.span>
-                <h3 className="mt-5 text-2xl font-bold">{L.thanks(lead?.firstName ?? "")}</h3>
-                {status === "sent" ? (
-                  <p className="mt-2 text-muted-foreground">{L.sent(CONTACT.phone)}</p>
-                ) : (
+                {status === "failed" ? (
                   <>
-                    <p className="mt-2 text-muted-foreground">{L.manual}</p>
-                    <p className="mt-4 rounded-xl bg-secondary p-3 text-sm font-medium select-all">{text}</p>
-                    <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                      <Button asChild variant="accent">
-                        <a href={CONTACT.telegram} target="_blank" rel="noreferrer" onClick={copy}>
-                          <Send /> {L.sendTelegram}
+                    <span className="mx-auto grid size-16 place-items-center rounded-2xl bg-destructive/10 text-destructive">
+                      <TriangleAlert className="size-8" />
+                    </span>
+                    <h3 className="mt-5 text-2xl font-bold">{L.failedTitle}</h3>
+                    <p className="mt-2 text-muted-foreground">{L.failed}</p>
+                    <div className="mt-6 grid gap-2 sm:grid-cols-2">
+                      <Button variant="accent" onClick={retry}>
+                        <RotateCw /> {L.retry}
+                      </Button>
+                      <Button asChild variant="outline">
+                        <a href={CONTACT.phoneHref}>
+                          <Phone /> {CONTACT.phone}
                         </a>
                       </Button>
-                      <Button variant="outline" onClick={copy}>
-                        {copied ? <Check /> : <Copy />} {copied ? L.copied : L.copy}
-                      </Button>
                     </div>
-                    <Button asChild variant="link" className="mt-2 h-auto whitespace-normal">
-                      <a href={CONTACT.phoneHref}>{L.orCall(CONTACT.phone)}</a>
+                  </>
+                ) : (
+                  <>
+                    <motion.span
+                      initial={{ scale: 0, rotate: -30 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      transition={{ type: "spring", stiffness: 260, damping: 16, delay: 0.1 }}
+                      className="mx-auto grid size-16 place-items-center rounded-2xl bg-accent text-accent-foreground"
+                    >
+                      <Check className="size-8" strokeWidth={3} />
+                    </motion.span>
+                    <h3 className="mt-5 text-3xl font-bold">{L.thanks(lead?.firstName ?? "")}</h3>
+                    <p className="mx-auto mt-3 max-w-sm text-muted-foreground">{L.subscribeText}</p>
+                    <Button asChild variant="accent" size="lg" className="mt-6">
+                      <a href={CONTACT.telegram} target="_blank" rel="noreferrer">
+                        <Send /> {L.subscribe}
+                      </a>
                     </Button>
                   </>
                 )}

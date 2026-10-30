@@ -342,14 +342,11 @@ const ru: Dict = {
     submit: "Оставить заявку",
     sending: "Отправляем",
     thanks: (name: string) => `Спасибо, ${name}!`,
-    sent: (phone: string) => `Заявка принята. Менеджер скоро позвонит вам с номера ${phone}.`,
-    manual: "Чтобы завершить заявку, отправьте её нам в Telegram или позвоните.",
-    sendTelegram: "Отправить в Telegram",
-    copy: "Скопировать",
-    copied: "Скопировано",
-    orCall: (phone: string) => `или позвоните по номеру ${phone}`,
-    leadText: (first: string, last: string, phone: string, map?: string) =>
-      `Заявка: ${first} ${last}, тел: ${phone}${map ? `, местоположение: ${map}` : ""}`,
+    subscribeText: "Подпишитесь на наш Telegram-канал, чтобы быть в курсе новостей.",
+    subscribe: "Подписаться",
+    failedTitle: "Заявка не отправилась",
+    failed: "Прервалась связь с интернетом или сервером. Попробуйте ещё раз или позвоните нам.",
+    retry: "Отправить ещё раз",
   },
   footer: {
     about:

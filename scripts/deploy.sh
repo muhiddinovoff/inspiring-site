@@ -32,8 +32,8 @@ FIRST_RUN=1
 if [ "$FIRST_RUN" -eq 1 ]; then
   say "Inspiring Education — o‘rnatish"
   DOMAIN=$(ask "Domen (masalan inspiring.uz, www siz): ")
-  DOMAIN=${DOMAIN,,}; DOMAIN=${DOMAIN#http://}; DOMAIN=${DOMAIN#https://}; DOMAIN=${DOMAIN#www.}; DOMAIN=${DOMAIN%/}
-  [[ "$DOMAIN" =~ ^[a-z0-9.-]+\.[a-z]{2,}$ ]] || die "Domen noto‘g‘ri: $DOMAIN"
+  DOMAIN=${DOMAIN,,}; DOMAIN=${DOMAIN#http://}; DOMAIN=${DOMAIN#https://}; DOMAIN=${DOMAIN#.}; DOMAIN=${DOMAIN#www.}; DOMAIN=${DOMAIN%/}
+  [[ "$DOMAIN" =~ ^([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$ ]] || die "Domen noto‘g‘ri: $DOMAIN"
   EMAIL=$(ask "SSL sertifikat uchun email: ")
   TOKEN=$(ask_secret "Telegram bot tokeni (ekranda ko‘rinmaydi): ")
   [[ "$TOKEN" =~ ^[0-9]+:[A-Za-z0-9_-]{30,}$ ]] || die "Token formati noto‘g‘ri."
@@ -162,7 +162,16 @@ if [ "$FIRST_RUN" -eq 1 ] || { [ ! -e "/etc/nginx/sites-enabled/$SVC" ] && [ ! -
   else
     echo "$CONF" >/etc/nginx/conf.d/$SVC.conf
   fi
-  nginx -t 2>/dev/null || { nginx -t; die "nginx sozlamasida xato — hech narsa qayta yuklanmadi."; }
+  # Long domains can overflow nginx's default name table; raise it only when that is the actual error.
+  if nginx -t 2>&1 | grep -q server_names_hash_bucket_size; then
+    echo 'server_names_hash_bucket_size 64;' >/etc/nginx/conf.d/$SVC-names.conf
+  fi
+  # A broken config must not stay enabled: the next reload of nginx would fail for every site on this server.
+  if ! nginx -t 2>/dev/null; then
+    nginx -t || true
+    rm -f /etc/nginx/sites-enabled/$SVC /etc/nginx/conf.d/$SVC.conf /etc/nginx/conf.d/$SVC-names.conf
+    die "nginx sozlamasida xato — o‘zgarish bekor qilindi, hech narsa qayta yuklanmadi."
+  fi
   systemctl reload nginx
 fi
 

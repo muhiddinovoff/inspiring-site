@@ -11,7 +11,6 @@ import { CONTACT } from "@/data/site"
 import { useI18n } from "@/i18n"
 import { submitLead, type Lead } from "@/lib/leads"
 import { formatLocal, isCompletePhone, localDigits } from "@/lib/phone"
-import { cn } from "@/lib/utils"
 
 type Status = "idle" | "sending" | "sent" | "manual"
 
@@ -20,7 +19,6 @@ export function LeadForm() {
   const L = t.lead
   const [name, setName] = useState("")
   const [digits, setDigits] = useState("")
-  const [grade, setGrade] = useState<number>()
   const [tried, setTried] = useState(false)
   const [status, setStatus] = useState<Status>("idle")
   const [lead, setLead] = useState<Lead | null>(null)
@@ -36,7 +34,6 @@ export function LeadForm() {
     const l: Lead = {
       name: name.trim(),
       phone: `+998${digits}`,
-      grade: grade === undefined ? undefined : `${grade + 1}`,
       lang,
       source: "sayt",
     }
@@ -45,7 +42,7 @@ export function LeadForm() {
     setStatus((await submitLead(l)) ? "sent" : "manual")
   }
 
-  const text = lead ? L.leadText(lead.name, lead.phone, grade === undefined ? undefined : L.grades[grade]) : ""
+  const text = lead ? L.leadText(lead.name, lead.phone) : ""
 
   async function copy() {
     if (!lead) return
@@ -148,30 +145,6 @@ export function LeadForm() {
                     </p>
                   )}
                 </div>
-
-                <fieldset className="grid gap-2">
-                  <legend className="mb-2 text-sm font-semibold">
-                    {L.grade} <span className="font-normal text-muted-foreground">{L.optional}</span>
-                  </legend>
-                  <div className="grid grid-cols-4 gap-2">
-                    {L.grades.map((g, i) => (
-                      <button
-                        key={i}
-                        type="button"
-                        aria-pressed={grade === i}
-                        onClick={() => setGrade((cur) => (cur === i ? undefined : i))}
-                        className={cn(
-                          "h-11 rounded-xl border px-1 text-sm font-semibold transition-all duration-200 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 active:scale-95",
-                          grade === i
-                            ? "border-transparent bg-primary text-primary-foreground"
-                            : "bg-background hover:bg-secondary",
-                        )}
-                      >
-                        {g}
-                      </button>
-                    ))}
-                  </div>
-                </fieldset>
 
                 <Button
                   type="submit"

@@ -100,42 +100,50 @@ const en: Dict = {
     kicker: "Why Inspiring",
     title: "Why parents choose us",
     badge: "of parents are happy with lesson quality and recommend us to others",
-    // Placeholder parent messages: replace the names and texts with real ones (same list in every language).
+    // The wall's conversation: questions parents ask and the centre's answers, from the site's own facts.
+    // Real parent reviews (with their consent) can go here too: { from: "parent", text: "..." }.
     chat: {
       aria: "Messages from parents",
       delivered: "Delivered",
       read: "Read",
       typing: "typing",
+      parent: "Parent",
       us: "Inspiring Education",
       messages: [
-        { name: "Dilnoza M.", text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit." },
         {
-          name: "Shahzod A.",
-          text: "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam!",
+          from: "parent",
+          text: "Hello! My child is in grade 2. Is it too early to prepare for a Presidential School?",
         },
-        { name: "Malika R.", text: "Duis aute irure dolor in reprehenderit." },
         {
-          name: "Javohir T.",
-          text: "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim.",
+          from: "us",
+          text: "Hello! It isn’t. Starting early takes the pressure off: topics are learned without rushing.",
         },
-        { name: "Nodira K.", text: "Nemo enim ipsam voluptatem quia voluptas sit aspernatur." },
+        { from: "parent", text: "Which subjects do the lessons cover?" },
+        { from: "us", text: "Maths and logic, native language and English. We also run regular mock exams." },
+        { from: "parent", text: "How will I follow my child’s progress?" },
+        { from: "us", text: "After every mock exam we tell you where your child is strong and what to work on." },
+        { from: "parent", text: "What are the price and the schedule?" },
         {
-          name: "Bekzod U.",
-          text: "Quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+          from: "us",
+          text: "They depend on grade, track and branch. Leave a request and our manager will give you the details.",
         },
-        { name: "Gulnora S.", text: "Ut enim ad minima veniam, quis nostrum." },
-        { name: "Sardor X.", text: "Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur." },
-        { name: "Kamola Y.", text: "At vero eos et accusamus et iusto odio dignissimos." },
+        { from: "parent", text: "Is there a branch near us?" },
         {
-          name: "Rustam N.",
-          text: "Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus.",
+          from: "us",
+          text: "Seven in Tashkent, plus Samarkand, Termez and Navoi. Find the nearest one on the map below.",
         },
-        { name: "Zarina O.", text: "Temporibus autem quibusdam et aut officiis debitis." },
+        { from: "parent", text: "Which schools do you prepare for?" },
         {
-          name: "Aziz E.",
-          text: "Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias.",
+          from: "us",
+          text: "Presidential Schools, Al-Khwarizmi School, and state and foreign-language specialised schools.",
         },
-      ],
+        { from: "parent", text: "How did students do last year?" },
+        { from: "us", text: "In 2025–2026 more than 192 of our students got into top schools." },
+        { from: "parent", text: "When does enrolment start?" },
+        { from: "us", text: "Enrolment is always open. You can start any time." },
+        { from: "parent", text: "How long does a request take?" },
+        { from: "us", text: "A minute: just a name and phone number. Our manager will call you back." },
+      ] as { from: "parent" | "us"; text: string }[],
     },
     items: [
       {
@@ -322,9 +330,6 @@ const en: Dict = {
     nameError: "Please enter your name",
     phone: "Phone number",
     phoneError: "Enter the full number, e.g. 90 123 45 67",
-    grade: "Child’s grade",
-    optional: "(optional)",
-    grades: ["Grade 1", "Grade 2", "Grade 3", "Grade 4"],
     submit: "Apply now",
     sending: "Sending",
     thanks: (name: string) => `Thank you, ${name}!`,
@@ -334,8 +339,7 @@ const en: Dict = {
     copy: "Copy",
     copied: "Copied",
     orCall: (phone: string) => `or call ${phone}`,
-    leadText: (name: string, phone: string, grade?: string) =>
-      `Request: ${name}, phone: ${phone}${grade ? `, ${grade}` : ""}`,
+    leadText: (name: string, phone: string) => `Request: ${name}, phone: ${phone}`,
   },
   footer: {
     about:

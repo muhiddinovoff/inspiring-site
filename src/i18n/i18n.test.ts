@@ -17,5 +17,4 @@ describe.each([
   it("labels every stat", () => expect(t.stats.items).toHaveLength(STATS.length))
   it("describes every branch", () => expect(t.branches.items).toHaveLength(BRANCHES.length))
   it("has one FAQ answer per question in every language", () => expect(t.faq.items).toHaveLength(uz.faq.items.length))
-  it("has the same grade options", () => expect(t.lead.grades).toHaveLength(uz.lead.grades.length))
 })

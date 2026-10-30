@@ -1,7 +1,6 @@
 export type Lead = {
   name: string
   phone: string
-  grade?: string
   lang: string
   source: string
 }

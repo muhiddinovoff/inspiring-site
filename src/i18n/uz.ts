@@ -98,42 +98,53 @@ const uz = {
     kicker: "Nega Inspiring",
     title: "Ota-onalar bizni nima uchun tanlaydi",
     badge: "ota-ona darslar sifatidan mamnun va bizni boshqalarga tavsiya qiladi",
-    // Placeholder parent messages: replace the names and texts with real ones (same list in every language).
+    // The wall's conversation: questions parents ask and the centre's answers, from the site's own facts.
+    // Real parent reviews (with their consent) can go here too: { from: "parent", text: "..." }.
     chat: {
       aria: "Ota-onalar xabarlari",
       delivered: "Yetkazildi",
       read: "O‘qildi",
       typing: "yozmoqda",
+      parent: "Ota-ona",
       us: "Inspiring Education",
       messages: [
-        { name: "Dilnoza M.", text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit." },
         {
-          name: "Shahzod A.",
-          text: "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam!",
+          from: "parent",
+          text: "Assalomu alaykum! Farzandim 2-sinfda. Prezident maktabiga tayyorlanishga erta emasmi?",
         },
-        { name: "Malika R.", text: "Duis aute irure dolor in reprehenderit." },
         {
-          name: "Javohir T.",
-          text: "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim.",
+          from: "us",
+          text: "Va alaykum assalom! Erta emas. Erta boshlash tayyorgarlikni bosimsiz qiladi: mavzular shoshilmasdan o‘zlashtiriladi.",
         },
-        { name: "Nodira K.", text: "Nemo enim ipsam voluptatem quia voluptas sit aspernatur." },
+        { from: "parent", text: "Darslar qaysi fanlardan bo‘ladi?" },
         {
-          name: "Bekzod U.",
-          text: "Quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+          from: "us",
+          text: "Matematika va mantiq, ona tili va ingliz tili. Muntazam sinov imtihonlari ham o‘tkaziladi.",
         },
-        { name: "Gulnora S.", text: "Ut enim ad minima veniam, quis nostrum." },
-        { name: "Sardor X.", text: "Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur." },
-        { name: "Kamola Y.", text: "At vero eos et accusamus et iusto odio dignissimos." },
+        { from: "parent", text: "Farzandimning natijasini qanday bilib boraman?" },
         {
-          name: "Rustam N.",
-          text: "Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus.",
+          from: "us",
+          text: "Har bir sinov imtihonidan keyin farzandingiz qaysi mavzuda kuchli, qayerda ishlash kerakligini aytamiz.",
         },
-        { name: "Zarina O.", text: "Temporibus autem quibusdam et aut officiis debitis." },
+        { from: "parent", text: "Narxi va dars jadvali qanday?" },
+        { from: "us", text: "Bu sinf, yo‘nalish va filialga bog‘liq. Ariza qoldirsangiz, menejerimiz aniq aytadi." },
+        { from: "parent", text: "Uyimizga yaqin filial bormi?" },
         {
-          name: "Aziz E.",
-          text: "Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias.",
+          from: "us",
+          text: "Toshkentda 7 ta, Samarqand, Termiz va Navoiyda filiallarimiz bor. Pastdagi xaritadan eng yaqinini topasiz.",
         },
-      ],
+        { from: "parent", text: "Qaysi maktablarga tayyorlaysiz?" },
+        {
+          from: "us",
+          text: "Prezident maktablari, Al-Xorazmiy maktabi, davlat va xorijiy tillarga ixtisoslashgan maktablarga.",
+        },
+        { from: "parent", text: "O‘tgan yili natijalar qanday bo‘lgan?" },
+        { from: "us", text: "2025–2026-yilda 192 dan ortiq o‘quvchimiz nufuzli maktablarga qabul qilindi." },
+        { from: "parent", text: "Qabul qachon boshlanadi?" },
+        { from: "us", text: "Qabul doimo ochiq. Istalgan vaqtda boshlashingiz mumkin." },
+        { from: "parent", text: "Ariza qoldirish qancha vaqt oladi?" },
+        { from: "us", text: "Bir daqiqa: ism va telefon raqami yetarli. Menejerimiz o‘zi qo‘ng‘iroq qiladi." },
+      ] as { from: "parent" | "us"; text: string }[],
     },
     items: [
       {
@@ -323,9 +334,6 @@ const uz = {
     nameError: "Ismingizni yozing",
     phone: "Telefon raqami",
     phoneError: "Raqamni to‘liq yozing, masalan 90 123 45 67",
-    grade: "Farzandingiz sinfi",
-    optional: "(ixtiyoriy)",
-    grades: ["1-sinf", "2-sinf", "3-sinf", "4-sinf"],
     submit: "Ariza qoldirish",
     sending: "Yuborilmoqda",
     thanks: (name: string) => `Rahmat, ${name}!`,
@@ -335,8 +343,7 @@ const uz = {
     copy: "Nusxa olish",
     copied: "Nusxalandi",
     orCall: (phone: string) => `yoki ${phone} raqamiga qo‘ng‘iroq qiling`,
-    leadText: (name: string, phone: string, grade?: string) =>
-      `Ariza: ${name}, tel: ${phone}${grade ? `, ${grade}` : ""}`,
+    leadText: (name: string, phone: string) => `Ariza: ${name}, tel: ${phone}`,
   },
   footer: {
     about:

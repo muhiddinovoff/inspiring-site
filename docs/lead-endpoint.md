@@ -3,7 +3,7 @@
 Sayt formasi har bir arizani JSON ko‘rinishida `VITE_LEAD_ENDPOINT` manziliga yuboradi:
 
 ```json
-{ "name": "Dilnoza", "phone": "+998901234567", "grade": "3", "lang": "uz", "source": "sayt", "createdAt": "2026-10-28T11:00:00.000Z" }
+{ "name": "Dilnoza", "phone": "+998901234567", "lang": "uz", "source": "sayt", "createdAt": "2026-10-28T11:00:00.000Z" }
 ```
 
 Eng oddiy va bepul yo‘l: Google Apps Script. Arizalar jadvalga tushadi va xohlasangiz Telegram guruhga ham xabar ketadi.
@@ -20,10 +20,10 @@ const TELEGRAM_CHAT_ID = ""
 function doPost(e) {
   const lead = JSON.parse(e.postData.contents)
   SpreadsheetApp.getActiveSheet().appendRow([
-    new Date(lead.createdAt), lead.name, lead.phone, lead.grade || "", lead.lang, lead.source,
+    new Date(lead.createdAt), lead.name, lead.phone, lead.lang, lead.source,
   ])
   if (TELEGRAM_TOKEN && TELEGRAM_CHAT_ID) {
-    const text = `Yangi ariza\n${lead.name}\n${lead.phone}${lead.grade ? `\n${lead.grade}-sinf` : ""}\nTil: ${lead.lang}`
+    const text = `Yangi ariza\n${lead.name}\n${lead.phone}\nTil: ${lead.lang}`
     UrlFetchApp.fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
       method: "post",
       payload: { chat_id: TELEGRAM_CHAT_ID, text },

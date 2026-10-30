@@ -100,42 +100,50 @@ const ru: Dict = {
     kicker: "Почему Inspiring",
     title: "Почему родители выбирают нас",
     badge: "родителей довольны качеством занятий и рекомендуют нас другим",
-    // Placeholder parent messages: replace the names and texts with real ones (same list in every language).
+    // The wall's conversation: questions parents ask and the centre's answers, from the site's own facts.
+    // Real parent reviews (with their consent) can go here too: { from: "parent", text: "..." }.
     chat: {
       aria: "Сообщения родителей",
       delivered: "Доставлено",
       read: "Прочитано",
       typing: "печатает",
+      parent: "Родитель",
       us: "Inspiring Education",
       messages: [
-        { name: "Dilnoza M.", text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit." },
+        { from: "parent", text: "Здравствуйте! Мой ребёнок во 2 классе. Не рано ли готовиться в Президентскую школу?" },
         {
-          name: "Shahzod A.",
-          text: "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam!",
+          from: "us",
+          text: "Здравствуйте! Не рано. Ранний старт делает подготовку спокойной: темы осваиваются без спешки.",
         },
-        { name: "Malika R.", text: "Duis aute irure dolor in reprehenderit." },
+        { from: "parent", text: "По каким предметам идут занятия?" },
+        { from: "us", text: "Математика и логика, родной и английский язык. Регулярно проводим пробные экзамены." },
+        { from: "parent", text: "Как я буду следить за результатами ребёнка?" },
         {
-          name: "Javohir T.",
-          text: "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim.",
+          from: "us",
+          text: "После каждого пробного экзамена расскажем, в чём ребёнок силён и над чем стоит поработать.",
         },
-        { name: "Nodira K.", text: "Nemo enim ipsam voluptatem quia voluptas sit aspernatur." },
+        { from: "parent", text: "Сколько стоит и какое расписание?" },
         {
-          name: "Bekzod U.",
-          text: "Quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+          from: "us",
+          text: "Зависит от класса, направления и филиала. Оставьте заявку, и менеджер всё точно расскажет.",
         },
-        { name: "Gulnora S.", text: "Ut enim ad minima veniam, quis nostrum." },
-        { name: "Sardor X.", text: "Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur." },
-        { name: "Kamola Y.", text: "At vero eos et accusamus et iusto odio dignissimos." },
+        { from: "parent", text: "Есть ли филиал рядом с нами?" },
         {
-          name: "Rustam N.",
-          text: "Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus.",
+          from: "us",
+          text: "7 филиалов в Ташкенте, а также в Самарканде, Термезе и Навои. Ближайший найдёте на карте ниже.",
         },
-        { name: "Zarina O.", text: "Temporibus autem quibusdam et aut officiis debitis." },
+        { from: "parent", text: "В какие школы вы готовите?" },
         {
-          name: "Aziz E.",
-          text: "Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias.",
+          from: "us",
+          text: "В Президентские школы, школу Аль-Хорезми, государственные и специализированные языковые школы.",
         },
-      ],
+        { from: "parent", text: "Какие были результаты в прошлом году?" },
+        { from: "us", text: "В 2025–2026 году более 192 наших учеников поступили в престижные школы." },
+        { from: "parent", text: "Когда начинается набор?" },
+        { from: "us", text: "Набор открыт всегда. Начать можно в любое время." },
+        { from: "parent", text: "Сколько времени займёт заявка?" },
+        { from: "us", text: "Минуту: достаточно имени и телефона. Менеджер сам перезвонит." },
+      ] as { from: "parent" | "us"; text: string }[],
     },
     items: [
       {
@@ -319,9 +327,6 @@ const ru: Dict = {
     nameError: "Укажите имя",
     phone: "Номер телефона",
     phoneError: "Введите номер полностью, например 90 123 45 67",
-    grade: "Класс ребёнка",
-    optional: "(необязательно)",
-    grades: ["1 класс", "2 класс", "3 класс", "4 класс"],
     submit: "Оставить заявку",
     sending: "Отправляем",
     thanks: (name: string) => `Спасибо, ${name}!`,
@@ -331,8 +336,7 @@ const ru: Dict = {
     copy: "Скопировать",
     copied: "Скопировано",
     orCall: (phone: string) => `или позвоните по номеру ${phone}`,
-    leadText: (name: string, phone: string, grade?: string) =>
-      `Заявка: ${name}, тел: ${phone}${grade ? `, ${grade}` : ""}`,
+    leadText: (name: string, phone: string) => `Заявка: ${name}, тел: ${phone}`,
   },
   footer: {
     about:

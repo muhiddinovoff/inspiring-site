@@ -326,12 +326,24 @@ const uz = {
   lead: {
     kicker: "Qabul doimo ochiq",
     title: "Birinchi qadamni bugun qo‘ying",
-    text: "Ism va raqamingizni qoldiring. Menejerimiz o‘zi qo‘ng‘iroq qilib, farzandingizga mos yo‘nalish, narx va jadvalni aytadi.",
+    text: "Ism, familiya va raqamingizni qoldiring. Menejerimiz o‘zi qo‘ng‘iroq qilib, farzandingizga mos yo‘nalish, narx va jadvalni aytadi.",
     perks: ["Bir daqiqa vaqt oladi", "Hech qanday majburiyat yo‘q", "Raqamingiz faqat siz bilan bog‘lanish uchun"],
     formTitle: "Bepul maslahatga yozilish",
-    name: "Ismingiz",
-    namePlaceholder: "Masalan, Dilnoza",
-    nameError: "Ismingizni yozing",
+    firstName: "Ismingiz",
+    firstNamePlaceholder: "Masalan, Dilnoza",
+    firstNameError: "Ismingizni yozing",
+    lastName: "Familiyangiz",
+    lastNamePlaceholder: "Masalan, Karimova",
+    lastNameError: "Familiyangizni yozing",
+    location: {
+      add: "Joylashuvimni ham yuborish",
+      optional: "(ixtiyoriy)",
+      adding: "Joylashuv aniqlanmoqda…",
+      added: (branch: string, d: string) => `Joylashuv qo‘shildi · eng yaqin filial: ${branch}, ${d}`,
+      remove: "Joylashuvni olib tashlash",
+      denied: "Joylashuvga ruxsat berilmadi — muammo emas, arizangiz baribir yuboriladi.",
+      hint: "Eng yaqin filialni tavsiya qilishimiz uchun. Faqat arizangiz bilan menejerga yuboriladi.",
+    },
     phone: "Telefon raqami",
     phoneError: "Raqamni to‘liq yozing, masalan 90 123 45 67",
     submit: "Ariza qoldirish",
@@ -343,7 +355,8 @@ const uz = {
     copy: "Nusxa olish",
     copied: "Nusxalandi",
     orCall: (phone: string) => `yoki ${phone} raqamiga qo‘ng‘iroq qiling`,
-    leadText: (name: string, phone: string) => `Ariza: ${name}, tel: ${phone}`,
+    leadText: (first: string, last: string, phone: string, map?: string) =>
+      `Ariza: ${first} ${last}, tel: ${phone}${map ? `, joylashuv: ${map}` : ""}`,
   },
   footer: {
     about:

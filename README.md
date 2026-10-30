@@ -23,7 +23,7 @@
 - **Uch tilda** — o‘zbek, rus, ingliz, har biri o‘z manzilida: [`/`](https://muhiddinovoff.github.io/inspiring-site/), [`/ru/`](https://muhiddinovoff.github.io/inspiring-site/ru/), [`/en/`](https://muhiddinovoff.github.io/inspiring-site/en/). Til tepadagi UZ / RU / EN tugmasi bilan almashadi va eslab qolinadi; har bir til sahifasining sarlavhasi, tavsifi va Telegram preview'i o‘sha tilda.
 - **Silliq animatsiyalar** — Lenis inersion skroll, bosh ekrandagi 3D “ekran” (scroll animatsiya), sanab ko‘tariladigan raqamlar, skroll bilan to‘ladigan yo‘l xaritasi, parallax.
 - **Matnlarni to‘ldirish** — ustozlar, ota-onalar fikrlari, filial koordinatalari qayerda turishi: [qo‘llanma](docs/content.md).
-- **Ariza formasi** — ikki maydon, `+998` telefon maskasi, sinf tanlash; Google Sheets / Telegram'ga ulanadi ([qo‘llanma](docs/lead-endpoint.md)).
+- **Ariza formasi** — ism, familiya, `+998` telefon maskasi va ixtiyoriy joylashuv (eng yaqin filial bilan); o‘z serverimiz orqali Telegram botga, call-markazga boradi ([qo‘llanma](docs/server.md)).
 - **3 xil ko‘rinish** — Yorug‘, Tun va Aralash (qurilma sozlamasiga qarab o‘zi almashadi). Tugma tepada, tanlov eslab qolinadi, almashganda sahifa silliq o‘tadi.
 - **Qulaylik** — bosiladigan telefon va xarita havolalari, shahar bo‘yicha filial filtri, mobil pastki panel.
 - **Sifat** — klaviatura bilan boshqarish, “harakatni kamaytirish” sozlamasini hurmat qilish, SEO va ulashish teglari, sitemap.
@@ -61,6 +61,8 @@ npm run dev        # http://localhost:5173
 | `npm run preview` | build natijasini ko‘rish |
 | `npm run check` | lint + format + test + build (push'dan oldin) |
 | `npm run format` | kodni formatlash |
+| `npm run server` | saytni va ariza serverini ishga tushiradi (avval `npm run build`; [qo‘llanma](docs/server.md)) |
+| `npm run bot:setup` | Telegram botning nomi, tavsifi va menyusini o‘rnatadi |
 | `npm run cutout` | bosh ekrandagi o‘quvchilar rasmidan fonni olib tashlaydi (`scripts/cutout.py`; avval `pip install "rembg[cpu]" pillow numpy`) |
 
 ## Tuzilma

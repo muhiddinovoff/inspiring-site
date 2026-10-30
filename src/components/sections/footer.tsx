@@ -10,7 +10,7 @@ export function Footer() {
     <footer className="bg-[#061d1a] pb-28 text-white/70 md:pb-10">
       <div className="mx-auto grid max-w-6xl gap-10 px-4 pt-14 md:grid-cols-[1.2fr_1fr_1fr] md:px-6">
         <div>
-          <Logo light gap="#061d1a" />
+          <Logo light />
           <p className="mt-4 max-w-xs text-sm">{t.footer.about}</p>
         </div>
         <nav aria-label={t.nav.footer} className="grid content-start gap-2 text-sm">

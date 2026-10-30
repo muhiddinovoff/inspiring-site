@@ -5,6 +5,20 @@ Bot tokeni **faqat serverdagi `.env` faylida** turadi — saytning kodida ham, G
 
 Kerak: Ubuntu 22.04/24.04 server (VPS), domen (masalan `inspiring.uz`) va unga SSH orqali kirish.
 
+## Tez yo‘l: bitta skript (boshqa saytlar bor serverda ham)
+Domen panelida `@` va `www` uchun **A** yozuvni server IP siga yo‘naltiring, so‘ng serverda:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/muhiddinovoff/inspiring-site/main/scripts/deploy.sh -o deploy.sh && sudo bash deploy.sh
+```
+
+Skript domen, email, bot tokeni va call-markaz chat ID larini so‘raydi, keyin hammasini o‘zi qiladi:
+alohida Node.js 22 (`/opt/inspiring/node`, tizimdagi Node ga tegmaydi), alohida foydalanuvchi va bo‘sh port,
+`inspiring` systemd xizmati, yangi domen uchun **bitta** nginx bloki (mavjud saytlarning sozlamalari o‘zgarmaydi),
+DNS tayyor bo‘lsa — bepul HTTPS, va botning nomi/tavsifi. Yangilash uchun shu `sudo bash deploy.sh` ni qayta ishga tushiring.
+
+Quyida xuddi shu qadamlar qo‘lda.
+
 ## 1. Domenni serverga ulash
 Domen panelida (DNS) ikkita **A** yozuv qo‘shing, qiymati — serveringiz IP manzili:
 

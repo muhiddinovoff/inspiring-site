@@ -349,14 +349,11 @@ const uz = {
     submit: "Ariza qoldirish",
     sending: "Yuborilmoqda",
     thanks: (name: string) => `Rahmat, ${name}!`,
-    sent: (phone: string) => `Arizangiz qabul qilindi. Menejerimiz tez orada ${phone} raqamidan qo‘ng‘iroq qiladi.`,
-    manual: "Arizani tugatish uchun uni Telegramda bizga yuboring yoki qo‘ng‘iroq qiling.",
-    sendTelegram: "Telegramda yuborish",
-    copy: "Nusxa olish",
-    copied: "Nusxalandi",
-    orCall: (phone: string) => `yoki ${phone} raqamiga qo‘ng‘iroq qiling`,
-    leadText: (first: string, last: string, phone: string, map?: string) =>
-      `Ariza: ${first} ${last}, tel: ${phone}${map ? `, joylashuv: ${map}` : ""}`,
+    subscribeText: "Yangiliklardan xabardor bo‘lish uchun Telegram kanalimizga obuna bo‘ling.",
+    subscribe: "Obuna bo‘lish",
+    failedTitle: "Ariza yuborilmadi",
+    failed: "Internet yoki serverda uzilish bo‘ldi. Qayta urinib ko‘ring yoki bizga qo‘ng‘iroq qiling.",
+    retry: "Qayta yuborish",
   },
   footer: {
     about:

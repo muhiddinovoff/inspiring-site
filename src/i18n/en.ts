@@ -345,14 +345,11 @@ const en: Dict = {
     submit: "Apply now",
     sending: "Sending",
     thanks: (name: string) => `Thank you, ${name}!`,
-    sent: (phone: string) => `Your request has been received. Our manager will call you soon from ${phone}.`,
-    manual: "To finish, send your request to us on Telegram or give us a call.",
-    sendTelegram: "Send on Telegram",
-    copy: "Copy",
-    copied: "Copied",
-    orCall: (phone: string) => `or call ${phone}`,
-    leadText: (first: string, last: string, phone: string, map?: string) =>
-      `Request: ${first} ${last}, phone: ${phone}${map ? `, location: ${map}` : ""}`,
+    subscribeText: "Subscribe to our Telegram channel to stay up to date with our news.",
+    subscribe: "Subscribe",
+    failedTitle: "Your request wasn’t sent",
+    failed: "The connection or our server dropped. Please try again or give us a call.",
+    retry: "Try again",
   },
   footer: {
     about:

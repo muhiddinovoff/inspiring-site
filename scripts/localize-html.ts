@@ -9,7 +9,7 @@ import en from "../src/i18n/en.ts"
 import ru from "../src/i18n/ru.ts"
 import uz from "../src/i18n/uz.ts"
 
-const SITE = "https://muhiddinovoff.github.io/inspiring-site/"
+const SITE = "https://inspiringeducation.uz/"
 const OG_LOCALE = { uz: "uz_UZ", ru: "ru_RU", en: "en_US" } as const
 
 const source = readFileSync("dist/index.html", "utf8")

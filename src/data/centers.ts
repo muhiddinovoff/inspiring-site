@@ -19,6 +19,7 @@ const COORDS: LatLng[] = [
   { lat: 39.668694, lng: 66.963011 }, // Samarqand, Bo‘stonsaroy 29
   { lat: 37.236085, lng: 67.27848 }, // Termiz, Soat chorrahasi
   { lat: 40.085013, lng: 65.38574 }, // Navoiy, Talabalar 50/1
+  { lat: 41.340334, lng: 69.204443 }, // Beruniy, Shayxontohur
 ]
 
 export const CENTERS: Center[] = BRANCHES.map((b, id) => ({

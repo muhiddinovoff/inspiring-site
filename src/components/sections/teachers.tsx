@@ -7,7 +7,7 @@ import { Reveal } from "@/components/motion/reveal"
 import { SectionHeading } from "@/components/sections/section-heading"
 import { Button } from "@/components/ui/button"
 import { TEACHERS, pick, type Teacher } from "@/data/teachers"
-import { ringOffset, useScrollCarousel } from "@/hooks/use-carousel"
+import { ringOffset, useCarousel } from "@/hooks/use-carousel"
 import { useI18n } from "@/i18n"
 import { richEffects } from "@/lib/device"
 import { mouseMoved } from "@/lib/pointer"
@@ -42,7 +42,7 @@ function useSizes() {
 type CardProps = {
   teacher: Teacher
   i: number
-  /** Carousel position (follows the scroll) and how far the centre card is open (0–1), shared by all cards. */
+  /** Carousel position (a point on the ring) and how far the centre card is open (0–1), shared by all cards. */
   pos: MotionValue<number>
   openness: MotionValue<number>
   /** Whole-card distance from the centre card. */
@@ -63,7 +63,7 @@ function TeacherCard({ teacher, i, pos, openness, offset, expanded, sizes, onOpe
   const active = offset === 0
   const far = Math.abs(offset) > 2
 
-  // Hover intent: opens only after the mouse has really moved over the card for a moment. A card scrolled
+  // Hover intent: opens only after the mouse has really moved over the card for a moment. A card turned or scrolled
   // under a resting cursor, or a pointer just passing by, leaves it shut.
   const intent = useRef<ReturnType<typeof setTimeout>>(undefined)
   const mouse = useRef<{ x: number; y: number } | null>(null)
@@ -71,7 +71,7 @@ function TeacherCard({ teacher, i, pos, openness, offset, expanded, sizes, onOpe
 
   const detailsW = sizes.open - sizes.openPhoto
 
-  // Place follows the scroll continuously. Neighbours stay sharp so faces read; the outer pair goes soft, and
+  // Place follows the carousel continuously. Neighbours stay sharp so faces read; the outer pair goes soft, and
   // while the centre card is open its neighbours step back: smaller, fainter, blurred.
   const step = useRef(sizes.step)
   step.current = sizes.step
@@ -232,10 +232,13 @@ function TeacherCard({ teacher, i, pos, openness, offset, expanded, sizes, onOpe
 export function Teachers() {
   const { t: tr } = useI18n()
   const sizes = useSizes()
-  const { pos, active, go, goTo, section, bind } = useScrollCarousel<HTMLElement>({ count: TEACHERS.length })
-  const inView = useInView(section.ref, { amount: 0.15 })
-  // Which card is open. Scrolling on to the next teacher, or away from the section, closes it.
+  // Which card is open. It holds the carousel still; turning to the next teacher, or scrolling away, closes it.
   const [open, setOpen] = useState<number | null>(null)
+  const { pos, active, go, goTo, section, bind } = useCarousel<HTMLElement>({
+    count: TEACHERS.length,
+    paused: open !== null,
+  })
+  const inView = useInView(section.ref, { amount: 0.15 })
   if (open !== null && (open !== active || !inView)) setOpen(null)
   const expanded = open === active
   const openness = useSpring(0, SPRING)
@@ -243,8 +246,7 @@ export function Teachers() {
 
   return (
     <section {...section} id="ustozlar" className="relative">
-      {/* Pinned while the page scrolls past: each teacher takes a turn in the centre. */}
-      <div className="sticky top-0 flex h-svh flex-col justify-center overflow-x-clip pt-16">
+      <div className="flex flex-col overflow-x-clip py-24 md:py-32">
         <div className="mx-auto w-full max-w-6xl px-4 md:px-6">
           <SectionHeading kicker={tr.teachers.kicker} title={tr.teachers.title} text={tr.teachers.text} />
         </div>

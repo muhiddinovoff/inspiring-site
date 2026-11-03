@@ -103,13 +103,88 @@ def head(rgba: np.ndarray) -> tuple[int, float, float]:
     return top, width, float(xs.mean()) if len(xs) else float(cols.mean())
 
 
+def to_ycc(rgb: np.ndarray) -> np.ndarray:
+    r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
+    return np.stack(
+        [0.299 * r + 0.587 * g + 0.114 * b, 128 - 0.168736 * r - 0.331264 * g + 0.5 * b, 128 + 0.5 * r - 0.418688 * g - 0.081312 * b],
+        -1,
+    )
+
+
+def from_ycc(ycc: np.ndarray) -> np.ndarray:
+    y, cb, cr = ycc[..., 0], ycc[..., 1] - 128, ycc[..., 2] - 128
+    return np.stack([y + 1.402 * cr, y - 0.344136 * cb - 0.714136 * cr, y + 1.772 * cb], -1)
+
+
+def white_balance(rgba: np.ndarray) -> np.ndarray:
+    """Every poster was graded differently. The white shirts should be white: whatever tint they carry comes off the
+    whole child (gently, and never more than 10 % per channel)."""
+    rgb = rgba[..., :3].astype(np.float32)
+    ycc = to_ycc(rgb)
+    shirt = (rgba[..., 3] > 250) & (ycc[..., 0] > 170) & (np.abs(ycc[..., 1] - 128) < 14) & (np.abs(ycc[..., 2] - 128) < 14)
+    if shirt.sum() < 500:
+        return rgba
+    mean = rgb[shirt].mean(0)
+    gain = np.clip(mean.mean() / mean, 0.9, 1.1) ** 0.8
+    rgba[..., :3] = np.clip(rgb * gain, 0, 255).astype(np.uint8)
+    return rgba
+
+
+def skin(rgba: np.ndarray) -> np.ndarray:
+    """A soft 0..1 mask of the skin (face, neck, hands), from the classic YCbCr skin range."""
+    ycc = to_ycc(rgba[..., :3].astype(np.float32))
+    y, cb, cr = ycc[..., 0], ycc[..., 1], ycc[..., 2]
+    hard = (rgba[..., 3] > 200) & (y > 55) & (cb > 77) & (cb < 130) & (cr > 133) & (cr < 195)
+    hard = ndimage.binary_opening(hard, iterations=2)
+    # Whole patches, no holes: flushed cheeks, eyes and lips are corrected together with the skin around them, or the
+    # change in tone would leave them as blotches.
+    hard = ndimage.binary_fill_holes(ndimage.binary_closing(hard, iterations=8))
+    return np.asarray(Image.fromarray((hard * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(4)), np.float32) / 255
+
+
+def retouch(rgba: np.ndarray, mask: np.ndarray, own: np.ndarray, target: np.ndarray) -> np.ndarray:
+    """Brings this child's skin towards the group's tone and brightness, then smooths it lightly. Only the skin is
+    touched: uniforms, hair, eyes and lips keep their own colour and texture."""
+    rgb = rgba[..., :3].astype(np.float32)
+    ycc = to_ycc(rgb)
+    m = mask[..., None]
+    gain = np.clip(target[0] / own[0], 0.88, 1.15) ** 0.75
+    shift = (target[1:] - own[1:]) * 0.7
+    tuned = ycc.copy()
+    tuned[..., 0] *= gain
+    tuned[..., 1:] += shift
+    rgb = rgb + m * (from_ycc(tuned) - rgb)
+    # Smoothing: a blur blended in only where the skin is even, so the eyes, brows and lips stay sharp.
+    blur = np.asarray(Image.fromarray(np.clip(rgb, 0, 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(2.2)), np.float32)
+    grad = np.asarray(Image.fromarray(np.clip(rgb, 0, 255).astype(np.uint8)).convert("L").filter(ImageFilter.FIND_EDGES), np.float32)
+    even = np.clip(1 - grad / 40, 0, 1)[..., None]
+    rgb = rgb + m * even * 0.4 * (blur - rgb)
+    rgba[..., :3] = np.clip(rgb, 0, 255).astype(np.uint8)
+    return rgba
+
+
+def clean_edge(rgba: np.ndarray) -> np.ndarray:
+    """Pulls the outline in by a pixel and softens it: no light fringe from the posters' glow around hair and shoulders."""
+    a = Image.fromarray(rgba[..., 3]).filter(ImageFilter.MinFilter(3)).filter(ImageFilter.GaussianBlur(0.8))
+    rgba[..., 3] = np.minimum(rgba[..., 3], np.asarray(a))
+    return rgba
+
+
 def main() -> None:
     cache = Path(sys.argv[1]) if len(sys.argv) > 1 else None
     OUT.mkdir(parents=True, exist_ok=True)
     n = len(ROW)
+    kids = [clean_edge(white_balance(despill(cut_out(name, box, cache)))) for name, box in ROW]
+    masks = [skin(rgba) for rgba in kids]
+    tones = []
+    for rgba, mask in zip(kids, masks):
+        ycc = to_ycc(rgba[..., :3].astype(np.float32))
+        tones.append((ycc * mask[..., None]).sum((0, 1)) / mask.sum())
+    # The group's tone: the median child, a touch brighter so faces read well on the dark theme too.
+    target = np.median(tones, 0) * np.array([1.04, 1, 1])
     layers = []
     for i, (name, box) in enumerate(ROW):
-        rgba = despill(cut_out(name, box, cache))
+        rgba = retouch(kids[i], masks[i], tones[i], target)
         top, width, cx = head(rgba)
         k = HEAD / width
         h, w = rgba.shape[:2]

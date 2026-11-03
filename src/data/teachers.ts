@@ -24,6 +24,51 @@ export type Teacher = {
 // Yutuq misoli: wins: [{ uz: "50+ o‘quvchi Prezident maktabiga", ru: "50+ учеников в Президентские школы", en: "50+ students into Presidential schools" }]
 export const TEACHERS: Teacher[] = [
   {
+    name: "",
+    subject: { uz: "", ru: "", en: "" },
+    exp: { uz: "", ru: "", en: "" },
+    about: { uz: "", ru: "", en: "" },
+    wins: [],
+    img: asset("teachers/ustoz-1.jpg"),
+  },
+  {
+    name: "",
+    subject: { uz: "", ru: "", en: "" },
+    exp: { uz: "", ru: "", en: "" },
+    about: { uz: "", ru: "", en: "" },
+    wins: [],
+    img: asset("teachers/ustoz-2.jpg"),
+  },
+  {
+    name: "Mr. Ali",
+    subject: { uz: "", ru: "", en: "" },
+    exp: { uz: "", ru: "", en: "" },
+    about: { uz: "", ru: "", en: "" },
+    wins: [
+      {
+        uz: "18 ta o‘quvchi Prezident maktabiga",
+        ru: "18 учеников поступили в Президентские школы",
+        en: "18 students into Presidential schools",
+      },
+      {
+        uz: "25 ta o‘quvchi Al-Xorazmiy nomidagi maktabga",
+        ru: "25 учеников поступили в школу имени Аль-Хорезми",
+        en: "25 students into the Al-Khorazmiy school",
+      },
+      {
+        uz: "90+ ta o‘quvchi ixtisoslashgan maktablarga",
+        ru: "90+ учеников поступили в специализированные школы",
+        en: "90+ students into specialized schools",
+      },
+      {
+        uz: "3 ta o‘quvchi xorijiy tillarga ixtisoslashtirilgan maktabga",
+        ru: "3 ученика поступили в школу с углублённым изучением иностранных языков",
+        en: "3 students into a foreign-language specialized school",
+      },
+    ],
+    img: asset("teachers/ustoz-3.jpg"),
+  },
+  {
     name: "Maxanov Asilbek",
     subject: { uz: "Matematika", ru: "Математика", en: "Mathematics" },
     exp: {
@@ -58,46 +103,85 @@ export const TEACHERS: Teacher[] = [
         en: "6 students into the Al-Khorazmiy school",
       },
     ],
-    img: asset("teachers/ustoz-1.jpg"),
-  },
-  {
-    name: "",
-    subject: { uz: "", ru: "", en: "" },
-    exp: { uz: "", ru: "", en: "" },
-    about: { uz: "", ru: "", en: "" },
-    wins: [],
-    img: asset("teachers/ustoz-2.jpg"),
-  },
-  {
-    name: "",
-    subject: { uz: "", ru: "", en: "" },
-    exp: { uz: "", ru: "", en: "" },
-    about: { uz: "", ru: "", en: "" },
-    wins: [],
-    img: asset("teachers/ustoz-3.jpg"),
-  },
-  {
-    name: "",
-    subject: { uz: "", ru: "", en: "" },
-    exp: { uz: "", ru: "", en: "" },
-    about: { uz: "", ru: "", en: "" },
-    wins: [],
     img: asset("teachers/ustoz-4.jpg"),
   },
   {
-    name: "",
-    subject: { uz: "", ru: "", en: "" },
-    exp: { uz: "", ru: "", en: "" },
-    about: { uz: "", ru: "", en: "" },
-    wins: [],
+    name: "Anna",
+    subject: { uz: "Ingliz tili", ru: "Английский язык", en: "English" },
+    exp: {
+      uz: "ESL/EFL o‘qituvchisi, IELTS/CEFR tayyorlov mutaxassisi — 2009-yildan beri",
+      ru: "Преподаватель ESL/EFL, специалист по подготовке к IELTS/CEFR — с 2009 года",
+      en: "ESL/EFL teacher, IELTS/CEFR exam prep specialist — since 2009",
+    },
+    about: {
+      uz: "2018–2025-yillarda Bilim va malakalarni baholash agentligida CEFR imtihon testlarini tuzuvchi va baholovchi bo‘lib ishlagan, hozir Inspiring International School’da IELTS va CEFR’ga tayyorlaydi. O‘zDJTU’da lingvistika bo‘yicha magistr, ingliz tili — C1.",
+      ru: "С 2018 по 2025 год работала главным специалистом Агентства по оценке знаний и навыков — разрабатывала и оценивала тесты CEFR. Сейчас преподаёт в Inspiring International School, готовит к IELTS и CEFR. Магистр лингвистики (УзГУМЯ), английский — C1.",
+      en: "From 2018 to 2025 served as chief specialist at Uzbekistan's Agency for Assessing Knowledge and Skills, developing and scoring official CEFR exams. Now teaches at Inspiring International School, preparing students for IELTS and CEFR. Master's in Linguistics (UzSWLU), English level C1.",
+    },
+    wins: [
+      {
+        uz: "CEFR imtihon testlarini rasmiy tuzuvchi va baholovchisi (2018–2025)",
+        ru: "Официальный разработчик и эксперт-оценщик тестов CEFR (2018–2025)",
+        en: "Official CEFR exam item writer and assessor (2018–2025)",
+      },
+      {
+        uz: "Cambridge Assessment English treninglarida ishtirok etgan",
+        ru: "Участвовала в тренингах Cambridge Assessment English",
+        en: "Trained with Cambridge Assessment English",
+      },
+      {
+        uz: "Lingvistika yo‘nalishi bo‘yicha magistr (O‘zDJTU)",
+        ru: "Магистр лингвистики (УзГУМЯ)",
+        en: "Master's degree in Linguistics (UzSWLU)",
+      },
+      {
+        uz: "Ingliz tili — C1 darajasi",
+        ru: "Английский язык — уровень C1",
+        en: "English — C1 level",
+      },
+    ],
     img: asset("teachers/ustoz-5.jpg"),
   },
   {
-    name: "",
-    subject: { uz: "", ru: "", en: "" },
-    exp: { uz: "", ru: "", en: "" },
-    about: { uz: "", ru: "", en: "" },
-    wins: [],
+    name: "Najmiddin Ibrohimov",
+    subject: { uz: "Matematika", ru: "Математика", en: "Mathematics" },
+    exp: {
+      uz: "O‘zMU, Matematika yo‘nalishi — 2023-yildan beri",
+      ru: "НУУз, направление «Математика» — с 2023 года",
+      en: "NUUz, Mathematics — since 2023",
+    },
+    about: {
+      uz: "MS A+ sertifikati sohibi, 2023-yildan matematika o‘qitadi. Dars namunalari: t.me/mathustoz.",
+      ru: "Обладатель сертификата MS A+, преподаёт математику с 2023 года. Примеры уроков: t.me/mathustoz.",
+      en: "Holds an MS A+ certificate, teaching mathematics since 2023. Lesson samples: t.me/mathustoz.",
+    },
+    wins: [
+      {
+        uz: "10 ta o‘quvchi Prezident maktabiga (1–3-o‘rinlar)",
+        ru: "10 учеников поступили в Президентские школы (1–3-е места)",
+        en: "10 students into Presidential schools (1st–3rd place)",
+      },
+      {
+        uz: "25+ o‘quvchi Alxorazmiy nomidagi maktabga",
+        ru: "25+ учеников поступили в школу имени Аль-Хорезми",
+        en: "25+ students into the Al-Khorazmiy school",
+      },
+      {
+        uz: "8 ta o‘quvchi Mirzo Ulug‘bek maktabiga (2 tasi 1-o‘rin)",
+        ru: "8 учеников поступили в школу Мирзо Улугбека (2 — на 1-м месте)",
+        en: "8 students into the Mirzo Ulugbek school (2 took 1st place)",
+      },
+      {
+        uz: "10+ o‘quvchi xorijiy tillarga ixtisoslashtirilgan maktablarga",
+        ru: "10+ учеников поступили в школы с углублённым изучением иностранных языков",
+        en: "10+ students into foreign-language specialized schools",
+      },
+      {
+        uz: "50+ o‘quvchi ixtisoslashtirilgan maktablarga",
+        ru: "50+ учеников поступили в специализированные школы",
+        en: "50+ students into specialized schools",
+      },
+    ],
     img: asset("teachers/ustoz-6.jpg"),
   },
 ]

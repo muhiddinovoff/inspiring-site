@@ -5,7 +5,7 @@ import { CarouselControls } from "@/components/carousel-controls"
 import { CountUp } from "@/components/motion/count-up"
 import { Reveal } from "@/components/motion/reveal"
 import { STATS } from "@/data/site"
-import { ringOffset, useScrollCarousel } from "@/hooks/use-carousel"
+import { ringOffset, useCarousel } from "@/hooks/use-carousel"
 import { useI18n } from "@/i18n"
 import { richEffects } from "@/lib/device"
 import { cn } from "@/lib/utils"
@@ -17,7 +17,7 @@ const SLOTS = [...STATS.keys(), ...STATS.keys()]
 
 type CardProps = { slot: number; i: number; pos: MotionValue<number>; active: boolean }
 
-/** Where a card sits follows the scroll continuously: centred and sharp, smaller, fainter and blurred to the sides. */
+/** Where a card sits follows the carousel continuously: centred and sharp, smaller, fainter and blurred to the sides. */
 function StatCard({ slot, i, pos, active }: CardProps) {
   const { t } = useI18n()
   const s = STATS[i]
@@ -79,12 +79,12 @@ function StatCard({ slot, i, pos, active }: CardProps) {
 
 export function Stats() {
   const { t } = useI18n()
-  const { pos, active, go, goTo, section, bind } = useScrollCarousel<HTMLElement>({ count: STATS.length })
+  const { pos, centre, active, go, goTo, section, bind } = useCarousel<HTMLElement>({ count: STATS.length })
+  const centreSlot = ((centre % SLOTS.length) + SLOTS.length) % SLOTS.length
 
   return (
     <section {...section} aria-label={t.stats.aria} className="relative">
-      {/* Pinned while the page scrolls past: each stat takes its turn in the centre. */}
-      <div className="sticky top-0 flex h-svh flex-col items-center justify-center overflow-x-clip pt-16">
+      <div className="flex flex-col items-center overflow-x-clip py-24 md:py-32">
         <p className="mb-8 text-sm font-bold tracking-[0.14em] text-brand-ink uppercase md:mb-10">{t.stats.aria}</p>
         <Reveal className="w-full">
           <motion.div
@@ -95,7 +95,7 @@ export function Stats() {
             className="relative mx-auto h-[19rem] w-[min(76vw,32rem)] cursor-grab rounded-[2rem] outline-none select-none focus-visible:ring-[3px] focus-visible:ring-ring/60 active:cursor-grabbing md:h-[25rem]"
           >
             {SLOTS.map((stat, slot) => (
-              <StatCard key={slot} slot={slot} i={stat} pos={pos} active={slot === active} />
+              <StatCard key={slot} slot={slot} i={stat} pos={pos} active={slot === centreSlot} />
             ))}
             <p aria-live="polite" className="sr-only">
               {t.stats.items[active].label}

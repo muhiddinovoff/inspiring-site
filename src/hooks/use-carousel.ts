@@ -1,7 +1,5 @@
-import { useRef, useState } from "react"
-import { useMotionValueEvent, useScroll, useSpring, useTransform, type PanInfo } from "framer-motion"
-
-import { scrollToY } from "@/lib/scroll"
+import { useEffect, useRef, useState } from "react"
+import { useInView, useReducedMotion, useSpring, type PanInfo } from "framer-motion"
 
 /** Signed shortest distance from position `p` to slot `i` on a ring of `n` slots, in [-n/2, n/2). Works for fractions. */
 export const ringOffset = (i: number, p: number, n: number) => {
@@ -9,59 +7,45 @@ export const ringOffset = (i: number, p: number, n: number) => {
   return d >= n / 2 ? d - n : d
 }
 
-/** Screen heights of scrolling per card. Lower is faster. */
-const PER_CARD = 0.45
+const mod = (i: number, n: number) => ((i % n) + n) % n
+
+/** How long each card stays in the centre before the carousel turns on by itself, in ms. */
+const AUTOPLAY = 5000
 
 /**
- * Scroll position → carousel position: moves card by card with a short rest on each, so every card can be read.
- * `v` is the section's scroll progress (0–1); the result runs from 0 (first card) to `count - 1` (last).
+ * A ring carousel, independent of the page scroll: arrows, dots, keys and swipes turn it, and while it is on screen
+ * and nobody is using it, it turns on by itself every few seconds. It pauses while hovered, focused or `paused`,
+ * and never moves on its own when the visitor prefers reduced motion.
+ * Spread `section` on the section and `bind` on the visible carousel.
+ *
+ * `pos` keeps counting past the last card (it is a position on the ring, not an index), so the cards keep turning
+ * the same way instead of rewinding. `centre` is that position rounded; `active` is the card in the centre.
  */
-function stepped(v: number, count: number) {
-  if (count < 2) return 0
-  const t = Math.min(Math.max(v, 0), 1) * (count - 1)
-  const k = Math.min(Math.floor(t), count - 2)
-  const f = (t - k - 0.2) / 0.6
-  const e = f <= 0 ? 0 : f >= 1 ? 1 : f * f * (3 - 2 * f)
-  return k + e
-}
-
-/**
- * A carousel driven by the page scroll: its section is pinned while the visitor scrolls past, and the cards turn
- * one by one until each has had its turn in the centre. Arrows, dots, keys and swipes scroll the page to a card.
- * Spread `section` on the tall section and `bind` on the visible carousel.
- */
-export function useScrollCarousel<S extends HTMLElement>({ count }: { count: number }) {
+export function useCarousel<S extends HTMLElement>({ count, paused = false }: { count: number; paused?: boolean }) {
   const ref = useRef<S>(null)
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] })
-  const target = useTransform(scrollYProgress, (v) => stepped(v, count))
-  // Springing the stepped value keeps a hard flick or swipe from snapping the cards.
-  const pos = useSpring(target, { stiffness: 140, damping: 28, mass: 0.6, restDelta: 0.0005 })
-  const [active, setActive] = useState(0)
-  // pos changes every frame while scrolling; only a new centred card is worth a React render.
-  const shown = useRef(0)
-  useMotionValueEvent(pos, "change", (v) => {
-    const next = Math.min(count - 1, Math.max(0, Math.round(v)))
-    if (next === shown.current) return
-    shown.current = next
-    setActive(next)
-  })
+  const [centre, setCentre] = useState(0)
+  const pos = useSpring(0, { stiffness: 140, damping: 28, mass: 0.6, restDelta: 0.0005 })
+  useEffect(() => pos.set(centre), [centre, pos])
+  const active = mod(centre, count)
+
+  const go = (step: number) => setCentre((c) => c + step)
+  /** Turns the shortest way round to card `i`. */
+  const goTo = (i: number) => setCentre((c) => c + ringOffset(i, c, count))
+
+  const inView = useInView(ref, { amount: 0.4 })
+  const still = useReducedMotion() ?? false
+  const [held, setHeld] = useState(false)
+  // Every move, by hand or by itself, restarts the wait, so a card someone just picked gets its full time.
+  useEffect(() => {
+    if (still || paused || held || !inView || count < 2) return
+    const id = setTimeout(() => {
+      if (document.visibilityState === "visible") setCentre((c) => c + 1)
+    }, AUTOPLAY)
+    return () => clearTimeout(id)
+  }, [centre, still, paused, held, inView, count])
+
   const dragged = useRef(false)
-
-  /** Scrolls the page to where card `i` sits in the centre. */
-  const goTo = (i: number) => {
-    const el = ref.current
-    if (!el) return
-    const top = el.getBoundingClientRect().top + window.scrollY
-    const range = el.offsetHeight - window.innerHeight
-    scrollToY(top + (count > 1 ? (range * i) / (count - 1) : 0))
-  }
-  // Past the last card, "next" wraps round to the first (and back), like the ring the cards sit on.
-  const go = (step: number) => goTo((((active + step) % count) + count) % count)
-
-  const section = {
-    ref,
-    style: { height: `calc(100svh + ${(count - 1) * PER_CARD * 100}svh)` },
-  }
+  const section = { ref }
 
   const bind = {
     tabIndex: 0,
@@ -71,6 +55,10 @@ export function useScrollCarousel<S extends HTMLElement>({ count }: { count: num
       else return
       e.preventDefault()
     },
+    onPointerEnter: (e: React.PointerEvent) => e.pointerType === "mouse" && setHeld(true),
+    onPointerLeave: () => setHeld(false),
+    onFocus: () => setHeld(true),
+    onBlur: () => setHeld(false),
     onPanStart: () => {
       dragged.current = true
     },
@@ -88,5 +76,5 @@ export function useScrollCarousel<S extends HTMLElement>({ count }: { count: num
     style: { touchAction: "pan-y" } as const,
   }
 
-  return { pos, active, go, goTo, section, bind }
+  return { pos, centre, active, go, goTo, section, bind }
 }

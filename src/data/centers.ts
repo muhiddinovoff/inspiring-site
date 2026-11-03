@@ -9,7 +9,7 @@ import type { LatLng } from "@/lib/geo"
 export type Center = LatLng & { id: number; city: City; phone: string; phoneHref: string; hours: string }
 
 const COORDS: LatLng[] = [
-  { lat: 41.2924, lng: 69.2236 }, // Chilonzor, Novza
+  { lat: 41.295964, lng: 69.216439 }, // Chilonzor, Novza
   { lat: 41.2235, lng: 69.2204 }, // Sergeli, 3-bekat
   { lat: 41.3597, lng: 69.2889 }, // Yunusobod, Turkiston
   { lat: 41.2046, lng: 69.1986 }, // Yangihayot, Yangidarxon

@@ -24,11 +24,35 @@ export type Teacher = {
 // Yutuq misoli: wins: [{ uz: "50+ o‘quvchi Prezident maktabiga", ru: "50+ учеников в Президентские школы", en: "50+ students into Presidential schools" }]
 export const TEACHERS: Teacher[] = [
   {
-    name: "",
-    subject: { uz: "", ru: "", en: "" },
-    exp: { uz: "", ru: "", en: "" },
-    about: { uz: "", ru: "", en: "" },
-    wins: [],
+    name: "Sherzod Dustov",
+    subject: { uz: "Matematika", ru: "Математика", en: "Mathematics" },
+    exp: {
+      uz: "30+ yillik tajriba, Inspiring asoschisi",
+      ru: "Опыт 30+ лет, основатель Inspiring",
+      en: "30+ years of experience, founder of Inspiring",
+    },
+    about: {
+      uz: "Xalqaro darajadagi matematika ustozi. Yurtimizning eng kuchli ta’lim maskanlarida dars bergan, hozir o‘zi asos solgan Inspiring’da matematikani sodda, oson va samarali o‘rgatadi. Ijtimoiy tarmoqlarda matematikani keng targ‘ib qiladi: t.me/dustov_math.",
+      ru: "Преподаватель математики международного уровня. Преподавал в сильнейших учебных заведениях страны, сейчас в основанном им Inspiring учит математике просто, понятно и эффективно. Активно популяризирует математику в соцсетях: t.me/dustov_math.",
+      en: "An internationally recognised mathematics teacher. He has taught at the country's strongest schools and now teaches maths simply, clearly and effectively at Inspiring, which he founded. He actively promotes mathematics on social media: t.me/dustov_math.",
+    },
+    wins: [
+      {
+        uz: "50+ o‘quvchisi xalqaro va milliy matematika olimpiadalari g‘olibi",
+        ru: "50+ учеников — победители международных и национальных олимпиад по математике",
+        en: "50+ students have won international and national maths olympiads",
+      },
+      {
+        uz: "5000+ iqtidorli yoshlarga matematikadan dars bergan",
+        ru: "Обучил математике 5000+ одарённых ребят",
+        en: "Has taught mathematics to 5,000+ gifted young people",
+      },
+      {
+        uz: "Shogirdlari O‘zbekiston va xorijning nufuzli universitetlarida grant asosida o‘qimoqda",
+        ru: "Ученики учатся в престижных вузах Узбекистана и за рубежом, в том числе на грантах",
+        en: "Former students study at top universities in Uzbekistan and abroad, many on grants",
+      },
+    ],
     img: asset("teachers/ustoz-1.jpg"),
   },
   {

@@ -143,11 +143,45 @@ export const TEACHERS: Teacher[] = [
     img: asset("teachers/ustoz-5.jpg"),
   },
   {
-    name: "",
-    subject: { uz: "", ru: "", en: "" },
-    exp: { uz: "", ru: "", en: "" },
-    about: { uz: "", ru: "", en: "" },
-    wins: [],
+    name: "Najmiddin Ibrohimov",
+    subject: { uz: "Matematika", ru: "Математика", en: "Mathematics" },
+    exp: {
+      uz: "O‘zMU, Matematika yo‘nalishi — 2023-yildan beri",
+      ru: "НУУз, направление «Математика» — с 2023 года",
+      en: "NUUz, Mathematics — since 2023",
+    },
+    about: {
+      uz: "MS A+ sertifikati sohibi, 2023-yildan matematika o‘qitadi. Dars namunalari: t.me/mathustoz.",
+      ru: "Обладатель сертификата MS A+, преподаёт математику с 2023 года. Примеры уроков: t.me/mathustoz.",
+      en: "Holds an MS A+ certificate, teaching mathematics since 2023. Lesson samples: t.me/mathustoz.",
+    },
+    wins: [
+      {
+        uz: "10 ta o‘quvchi Prezident maktabiga (1–3-o‘rinlar)",
+        ru: "10 учеников поступили в Президентские школы (1–3-е места)",
+        en: "10 students into Presidential schools (1st–3rd place)",
+      },
+      {
+        uz: "25+ o‘quvchi Alxorazmiy nomidagi maktabga",
+        ru: "25+ учеников поступили в школу имени Аль-Хорезми",
+        en: "25+ students into the Al-Khorazmiy school",
+      },
+      {
+        uz: "8 ta o‘quvchi Mirzo Ulug‘bek maktabiga (2 tasi 1-o‘rin)",
+        ru: "8 учеников поступили в школу Мирзо Улугбека (2 — на 1-м месте)",
+        en: "8 students into the Mirzo Ulugbek school (2 took 1st place)",
+      },
+      {
+        uz: "10+ o‘quvchi xorijiy tillarga ixtisoslashtirilgan maktablarga",
+        ru: "10+ учеников поступили в школы с углублённым изучением иностранных языков",
+        en: "10+ students into foreign-language specialized schools",
+      },
+      {
+        uz: "50+ o‘quvchi ixtisoslashtirilgan maktablarga",
+        ru: "50+ учеников поступили в специализированные школы",
+        en: "50+ students into specialized schools",
+      },
+    ],
     img: asset("teachers/ustoz-6.jpg"),
   },
 ]

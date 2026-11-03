@@ -40,6 +40,7 @@ export const BRANCHES: { city: City; map: string }[] = [
   { city: "samarkand", map: "Samarqand, Bo‘stonsaroy ko‘chasi, 29" },
   { city: "termez", map: "Termiz, Soat chorrahasi" },
   { city: "navoi", map: "Navoiy, Talabalar ko‘chasi, 50/1" },
+  { city: "tashkent", map: "Toshkent, Shayxontohur tumani, Beruniy" },
 ]
 
 export const SCHOOL_MAP = "Toshkent, Chilonzor tumani, 1-Katta Chilonzor MFY, 6-uy"

@@ -8,7 +8,7 @@ const en: Dict = {
   meta: {
     title: "Inspiring Education — Presidential School preparation",
     description:
-      "Preparation for Presidential and specialized schools in Uzbekistan. 192+ students admitted in 2025–2026. 10 branches in Tashkent, Samarkand, Termez and Navoi.",
+      "Preparation for Presidential and specialized schools in Uzbekistan. 192+ students admitted in 2025–2026. 11 branches in Tashkent, Samarkand, Termez and Navoi.",
   },
   common: {
     apply: "Apply now",
@@ -130,7 +130,7 @@ const en: Dict = {
         { from: "parent", text: "Is there a branch near us?" },
         {
           from: "us",
-          text: "Seven in Tashkent, plus Samarkand, Termez and Navoi. Find the nearest one on the map below.",
+          text: "Eight in Tashkent, plus Samarkand, Termez and Navoi. Find the nearest one on the map below.",
         },
         { from: "parent", text: "Which schools do you prepare for?" },
         {
@@ -160,7 +160,7 @@ const en: Dict = {
       },
       {
         title: "Close to home",
-        text: "7 branches in Tashkent, plus Samarkand, Termez and Navoi. No time lost on long commutes.",
+        text: "8 branches in Tashkent, plus Samarkand, Termez and Navoi. No time lost on long commutes.",
       },
     ],
   },
@@ -246,14 +246,14 @@ const en: Dict = {
       },
       {
         q: "Where are classes held?",
-        a: "In 7 districts of Tashkent and at our branches in Samarkand, Termez and Navoi. See the addresses in the Branches section below.",
+        a: "In 8 districts of Tashkent and at our branches in Samarkand, Termez and Navoi. See the addresses in the Branches section below.",
       },
     ],
   },
   branches: {
     kicker: "Branches",
     title: "Pick a branch near you",
-    text: "10 branches: 7 in Tashkent and one each in Samarkand, Termez and Navoi. Tap an address to open the map.",
+    text: "11 branches: 8 in Tashkent and one each in Samarkand, Termez and Navoi. Tap an address to open the map.",
     filter: "City",
     showAll: (n: number) => `Show all (${n})`,
     all: "All",
@@ -285,6 +285,11 @@ const en: Dict = {
         name: "Navoi",
         address: "50/1 Talabalar street",
         landmark: "opposite Azamat Fayz wedding hall, 14th microdistrict",
+      },
+      {
+        name: "Beruniy",
+        address: "Shayxontohur district",
+        landmark: 'opposite the "Huvaydo" wedding hall, through the door next to Bellisimo Pizza, up to the 3rd floor',
       },
     ],
     school: {
@@ -353,7 +358,7 @@ const en: Dict = {
   },
   footer: {
     about:
-      "Preparation centre for Presidential and specialized schools. 10 branches in Tashkent, Samarkand, Termez and Navoi.",
+      "Preparation centre for Presidential and specialized schools. 11 branches in Tashkent, Samarkand, Termez and Navoi.",
     subscribers: "13.6K",
   },
 }

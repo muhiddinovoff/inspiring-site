@@ -6,7 +6,7 @@ const uz = {
   meta: {
     title: "Inspiring Education — Prezident maktablariga tayyorlov",
     description:
-      "Prezident va ixtisoslashtirilgan maktablarga tayyorlov markazi. 2025–2026-yilda 192+ o‘quvchi qabul qilindi. Toshkent, Samarqand, Termiz va Navoiyda 10 ta filial.",
+      "Prezident va ixtisoslashtirilgan maktablarga tayyorlov markazi. 2025–2026-yilda 192+ o‘quvchi qabul qilindi. Toshkent, Samarqand, Termiz va Navoiyda 11 ta filial.",
   },
   common: {
     apply: "Ariza qoldirish",
@@ -131,7 +131,7 @@ const uz = {
         { from: "parent", text: "Uyimizga yaqin filial bormi?" },
         {
           from: "us",
-          text: "Toshkentda 7 ta, Samarqand, Termiz va Navoiyda filiallarimiz bor. Pastdagi xaritadan eng yaqinini topasiz.",
+          text: "Toshkentda 8 ta, Samarqand, Termiz va Navoiyda filiallarimiz bor. Pastdagi xaritadan eng yaqinini topasiz.",
         },
         { from: "parent", text: "Qaysi maktablarga tayyorlaysiz?" },
         {
@@ -161,7 +161,7 @@ const uz = {
       },
       {
         title: "Uyingizga yaqin",
-        text: "Toshkentda 7 ta, Samarqand, Termiz va Navoiyda filiallarimiz bor. Qatnov uchun vaqt ketmaydi.",
+        text: "Toshkentda 8 ta, Samarqand, Termiz va Navoiyda filiallarimiz bor. Qatnov uchun vaqt ketmaydi.",
       },
     ],
   },
@@ -250,14 +250,14 @@ const uz = {
       },
       {
         q: "Darslar qayerda o‘tadi?",
-        a: "Toshkentning 7 ta hududida, shuningdek Samarqand, Termiz va Navoiydagi filiallarimizda. Manzillarni pastdagi “Filiallar” bo‘limida topasiz.",
+        a: "Toshkentning 8 ta hududida, shuningdek Samarqand, Termiz va Navoiydagi filiallarimizda. Manzillarni pastdagi “Filiallar” bo‘limida topasiz.",
       },
     ],
   },
   branches: {
     kicker: "Filiallar",
     title: "Uyingizga yaqin filialni tanlang",
-    text: "10 ta filial: Toshkentda 7 ta, Samarqand, Termiz va Navoiyda bittadan. Manzilni bossangiz, xarita ochiladi.",
+    text: "11 ta filial: Toshkentda 8 ta, Samarqand, Termiz va Navoiyda bittadan. Manzilni bossangiz, xarita ochiladi.",
     filter: "Shahar",
     showAll: (n: number) => `Hammasini ko‘rsatish (${n})`,
     all: "Hammasi",
@@ -289,6 +289,11 @@ const uz = {
         name: "Navoiy",
         address: "Talabalar ko‘chasi, 50/1",
         landmark: "Azamat Fayz to‘yxonasi qarshisi, 14-mikrorayon",
+      },
+      {
+        name: "Beruniy",
+        address: "Shayxontohur tumani",
+        landmark: "«Huvaydo» to‘yxonasi qarshisida, Bellisimo pitsa yonidagi eshikdan 3-qavatga chiqiladi",
       },
     ] as { name: string; address: string; landmark?: string }[],
     school: {
@@ -357,7 +362,7 @@ const uz = {
   },
   footer: {
     about:
-      "Prezident va ixtisoslashtirilgan maktablarga tayyorlov markazi. Toshkent, Samarqand, Termiz va Navoiyda 10 ta filial.",
+      "Prezident va ixtisoslashtirilgan maktablarga tayyorlov markazi. Toshkent, Samarqand, Termiz va Navoiyda 11 ta filial.",
     subscribers: "13,6 ming",
   },
 }

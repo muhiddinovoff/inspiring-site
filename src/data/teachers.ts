@@ -32,11 +32,40 @@ export const TEACHERS: Teacher[] = [
     img: asset("teachers/ustoz-1.jpg"),
   },
   {
-    name: "",
+    name: "Xalilov Dilshodbek",
     subject: { uz: "", ru: "", en: "" },
-    exp: { uz: "", ru: "", en: "" },
-    about: { uz: "", ru: "", en: "" },
-    wins: [],
+    exp: {
+      uz: "2021-yildan beri dars beradi",
+      ru: "Преподаёт с 2021 года",
+      en: "Teaching since 2021",
+    },
+    about: {
+      uz: "2022–2024-yillarda 60+ abituriyentni oliy ta’limga kiritgan, 2024-yildan yosh bolalarni nufuzli maktablarga tayyorlaydi.",
+      ru: "В 2022–2024 годах помог 60+ абитуриентам поступить в вузы, с 2024 года готовит детей в престижные школы.",
+      en: "Helped 60+ applicants get into university in 2022–2024; since 2024 prepares children for top schools.",
+    },
+    wins: [
+      {
+        uz: "7 ta o‘quvchi Prezident maktabiga",
+        ru: "7 учеников поступили в Президентские школы",
+        en: "7 students into Presidential schools",
+      },
+      {
+        uz: "20 ta o‘quvchi Al-Xorazmiy nomidagi maktabga",
+        ru: "20 учеников поступили в школу имени Аль-Хорезми",
+        en: "20 students into the Al-Khorazmiy school",
+      },
+      {
+        uz: "33 ta o‘quvchi ixtisoslashtirilgan maktablarga",
+        ru: "33 ученика поступили в специализированные школы",
+        en: "33 students into specialized schools",
+      },
+      {
+        uz: "7 ta o‘quvchi 2026-yilda ochilgan xorijiy tillarga ixtisoslashtirilgan maktabga",
+        ru: "7 учеников поступили в открытую в 2026 году школу с углублённым изучением иностранных языков",
+        en: "7 students into the foreign-language specialized school opened in 2026",
+      },
+    ],
     img: asset("teachers/ustoz-2.jpg"),
   },
   {

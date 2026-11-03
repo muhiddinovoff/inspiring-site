@@ -40,12 +40,14 @@ Statistika (`STATS`), natijalar (`RESULTS`, `OVERALL_RESULTS`) shu yerda. Ularni
 
 ## 5. Bosh ekran rasmi
 
-Boshqa guruh rasmi qo‘yilsa: uni `public/hero/students-2000.webp` qilib saqlang, so‘ng
+Bosh ekrandagi bolalar ularning natija posterlaridan qirqib olingan (`assets/hero/posters/`). O‘quvchini
+almashtirish yoki qo‘shish uchun posterni shu papkaga qo‘ying, `scripts/cutout.py` dagi `ROW` ro‘yxatiga uning
+nomi va posterdagi bola turgan joyni (ism yozuvidan yuqorida, logolarsiz) yozing, so‘ng
 
 ```
-pip install "rembg[cpu]" pillow numpy
+pip install "rembg[cpu]" pillow numpy scipy
 npm run cutout
 ```
 
-Skript fonni olib tashlaydi va har bir bolani alohida qatlamga ajratadi. Bolalar soni yoki joyi o‘zgarsa,
-`scripts/cutout.py` dagi `HEADS` ro‘yxatiga har bir boshning gorizontal markazini (2000 px kenglikdagi rasmda) yozing.
+Skript fonni olib tashlaydi, hammani bir xil bosh o‘lchamiga keltiradi va bir qatorga teradi: o‘rtadagilar
+biroz yuqorida, chetdagilar pastroq. Posteri pastroqda kesilgan bolalarni o‘rtaga qo‘ygan ma’qul.

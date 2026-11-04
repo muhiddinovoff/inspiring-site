@@ -170,16 +170,8 @@ const uz = {
     title: "Farzandingizga kim dars beradi",
     text: "Imtihon talablarini yaxshi biladigan, yillar davomida o‘quvchilarni nufuzli maktablarga olib borgan ustozlar.",
     fallbackName: "Inspiring ustozi",
-    fallbackSubject: "Imtihonga tayyorlov",
     labels: { subject: "Fan", exp: "Tajriba", wins: "Yutuqlar", about: "Qisqacha" },
     contact: "Bog‘lanish",
-    // Shown until a teacher's own experience, achievements and bio are filled in src/data/teachers.ts.
-    placeholder: {
-      exp: "Lorem ipsum",
-      wins: ["Lorem ipsum dolor sit amet", "Consectetur adipiscing elit", "Sed do eiusmod tempor"],
-      about:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-    },
     prev: "Oldingi ustoz",
     next: "Keyingi ustoz",
   },

@@ -169,16 +169,8 @@ const ru: Dict = {
     title: "Кто будет учить вашего ребёнка",
     text: "Преподаватели, которые хорошо знают требования экзаменов и годами приводят учеников в престижные школы.",
     fallbackName: "Преподаватель Inspiring",
-    fallbackSubject: "Подготовка к экзаменам",
     labels: { subject: "Предмет", exp: "Опыт", wins: "Достижения", about: "Коротко" },
     contact: "Связаться",
-    // Shown until a teacher's own experience, achievements and bio are filled in src/data/teachers.ts.
-    placeholder: {
-      exp: "Lorem ipsum",
-      wins: ["Lorem ipsum dolor sit amet", "Consectetur adipiscing elit", "Sed do eiusmod tempor"],
-      about:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-    },
     prev: "Предыдущий преподаватель",
     next: "Следующий преподаватель",
   },

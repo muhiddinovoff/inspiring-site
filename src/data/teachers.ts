@@ -9,7 +9,8 @@ export type Localized = Record<Lang, string>
  * - name: ism-familiya (barcha tillarda bir xil)
  * - subject, exp, about: uch tilda, masalan { uz: "Matematika", ru: "Математика", en: "Mathematics" }
  * - wins: yutuqlar, har biri uch tilda
- * Bo‘sh maydonlar o‘rniga vaqtincha umumiy yoki "Lorem ipsum" matn chiqadi (src/i18n: teachers.fallback*, teachers.placeholder).
+ * Bo‘sh qoldirilgan maydon kartada ko‘rsatilmaydi (ism bo‘sh bo‘lsa, src/i18n dagi teachers.fallbackName chiqadi).
+ * Kartada yutuqlardan birinchi 5 tasi (telefonda 3 tasi) ko‘rinadi.
  */
 export type Teacher = {
   name: string

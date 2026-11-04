@@ -58,7 +58,7 @@ export const TEACHERS: Teacher[] = [
   },
   {
     name: "Xalilov Dilshodbek",
-    subject: { uz: "", ru: "", en: "" },
+    subject: { uz: "Matematika", ru: "Математика", en: "Mathematics" },
     exp: {
       uz: "2021-yildan beri dars beradi",
       ru: "Преподаёт с 2021 года",
@@ -95,7 +95,7 @@ export const TEACHERS: Teacher[] = [
   },
   {
     name: "Mr. Ali",
-    subject: { uz: "", ru: "", en: "" },
+    subject: { uz: "Ingliz tili", ru: "Английский язык", en: "English" },
     exp: { uz: "", ru: "", en: "" },
     about: { uz: "", ru: "", en: "" },
     wins: [

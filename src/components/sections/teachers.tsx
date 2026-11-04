@@ -56,10 +56,11 @@ type CardProps = {
 function TeacherCard({ teacher, i, pos, openness, offset, expanded, sizes, onOpen, onFocus }: CardProps) {
   const { t: tr, lang } = useI18n()
   const name = teacher.name || tr.teachers.fallbackName
-  const subject = pick(teacher.subject, lang) || tr.teachers.fallbackSubject
-  const exp = pick(teacher.exp, lang) || tr.teachers.placeholder.exp
-  const about = pick(teacher.about, lang) || tr.teachers.placeholder.about
-  const wins = teacher.wins.length ? teacher.wins.map((w) => pick(w, lang)) : tr.teachers.placeholder.wins
+  // What isn't filled in yet is left out of the card rather than padded with stand-in text.
+  const subject = pick(teacher.subject, lang)
+  const exp = pick(teacher.exp, lang)
+  const about = pick(teacher.about, lang)
+  const wins = teacher.wins.map((w) => pick(w, lang)).filter(Boolean)
   const active = offset === 0
   const far = Math.abs(offset) > 2
 
@@ -163,7 +164,7 @@ function TeacherCard({ teacher, i, pos, openness, offset, expanded, sizes, onOpe
           </div>
           <div className="flex flex-1 flex-col justify-center px-4">
             <h3 className="truncate font-display text-base font-bold md:text-lg">{name}</h3>
-            <p className="truncate text-xs text-muted-foreground md:text-sm">{subject}</p>
+            {subject && <p className="truncate text-xs text-muted-foreground md:text-sm">{subject}</p>}
           </div>
         </motion.div>
 
@@ -176,41 +177,52 @@ function TeacherCard({ teacher, i, pos, openness, offset, expanded, sizes, onOpe
           style={{ width: detailsW }}
           className="flex shrink-0 flex-col gap-3 overflow-hidden p-4 md:gap-4 md:p-6"
         >
-          <dl className="grid grid-cols-2 gap-3 text-sm">
+          {(subject || exp) && (
+            <dl className="grid grid-cols-2 gap-3 text-sm">
+              {subject && (
+                <div>
+                  <dt className="text-[11px] font-bold tracking-[0.12em] text-muted-foreground uppercase">
+                    {tr.teachers.labels.subject}
+                  </dt>
+                  <dd className="mt-0.5 font-semibold text-brand-ink">{subject}</dd>
+                </div>
+              )}
+              {exp && (
+                <div>
+                  <dt className="text-[11px] font-bold tracking-[0.12em] text-muted-foreground uppercase">
+                    {tr.teachers.labels.exp}
+                  </dt>
+                  <dd className="mt-0.5 font-semibold">{exp}</dd>
+                </div>
+              )}
+            </dl>
+          )}
+          {wins.length > 0 && (
             <div>
-              <dt className="text-[11px] font-bold tracking-[0.12em] text-muted-foreground uppercase">
-                {tr.teachers.labels.subject}
-              </dt>
-              <dd className="mt-0.5 font-semibold text-brand-ink">{subject}</dd>
+              <p className="text-[11px] font-bold tracking-[0.12em] text-muted-foreground uppercase">
+                {tr.teachers.labels.wins}
+              </p>
+              <ul className="mt-1.5 grid gap-1">
+                {/* Phones have room for three; wider cards show up to five. */}
+                {wins.slice(0, 5).map((w, i) => (
+                  <li key={i} className={cn("flex gap-2 text-xs md:text-sm", i >= 3 && "max-md:hidden")}>
+                    <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-accent" />
+                    <span className="line-clamp-1">{w}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
-            <div>
-              <dt className="text-[11px] font-bold tracking-[0.12em] text-muted-foreground uppercase">
-                {tr.teachers.labels.exp}
-              </dt>
-              <dd className="mt-0.5 font-semibold">{exp}</dd>
+          )}
+          {about && (
+            <div className="min-h-0 overflow-hidden">
+              <p className="text-[11px] font-bold tracking-[0.12em] text-muted-foreground uppercase">
+                {tr.teachers.labels.about}
+              </p>
+              <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground md:line-clamp-4 md:text-sm">
+                {about}
+              </p>
             </div>
-          </dl>
-          <div>
-            <p className="text-[11px] font-bold tracking-[0.12em] text-muted-foreground uppercase">
-              {tr.teachers.labels.wins}
-            </p>
-            <ul className="mt-1.5 grid gap-1">
-              {wins.slice(0, 3).map((w, i) => (
-                <li key={i} className="flex gap-2 text-xs md:text-sm">
-                  <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-accent" />
-                  <span className="line-clamp-1">{w}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="min-h-0">
-            <p className="text-[11px] font-bold tracking-[0.12em] text-muted-foreground uppercase">
-              {tr.teachers.labels.about}
-            </p>
-            <p className="mt-1 line-clamp-3 text-xs leading-relaxed text-muted-foreground md:line-clamp-4 md:text-sm">
-              {about}
-            </p>
-          </div>
+          )}
           <Button
             asChild
             variant="accent"

@@ -1,6 +1,6 @@
 /**
  * Bosh ekranda navbat bilan (har 5 soniyada) ko‘rsatiladigan o‘quvchilar — natija posterlaridan
- * (`assets/hero/posters/`). `kid` — `public/hero/cutouts/kid-N-*.webp` dagi qirqib olingan rasm raqami
+ * (`assets/hero/posters/`). `kid` — `public/hero/students/kid-N.webp` dagi qirqib olingan rasm raqami
  * (`scripts/cutout.py` dagi `ROW` tartibida). `city` — maktab shahri, nomi i18n `hero.school` da.
  */
 export const HERO_STUDENTS = [

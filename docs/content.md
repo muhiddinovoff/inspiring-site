@@ -41,10 +41,11 @@ Statistika (`STATS`), natijalar (`RESULTS`, `OVERALL_RESULTS`) shu yerda. Ularni
 ## 5. Bosh ekran rasmi
 
 Fon — Toshkent shahridagi Prezident maktabi binosi (`assets/hero/school.jpg`, manba: president.uz, saytda
-“Foto: president.uz” deb ko‘rsatiladi). Pastdagi kartada o‘quvchilar har 5 soniyada almashadi: ism, ball, o‘rin
-va maktab `src/data/hero-students.ts` da.
+“Foto: president.uz” deb ko‘rsatiladi). O‘ng tomonda (telefonda pastda) bitta o‘quvchi katta turadi va har 5
+soniyada keyingisi chiqadi; ism, ball, o‘rin va maktab `src/data/hero-students.ts` da, keyin o‘sha ro‘yxatga
+`kid` raqami bilan qo‘shing.
 
-Kartadagi bolalar rasmi ularning natija posterlaridan qirqib olingan (`assets/hero/posters/`). O‘quvchini
+Bolalar rasmi ularning natija posterlaridan qirqib olingan (`assets/hero/posters/`). O‘quvchini
 almashtirish yoki qo‘shish uchun posterni shu papkaga qo‘ying, `scripts/cutout.py` dagi `ROW` ro‘yxatiga uning
 nomi va posterdagi bola turgan joyni (ism yozuvidan yuqorida, logolarsiz) yozing, so‘ng
 
@@ -53,5 +54,6 @@ pip install "rembg[cpu]" pillow numpy scipy
 npm run cutout
 ```
 
-Skript fonni olib tashlaydi, hammani bir xil bosh o‘lchamiga keltiradi va bir qatorga teradi: o‘rtadagilar
-biroz yuqorida, chetdagilar pastroq. Posteri pastroqda kesilgan bolalarni o‘rtaga qo‘ygan ma’qul.
+Skript fonni olib tashlaydi, rangini tekislaydi va hammani bir xil kadrga (bir xil bosh o‘lchami va joyi) qo‘yib
+`public/hero/students/kid-N.webp` ga yozadi; N — `ROW` dagi tartib raqami. Poster beldan pastroqda tugashi kerak,
+aks holda skript eng qisqasi bo‘yicha ogohlantiradi (`body to … of …`).

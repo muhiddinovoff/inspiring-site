@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import { ArrowRight, Phone } from "lucide-react"
 
@@ -51,10 +51,13 @@ function Student({ still }: { still: boolean }) {
 
   return (
     <>
-      {/* The portrait, with a soft glow behind it. Its cut-off hem fades into the bottom of the photo. */}
+      {/* The portrait, with a soft glow behind it, in front of the headline. Its cut-off hem fades out. On phones its
+          top comes from the headline (--kid-top, see useDepth), so the head rises over the headline's last line like
+          the depth effect on an iPhone lock screen. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute bottom-0 left-1/2 h-[min(61%,34rem)] -translate-x-1/2 md:right-[3%] md:left-auto md:h-[50%] md:translate-x-0 lg:right-[5%] lg:h-[88%] xl:right-[8%]"
+        data-portrait
+        className="pointer-events-none absolute top-[var(--kid-top,45%)] bottom-[calc(4rem+env(safe-area-inset-bottom))] left-[60%] z-[1] -translate-x-1/2 md:top-auto md:right-[3%] md:bottom-0 md:left-auto md:h-[50%] md:translate-x-0 lg:right-[5%] lg:h-[88%] xl:right-[8%]"
         style={{ aspectRatio: `${HERO_CUTOUTS.width} / ${HERO_CUTOUTS.height}` }}
       >
         <div className="absolute inset-x-[-25%] bottom-0 h-[85%] bg-[radial-gradient(50%_50%_at_50%_55%,rgb(10_214_126/0.35),transparent_70%)]" />
@@ -143,9 +146,41 @@ function Student({ still }: { still: boolean }) {
   )
 }
 
+/** Where the portrait's head starts, as a share of the portrait's height (see scripts/cutout.py, HEAD_TOP). */
+const HEAD_TOP = 40 / HERO_CUTOUTS.height
+
+/**
+ * On phones: sets --kid-top on the frame so the portrait's head starts in the middle of the headline's last line,
+ * whatever the language, font size or screen height. Wider screens place the portrait by CSS alone.
+ */
+function useDepth(frame: React.RefObject<HTMLDivElement | null>, title: React.RefObject<HTMLHeadingElement | null>) {
+  useLayoutEffect(() => {
+    const f = frame.current
+    const h1 = title.current
+    const kid = f?.querySelector<HTMLElement>("[data-portrait]")
+    if (!f || !h1 || !kid) return
+    const place = () => {
+      const box = f.getBoundingClientRect()
+      const target = h1.getBoundingClientRect().bottom - box.top - parseFloat(getComputedStyle(h1).lineHeight) / 2
+      const bottom = parseFloat(getComputedStyle(kid).bottom) || 0
+      // The head sits HEAD_TOP down a portrait running from --kid-top to `bottom`: solve for --kid-top.
+      const top = (target - HEAD_TOP * (box.height - bottom)) / (1 - HEAD_TOP)
+      f.style.setProperty("--kid-top", `${Math.round(top)}px`)
+    }
+    place()
+    const ro = new ResizeObserver(place)
+    ro.observe(f)
+    ro.observe(h1)
+    return () => ro.disconnect()
+  }, [frame, title])
+}
+
 export function Hero() {
   const { t } = useI18n()
   const still = useReducedMotion() ?? false
+  const frame = useRef<HTMLDivElement>(null)
+  const title = useRef<HTMLHeadingElement>(null)
+  useDepth(frame, title)
   const words = t.hero.title.split(" ")
   const accent = t.hero.titleAccent.split(" ")
 
@@ -155,7 +190,10 @@ export function Hero() {
       aria-labelledby="hero-title"
       className="relative h-svh min-h-[40rem] px-2 pt-[calc(4rem+env(safe-area-inset-top))] pb-2 md:min-h-[44rem] md:px-4 md:pt-[72px] md:pb-4"
     >
-      <div className="relative isolate h-full overflow-hidden rounded-[1.75rem] bg-brand-deep text-white md:rounded-[2.5rem]">
+      <div
+        ref={frame}
+        className="relative isolate h-full overflow-hidden rounded-[1.75rem] bg-brand-deep text-white md:rounded-[2.5rem]"
+      >
         <motion.img
           src={asset("hero/school-1280.webp")}
           srcSet={`${asset("hero/school-768.webp")} 768w, ${asset("hero/school-1280.webp")} 1280w`}
@@ -201,6 +239,7 @@ export function Hero() {
           </motion.p>
 
           <h1
+            ref={title}
             id="hero-title"
             className="mt-4 text-[clamp(2rem,min(8.6vw,6svh),3.5rem)] leading-[1.02] font-extrabold tracking-[-0.03em] md:mt-6 lg:text-[clamp(2.75rem,min(4.6vw,8svh),5rem)]"
           >

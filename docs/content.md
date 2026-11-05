@@ -41,7 +41,7 @@ Statistika (`STATS`), natijalar (`RESULTS`, `OVERALL_RESULTS`) shu yerda. Ularni
 ## 5. Bosh ekran rasmi
 
 Fon — Toshkent shahridagi Prezident maktabi binosi (`assets/hero/school.jpg`, manba: president.uz, saytda
-“Foto: president.uz” deb ko‘rsatiladi). O‘ng tomonda (telefonda pastda) bitta o‘quvchi katta turadi va har 5
+“Foto: president.uz” deb ko‘rsatiladi). O‘ng tomonda (telefonda pastda) bitta o‘quvchi katta turadi va har 3
 soniyada keyingisi chiqadi; ism, ball, o‘rin va maktab `src/data/hero-students.ts` da, keyin o‘sha ro‘yxatga
 `kid` raqami bilan qo‘shing.
 

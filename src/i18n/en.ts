@@ -47,13 +47,20 @@ const en: Dict = {
   },
   hero: {
     badge: "Enrollment open all year",
-    titleBefore: "Your child’s path to a ",
-    titleAccent: "Presidential School",
-    titleAfter: " starts here",
+    title: "Thousands apply. Few get in.",
+    titleAccent: "Your child will be one of them.",
     lead: (n: number) =>
       `Preparation for Presidential and specialized schools. In 2025–2026, more than ${n} of our students were admitted to the school of their dreams.`,
     cta: "Get a free consultation",
-    photoAlt: "Inspiring Education students in Presidential School uniforms",
+    photoAlt: "The Presidential School building in Tashkent",
+    photoCredit: "Photo: president.uz",
+    resultsAria: "Our admitted students",
+    resultKicker: (year: number) => `${year} result`,
+    score: (_: number, s: string) => `${s} points`,
+    rank: (n: number) =>
+      `${n}${["th", "st", "nd", "rd"][n % 100 > 10 && n % 100 < 14 ? 0 : n % 10 < 4 ? n % 10 : 0]} place`,
+    school: { tashkent: "Presidential School in Tashkent", termez: "Presidential School in Termez" },
+    pick: (name: string) => `Show ${name}’s result`,
   },
   stats: {
     aria: "In numbers",

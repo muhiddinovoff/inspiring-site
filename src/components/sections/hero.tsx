@@ -10,9 +10,9 @@ import { CONTACT, RESULTS_TOTAL } from "@/data/site"
 import { useI18n } from "@/i18n"
 import { asset } from "@/lib/site-root"
 
-/** How long each student stays on the card, in ms. */
+/** How long each student stays on, in ms. */
 const TURN = 5000
-const kidSrc = (kid: number) => asset(`hero/cutouts/kid-${kid}-1000.webp`)
+const kidSrc = (kid: number) => asset(`hero/students/kid-${kid}.webp`)
 
 /** One headline word: fades in, sharpens and settles on load, a beat after the word before it. */
 function Word({ i, still, children }: { i: number; still: boolean; children: string }) {
@@ -29,15 +29,14 @@ function Word({ i, still, children }: { i: number; still: boolean; children: str
 }
 
 /**
- * The admitted students, one at a time: photo, name, score, place and school. Turns every few seconds,
- * holds while hovered or focused; the bars underneath pick a student directly.
+ * The admitted student on show: one large portrait standing on the bottom edge of the photo and a small name tag.
+ * Turns every few seconds, holds while the tag is hovered or focused; the bars on the tag pick a student directly.
  */
-function StudentCard({ still }: { still: boolean }) {
+function Student({ still }: { still: boolean }) {
   const { t } = useI18n()
   const [i, setI] = useState(0)
   const [held, setHeld] = useState(false)
   const s = HERO_STUDENTS[i]
-  const size = HERO_CUTOUTS.kids[s.kid - 1]
 
   useEffect(() => {
     if (held) return
@@ -45,99 +44,102 @@ function StudentCard({ still }: { still: boolean }) {
     return () => clearTimeout(id)
   }, [i, held])
 
-  // Warm the next photo so it is there when the card turns.
+  // Warm the next portrait so it is there when the turn comes.
   useEffect(() => {
     new Image().src = kidSrc(HERO_STUDENTS[(i + 1) % HERO_STUDENTS.length].kid)
   }, [i])
 
-  const fade = still ? { duration: 0 } : { duration: 0.6, ease: EASE }
-
   return (
-    <motion.div
-      role="group"
-      aria-roledescription={t.common.carousel}
-      aria-label={t.hero.resultsAria}
-      initial={still ? false : { opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.9, ease: EASE, delay: 0.9 }}
-      onPointerEnter={(e) => e.pointerType === "mouse" && setHeld(true)}
-      onPointerLeave={() => setHeld(false)}
-      onFocus={() => setHeld(true)}
-      onBlur={() => setHeld(false)}
-      className="w-full rounded-3xl border border-white/15 bg-[#06201d]/55 p-3 shadow-[0_30px_60px_-30px_rgb(0_0_0/0.6)] backdrop-blur-xl md:p-4 lg:w-[28rem] lg:shrink-0"
-    >
-      <div className="flex items-center gap-4">
-        <div className="relative size-24 shrink-0 overflow-hidden rounded-2xl bg-[radial-gradient(80%_80%_at_50%_30%,#16877c,#0a3f3a)] md:size-28">
-          <AnimatePresence initial={false}>
-            <motion.img
-              key={s.kid}
-              src={kidSrc(s.kid)}
-              alt=""
-              width={Math.round((size.w / 100) * HERO_CUTOUTS.width) / 2}
-              height={Math.round((size.h / 100) * HERO_CUTOUTS.height) / 2}
-              draggable={false}
-              initial={{ opacity: 0, scale: 1.08 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0 }}
-              transition={fade}
-              className="absolute inset-x-0 top-0 mx-auto h-auto w-[135%] max-w-none -translate-x-[13%] select-none"
-            />
-          </AnimatePresence>
-        </div>
+    <>
+      {/* The portrait, with a soft glow behind it. Its cut-off hem fades into the bottom of the photo. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute bottom-0 left-1/2 h-[min(61%,34rem)] -translate-x-1/2 md:right-[3%] md:left-auto md:h-[50%] md:translate-x-0 lg:right-[5%] lg:h-[88%] xl:right-[8%]"
+        style={{ aspectRatio: `${HERO_CUTOUTS.width} / ${HERO_CUTOUTS.height}` }}
+      >
+        <div className="absolute inset-x-[-25%] bottom-0 h-[85%] bg-[radial-gradient(50%_50%_at_50%_55%,rgb(10_214_126/0.35),transparent_70%)]" />
+        <AnimatePresence initial={false}>
+          <motion.img
+            key={s.kid}
+            src={kidSrc(s.kid)}
+            alt=""
+            width={HERO_CUTOUTS.width}
+            height={HERO_CUTOUTS.height}
+            draggable={false}
+            initial={still ? { opacity: 0 } : { opacity: 0, y: "4%", scale: 0.97 }}
+            animate={{ opacity: 1, y: "0%", scale: 1 }}
+            exit={{ opacity: 0, y: still ? "0%" : "2%" }}
+            transition={still ? { duration: 0 } : { duration: 0.9, ease: EASE }}
+            className="absolute inset-0 size-full origin-bottom [mask-image:linear-gradient(to_top,transparent,black_14%)] drop-shadow-[0_30px_40px_rgb(0_0_0/0.45)] select-none"
+          />
+        </AnimatePresence>
+      </div>
 
-        <div aria-live={held ? "polite" : "off"} className="relative min-w-0 flex-1 self-stretch">
+      <motion.div
+        role="group"
+        aria-roledescription={t.common.carousel}
+        aria-label={t.hero.resultsAria}
+        initial={still ? false : { opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.9, ease: EASE, delay: 0.9 }}
+        onPointerEnter={(e) => e.pointerType === "mouse" && setHeld(true)}
+        onPointerLeave={() => setHeld(false)}
+        onFocus={() => setHeld(true)}
+        onBlur={() => setHeld(false)}
+        className="absolute inset-x-3 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-10 rounded-2xl border border-white/15 bg-[#06201d]/60 px-4 pt-2.5 pb-1 backdrop-blur-xl md:inset-x-auto md:bottom-6 md:left-6 md:w-[20rem] md:pt-3 md:pb-1.5 lg:right-6 lg:left-auto xl:right-10 xl:bottom-10"
+      >
+        <div aria-live={held ? "polite" : "off"}>
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={i}
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={still ? { duration: 0 } : { duration: 0.35, ease: EASE }}
-              className="flex h-full flex-col justify-center"
+              exit={{ opacity: 0, y: -8 }}
+              transition={still ? { duration: 0 } : { duration: 0.3, ease: EASE }}
             >
-              <p className="text-[0.7rem] font-bold tracking-[0.14em] text-[#7ee9b8] uppercase">
+              <p className="hidden text-[0.65rem] font-bold tracking-[0.14em] text-[#7ee9b8] uppercase md:block">
                 {t.hero.resultKicker(HERO_YEAR)}
               </p>
-              <p className="mt-1 font-display text-lg leading-tight font-bold text-balance md:text-xl">{s.name}</p>
-              <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-sm font-semibold">
-                <span className="rounded-full bg-accent px-2.5 py-0.5 text-accent-foreground">
-                  {t.hero.score(s.score, String(s.score).replace(".", t.decimal))}
+              <p className="font-display text-base leading-tight font-bold md:mt-0.5 md:text-lg">{s.name}</p>
+              <p className="mt-0.5 text-xs text-white/75 md:mt-1 md:text-sm">
+                <span className="font-semibold text-white">
+                  {t.hero.score(s.score, String(s.score).replace(".", t.decimal))} · {t.hero.rank(s.rank)}
                 </span>
-                <span className="rounded-full bg-white/12 px-2.5 py-0.5">{t.hero.rank(s.rank)}</span>
+                <br />
+                {t.hero.school[s.city]}
               </p>
-              <p className="mt-1.5 text-sm leading-snug text-white/70">{t.hero.school[s.city]}</p>
             </motion.div>
           </AnimatePresence>
         </div>
-      </div>
 
-      {/* One bar per student: the current one fills up over its turn. */}
-      <div className="mt-3 flex gap-1 md:mt-4">
-        {HERO_STUDENTS.map((st, k) => (
-          <button
-            key={k}
-            type="button"
-            aria-label={t.hero.pick(st.name)}
-            aria-current={k === i}
-            onClick={() => setI(k)}
-            className="group flex h-4 flex-1 items-center outline-none"
-          >
-            <span className="relative h-1 w-full overflow-hidden rounded-full bg-white/20 transition-[height] group-hover:h-1.5 group-focus-visible:h-1.5 group-focus-visible:ring-2 group-focus-visible:ring-white/70">
-              {k < i && <span className="absolute inset-0 bg-white/60" />}
-              {k === i && (
-                <motion.span
-                  key={`${i}-${held}`}
-                  initial={{ scaleX: held || still ? 1 : 0 }}
-                  animate={{ scaleX: 1 }}
-                  transition={{ duration: held || still ? 0 : TURN / 1000, ease: "linear" }}
-                  className="absolute inset-0 origin-left bg-accent"
-                />
-              )}
-            </span>
-          </button>
-        ))}
-      </div>
-    </motion.div>
+        {/* One bar per student: the current one fills up over its turn. */}
+        <div className="mt-1 flex gap-1 md:mt-2">
+          {HERO_STUDENTS.map((st, k) => (
+            <button
+              key={k}
+              type="button"
+              aria-label={t.hero.pick(st.name)}
+              aria-current={k === i}
+              onClick={() => setI(k)}
+              className="group flex h-4 flex-1 items-center outline-none"
+            >
+              <span className="relative h-1 w-full overflow-hidden rounded-full bg-white/20 transition-[height] group-hover:h-1.5 group-focus-visible:h-1.5 group-focus-visible:ring-2 group-focus-visible:ring-white/70">
+                {k < i && <span className="absolute inset-0 bg-white/60" />}
+                {k === i && (
+                  <motion.span
+                    key={`${i}-${held}`}
+                    initial={{ scaleX: held || still ? 1 : 0 }}
+                    animate={{ scaleX: 1 }}
+                    transition={{ duration: held || still ? 0 : TURN / 1000, ease: "linear" }}
+                    className="absolute inset-0 origin-left bg-accent"
+                  />
+                )}
+              </span>
+            </button>
+          ))}
+        </div>
+      </motion.div>
+    </>
   )
 }
 
@@ -170,90 +172,89 @@ export function Hero() {
         {/* Darkened from the bottom and the left, where the text sits, so it reads on any part of the photo. */}
         <div
           aria-hidden
-          className="absolute inset-0 -z-10 bg-gradient-to-t from-[#04201c] via-[#04201c]/60 via-45% to-[#04201c]/10"
+          className="absolute inset-0 -z-10 bg-gradient-to-t from-[#04201c] via-[#04201c]/60 via-45% to-[#04201c]/20"
         />
         <div
           aria-hidden
-          className="absolute inset-0 -z-10 hidden bg-gradient-to-r from-[#04201c]/75 via-[#04201c]/25 via-50% to-transparent md:block"
+          className="absolute inset-0 -z-10 bg-gradient-to-b from-[#04201c]/80 via-[#04201c]/30 via-40% to-transparent lg:bg-gradient-to-r lg:from-[#04201c]/80 lg:via-[#04201c]/30 lg:via-55%"
         />
 
-        <p className="absolute top-3 right-4 text-[0.65rem] text-white/55 md:top-5 md:right-6 md:text-xs">
+        <p className="absolute top-3 right-4 z-10 text-[0.65rem] text-white/55 md:top-5 md:right-6 md:text-xs">
           {t.hero.photoCredit}
         </p>
 
-        <div className="flex h-full flex-col justify-end gap-6 p-5 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:p-10 lg:flex-row lg:items-end lg:justify-between lg:gap-10 lg:p-14">
-          <div className="max-w-3xl">
-            <motion.p
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.9, ease: EASE, delay: 0.05 }}
-              className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3.5 py-1.5 text-sm font-semibold backdrop-blur"
-            >
-              <span className="relative flex size-2">
-                <span className="absolute inline-flex size-full animate-ping rounded-full bg-accent opacity-70 motion-reduce:animate-none" />
-                <span className="relative inline-flex size-2 rounded-full bg-accent" />
-              </span>
-              {t.hero.badge}
-            </motion.p>
+        <Student still={still} />
 
-            <h1
-              id="hero-title"
-              className="mt-4 text-[clamp(2.25rem,min(7.4vw,8svh),5.25rem)] leading-[1.02] font-extrabold tracking-[-0.03em] md:mt-6"
-            >
-              {words.map((w, i) => (
+        {/* Phones and tablets: the text on top, the student below. Wide screens: the text on the left, bottom-aligned. */}
+        <div className="relative max-w-3xl p-5 pt-10 md:p-10 md:pt-14 lg:absolute lg:bottom-0 lg:left-0 lg:max-w-[min(46rem,54%)] lg:p-14">
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.9, ease: EASE, delay: 0.05 }}
+            className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3.5 py-1.5 text-sm font-semibold backdrop-blur"
+          >
+            <span className="relative flex size-2">
+              <span className="absolute inline-flex size-full animate-ping rounded-full bg-accent opacity-70 motion-reduce:animate-none" />
+              <span className="relative inline-flex size-2 rounded-full bg-accent" />
+            </span>
+            {t.hero.badge}
+          </motion.p>
+
+          <h1
+            id="hero-title"
+            className="mt-4 text-[clamp(2rem,min(8.6vw,6svh),3.5rem)] leading-[1.02] font-extrabold tracking-[-0.03em] md:mt-6 lg:text-[clamp(2.75rem,min(4.6vw,8svh),5rem)]"
+          >
+            {words.map((w, i) => (
+              <span key={i}>
+                <Word i={i} still={still}>
+                  {w}
+                </Word>{" "}
+              </span>
+            ))}
+            <span className="block text-[#7ee9b8]">
+              {accent.map((w, i) => (
                 <span key={i}>
-                  <Word i={i} still={still}>
+                  <Word i={words.length + i} still={still}>
                     {w}
                   </Word>{" "}
                 </span>
               ))}
-              <span className="block text-[#7ee9b8]">
-                {accent.map((w, i) => (
-                  <span key={i}>
-                    <Word i={words.length + i} still={still}>
-                      {w}
-                    </Word>{" "}
-                  </span>
-                ))}
-              </span>
-            </h1>
+            </span>
+          </h1>
 
-            <motion.p
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.9, ease: EASE, delay: 0.8 }}
-              className="mt-4 max-w-xl text-sm leading-snug text-white/80 md:mt-5 md:text-lg [@media(max-height:640px)]:hidden"
+          <motion.p
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.9, ease: EASE, delay: 0.8 }}
+            className="mt-4 hidden max-w-xl text-lg leading-snug text-white/80 lg:block [@media(max-height:640px)]:hidden"
+          >
+            {t.hero.lead(RESULTS_TOTAL)}
+          </motion.p>
+
+          {/* Phones get their actions from the fixed bottom bar (MobileCta) instead. */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.9, ease: EASE, delay: 1 }}
+            className="mt-7 hidden gap-3 md:flex"
+          >
+            <Button asChild variant="accent" size="lg" className="group">
+              <a href="#ariza">
+                {t.hero.cta}
+                <ArrowRight className="transition-transform duration-300 group-hover:translate-x-1" />
+              </a>
+            </Button>
+            <Button
+              asChild
+              variant="outline"
+              size="lg"
+              className="border-white/25 bg-white/10 text-white backdrop-blur hover:bg-white/20"
             >
-              {t.hero.lead(RESULTS_TOTAL)}
-            </motion.p>
-
-            {/* Phones get their actions from the fixed bottom bar (MobileCta) instead. */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.9, ease: EASE, delay: 1 }}
-              className="mt-7 hidden gap-3 md:flex"
-            >
-              <Button asChild variant="accent" size="lg" className="group">
-                <a href="#ariza">
-                  {t.hero.cta}
-                  <ArrowRight className="transition-transform duration-300 group-hover:translate-x-1" />
-                </a>
-              </Button>
-              <Button
-                asChild
-                variant="outline"
-                size="lg"
-                className="border-white/25 bg-white/10 text-white backdrop-blur hover:bg-white/20"
-              >
-                <a href={CONTACT.phoneHref}>
-                  <Phone /> {CONTACT.phone}
-                </a>
-              </Button>
-            </motion.div>
-          </div>
-
-          <StudentCard still={still} />
+              <a href={CONTACT.phoneHref}>
+                <Phone /> {CONTACT.phone}
+              </a>
+            </Button>
+          </motion.div>
         </div>
       </div>
     </section>

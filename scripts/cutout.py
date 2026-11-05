@@ -1,15 +1,15 @@
 """
-Cuts the admitted students out of their result posters and lines them up for the hero, one layer per child.
+Cuts the admitted students out of their result posters for the hero, one portrait per child.
 
     pip install "rembg[cpu]" pillow numpy scipy
     npm run cutout
 
 Reads assets/hero/posters/<name>.* (the posters as published, not shipped with the site; left untouched) and writes:
-- public/hero/cutouts/kid-<n>-<w>.webp    one cropped layer per child, 1000 and 2000 px wide canvases
-- src/data/hero-cutouts.ts                where each layer sits on the canvas, in percent
+- public/hero/students/kid-<n>.webp    one portrait per child (n is the place in ROW), all the same frame
+- src/data/hero-cutouts.ts             the frame's size
 
-Every child is scaled to the same head width and stands on one curve: the middle of the row a little higher, the
-edges lower, as in a group photo. Pass a folder as the first argument to keep the cut-outs there and reuse them on
+Every child is scaled to the same head width and placed the same way, so they can take turns in one spot.
+Pass a folder as the first argument to keep the cut-outs there and reuse them on
 the next run (the background removal is the slow part).
 """
 
@@ -23,14 +23,12 @@ from scipy import ndimage
 
 ROOT = Path(__file__).resolve().parent.parent
 POSTERS = ROOT / "assets/hero/posters"
-OUT = ROOT / "public/hero/cutouts"
+OUT = ROOT / "public/hero/students"
 MANIFEST = ROOT / "src/data/hero-cutouts.ts"
 MODEL = "birefnet-portrait"
-WIDTHS = [1000, 2000]
 
-# Left to right. The box is the child on the poster: above the name plate, clear of the score and the logos.
-# The posters end at different heights; the children photographed furthest down stand in the middle, where the row
-# is highest.
+# The box is the child on the poster: above the name plate, clear of the score and the logos. The order gives the
+# file numbers that src/data/hero-students.ts refers to.
 ROW = [
     ("samira", (470, 120, 1122, 1030)),
     ("mirhabib", (420, 160, 1054, 1165)),
@@ -44,12 +42,11 @@ ROW = [
     ("xondamir", (370, 230, 941, 1175)),
 ]
 
-# The canvas the layers are placed on (same shape as the hero stage expects).
-W, H = 2000, 884
-HEAD = 165  # head width on the canvas, px
-MARGIN = 130  # centre of the outer heads from the canvas edge
-TOP_MIDDLE, TOP_EDGE = 262, 345  # top of the heads in the middle of the row and on its ends
-LIFT = 40  # how far a layer may end above the canvas bottom: the hero's bottom fade hides that much
+# Every portrait's frame: the head this wide, its top this far down, centred. The posters end around the hips;
+# the frame is cut where the shortest of them ends.
+W, H = 640, 790
+HEAD = 230
+HEAD_TOP = 40
 
 
 def cut_out(name: str, box: tuple[int, int, int, int], cache: Path | None) -> np.ndarray:
@@ -173,59 +170,35 @@ def clean_edge(rgba: np.ndarray) -> np.ndarray:
 def main() -> None:
     cache = Path(sys.argv[1]) if len(sys.argv) > 1 else None
     OUT.mkdir(parents=True, exist_ok=True)
-    n = len(ROW)
     kids = [clean_edge(white_balance(despill(cut_out(name, box, cache)))) for name, box in ROW]
     masks = [skin(rgba) for rgba in kids]
     tones = []
     for rgba, mask in zip(kids, masks):
         ycc = to_ycc(rgba[..., :3].astype(np.float32))
         tones.append((ycc * mask[..., None]).sum((0, 1)) / mask.sum())
-    # The group's tone: the median child, a touch brighter so faces read well on the dark theme too.
+    # The group's tone: the median child, a touch brighter so faces read well on the dark photo.
     target = np.median(tones, 0) * np.array([1.04, 1, 1])
-    layers = []
     for i, (name, box) in enumerate(ROW):
         rgba = retouch(kids[i], masks[i], tones[i], target)
         top, width, cx = head(rgba)
         k = HEAD / width
         h, w = rgba.shape[:2]
-        # The middle of the row stands higher, on a gentle curve, unless the photo ends too soon for that.
-        t = abs(i - (n - 1) / 2) / ((n - 1) / 2)
-        want = TOP_MIDDLE + (TOP_EDGE - TOP_MIDDLE) * t**1.6
-        y_top = max(want, H - LIFT - (h - top) * k)
-        x_head = MARGIN + i * (W - 2 * MARGIN) / (n - 1)
-        x0, y0 = x_head - cx * k, y_top - top * k
-        layers.append((rgba, k, x0, y0))
-        print(f"{name:12} head {width:5.0f}px  scale {k:.3f}  top {y_top:5.1f} (wanted {want:5.1f})")
+        img = Image.fromarray(rgba).resize((round(w * k), round(h * k)), Image.LANCZOS)
+        # Same head size and place on every frame, so the portraits swap without the figure jumping.
+        frame = Image.new("RGBA", (W, H))
+        frame.alpha_composite(img, (round(W / 2 - cx * k), round(HEAD_TOP - top * k)))
+        # A light unsharp mask on the colour only: faces read crisp at large sizes; edges stay soft.
+        rgb = frame.convert("RGB").filter(ImageFilter.UnsharpMask(radius=1.2, percent=60, threshold=2))
+        rgb.putalpha(frame.getchannel("A"))
+        rgb.save(OUT / f"kid-{i + 1}.webp", quality=90, method=6)
+        reach = HEAD_TOP + (h - top) * k
+        print(f"{name:12} head {width:5.0f}px  scale {k:.3f}  body to {reach:5.0f}px of {H}")
 
-    meta = []
-    for i, (rgba, k, x0, y0) in enumerate(layers):
-        h, w = rgba.shape[:2]
-        crop = Image.fromarray(rgba)
-        # Never past the canvas: what hangs below or beyond it is cut off.
-        right, bottom = min(W, x0 + w * k), min(H, y0 + h * k)
-        left = max(0.0, x0)
-        src = (round((left - x0) / k), 0, round((right - x0) / k), round((bottom - y0) / k))
-        crop = crop.crop(src)
-        for target in WIDTHS:
-            s = target / W
-            size = (max(1, round((right - left) * s)), max(1, round((bottom - y0) * s)))
-            out = crop.resize(size, Image.LANCZOS)
-            # A light unsharp mask on the colour only: faces read crisp at large sizes; edges stay soft.
-            rgb = out.convert("RGB").filter(ImageFilter.UnsharpMask(radius=1.2, percent=60, threshold=2))
-            rgb.putalpha(out.getchannel("A"))
-            rgb.save(OUT / f"kid-{i + 1}-{target}.webp", quality=90, method=6)
-        meta.append(
-            {
-                "x": round(left / W * 100, 3),
-                "y": round(y0 / H * 100, 3),
-                "w": round((right - left) / W * 100, 3),
-                "h": round((bottom - y0) / H * 100, 3),
-            }
-        )
-
-    data = json.dumps({"width": W, "height": H, "sizes": WIDTHS, "kids": meta})
-    MANIFEST.write_text(f"// Generated by `npm run cutout` (scripts/cutout.py). Do not edit by hand.\n\nexport const HERO_CUTOUTS = {data} as const\n")
-    print(f"{len(meta)} layers written to {OUT.relative_to(ROOT)}")
+    MANIFEST.write_text(
+        "// Generated by `npm run cutout` (scripts/cutout.py). Do not edit by hand.\n\n"
+        f"export const HERO_CUTOUTS = {json.dumps({'width': W, 'height': H})} as const\n"
+    )
+    print(f"{len(ROW)} portraits written to {OUT.relative_to(ROOT)}")
 
 
 if __name__ == "__main__":

@@ -11,7 +11,7 @@ import { useI18n } from "@/i18n"
 import { asset } from "@/lib/site-root"
 
 /** How long each student stays on, in ms. */
-const TURN = 5000
+const TURN = 3000
 const kidSrc = (kid: number) => asset(`hero/students/kid-${kid}.webp`)
 
 /** One headline word: fades in, sharpens and settles on load, a beat after the word before it. */

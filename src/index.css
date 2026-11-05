@@ -97,8 +97,8 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 6px);
   --font-sans: "Manrope Variable", "Segoe UI", system-ui, sans-serif;
-  /* Bricolage has no Cyrillic, so Russian headings fall through to Onest glyph by glyph. */
-  --font-display: "Bricolage Grotesque Variable", "Onest Variable", "Segoe UI", system-ui, sans-serif;
+  /* Both fonts cover Latin and Cyrillic, so headings and text look the same in all three languages. */
+  --font-display: "Onest Variable", "Segoe UI", system-ui, sans-serif;
   --animate-accordion-down: accordion-down 0.28s cubic-bezier(0.22, 1, 0.36, 1);
   --animate-accordion-up: accordion-up 0.22s cubic-bezier(0.22, 1, 0.36, 1);
 

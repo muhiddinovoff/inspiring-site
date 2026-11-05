@@ -45,13 +45,19 @@ const uz = {
   },
   hero: {
     badge: "Qabul doimo ochiq",
-    titleBefore: "Farzandingizning ",
-    titleAccent: "Prezident maktabiga",
-    titleAfter: " yo‘li shu yerdan boshlanadi",
+    title: "Minglab topshiradi. Kamchiligi kiradi.",
+    titleAccent: "Farzandingiz\u00a0— ular orasida.",
     lead: (n: number) =>
       `Prezident va ixtisoslashtirilgan maktablarga tayyorlov. 2025–2026-yilda ${n} dan ortiq o‘quvchimiz orzusidagi maktabga qabul qilindi.`,
     cta: "Bepul maslahat olish",
-    photoAlt: "Prezident maktabi formasidagi Inspiring Education o‘quvchilari",
+    photoAlt: "Toshkent shahridagi Prezident maktabi binosi",
+    photoCredit: "Foto: president.uz",
+    resultsAria: "Qabul qilingan o‘quvchilarimiz",
+    resultKicker: (year: number) => `${year}-yil natijasi`,
+    score: (_: number, s: string) => `${s} ball`,
+    rank: (n: number) => `${n}-o‘rin`,
+    school: { tashkent: "Toshkent shahridagi Prezident maktabi", termez: "Termiz shahridagi Prezident maktabi" },
+    pick: (name: string) => `${name} natijasini ko‘rsatish`,
   },
   stats: {
     aria: "Raqamlarda",

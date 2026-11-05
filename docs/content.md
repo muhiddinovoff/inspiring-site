@@ -40,7 +40,11 @@ Statistika (`STATS`), natijalar (`RESULTS`, `OVERALL_RESULTS`) shu yerda. Ularni
 
 ## 5. Bosh ekran rasmi
 
-Bosh ekrandagi bolalar ularning natija posterlaridan qirqib olingan (`assets/hero/posters/`). O‘quvchini
+Fon — Toshkent shahridagi Prezident maktabi binosi (`assets/hero/school.jpg`, manba: president.uz, saytda
+“Foto: president.uz” deb ko‘rsatiladi). Pastdagi kartada o‘quvchilar har 5 soniyada almashadi: ism, ball, o‘rin
+va maktab `src/data/hero-students.ts` da.
+
+Kartadagi bolalar rasmi ularning natija posterlaridan qirqib olingan (`assets/hero/posters/`). O‘quvchini
 almashtirish yoki qo‘shish uchun posterni shu papkaga qo‘ying, `scripts/cutout.py` dagi `ROW` ro‘yxatiga uning
 nomi va posterdagi bola turgan joyni (ism yozuvidan yuqorida, logolarsiz) yozing, so‘ng
 

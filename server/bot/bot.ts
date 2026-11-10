@@ -10,25 +10,16 @@
  */
 import { CONTACT } from "../../src/data/site.ts"
 import type { Telegram, Update } from "../telegram.ts"
+import { createAdmin } from "./admin.ts"
 import type { Store, User } from "./db.ts"
 import { answer, type Button, complete, type Draft, isStep, type Markup, question, type Step, summary } from "./form.ts"
 import { fileName, leadCard, leadsWorkbook, statsText, tashkentDay, tashkentHour, XLSX_TYPE } from "./report.ts"
 import { REGIONS } from "./regions.ts"
+import { type BotConfig, settingsStore } from "./settings.ts"
+
+export type { BotConfig } from "./settings.ts"
 
 export type Api = Pick<Telegram, "call" | "sendFile">
-
-export type BotConfig = {
-  /** Who gets lead cards and may use /excel, /stats (chat IDs). */
-  admins: string[]
-  /** "@inspiringuz"; empty turns the subscription gate off. */
-  channel: string
-  /** Numeric ID of the private channel with the closed courses ("-100…"); empty: not set up yet. */
-  closedChannel: string
-  goal: number
-  /** Hour in Tashkent for the daily Excel report; null: off. */
-  reportHour: number | null
-  site: string
-}
 
 const MENU = {
   closed: "🔒 Yopiq kurslar",
@@ -36,19 +27,12 @@ const MENU = {
   me: "📝 Ma’lumotlarim",
   contact: "📞 Aloqa",
 } as const
-const ADMIN = { excel: "📥 Excel", stats: "📊 Statistika" } as const
 
 const menuKeyboard: Markup = {
   keyboard: [[{ text: MENU.closed }], [{ text: MENU.friends }, { text: MENU.me }], [{ text: MENU.contact }]],
   resize_keyboard: true,
   is_persistent: true,
 }
-const adminKeyboard: Markup = {
-  keyboard: [[{ text: ADMIN.excel }, { text: ADMIN.stats }]],
-  resize_keyboard: true,
-  is_persistent: true,
-}
-
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
 const nameOf = (f: { first_name?: string; last_name?: string }) =>
   [f.first_name, f.last_name].filter(Boolean).join(" ").slice(0, 80)
@@ -58,12 +42,15 @@ export const progress = (n: number, goal: number) => {
 }
 const MEMBER = new Set(["creator", "administrator", "member"])
 
-export function createBot(api: Api, store: Store, cfg: BotConfig, log: (m: string) => void) {
-  let botName: string | undefined
-  const username = async () => (botName ??= (await api.call<{ username: string }>("getMe", {})).username)
+export function createBot(api: Api, store: Store, env: BotConfig, log: (m: string) => void) {
+  const settings = settingsStore(store, env)
+  /** Current settings: the admin panel can change them at any time. */
+  const cfg = () => settings.get()
+  let self: { id: number; username: string } | undefined
+  const me = async () => (self ??= await api.call<{ id: number; username: string }>("getMe", {}))
+  const username = async () => (await me()).username
   const refLink = async (id: number) => `https://t.me/${await username()}?start=ref_${id}`
-  const isAdmin = (id: number) => cfg.admins.includes(String(id))
-  const channelUrl = `https://t.me/${cfg.channel.replace(/^@/, "")}`
+  const isAdmin = (id: number) => cfg().admins.includes(String(id))
 
   const send = (chat: number | string, text: string, markup?: Markup) =>
     api.call<{ message_id: number }>("sendMessage", {
@@ -88,7 +75,7 @@ export function createBot(api: Api, store: Store, cfg: BotConfig, log: (m: strin
 
   // ------------------------------------------------------------------ channel membership
   let warned = false
-  const subCache = new Map<number, { ok: boolean; at: number }>()
+  const subCache = new Map<string, { ok: boolean; at: number }>()
   /** true / false, or null when the bot can't tell (it must be an admin of the channel). */
   async function member(chat: string, user: number): Promise<boolean | null> {
     try {
@@ -101,7 +88,7 @@ export function createBot(api: Api, store: Store, cfg: BotConfig, log: (m: strin
       log(`getChatMember ${chat}/${user}: ${(e as Error).message}`)
       if (!warned) {
         warned = true
-        for (const a of cfg.admins) {
+        for (const a of cfg().admins) {
           void notify(
             a,
             `⚠️ Bot <b>${esc(chat)}</b> a’zolarini tekshira olmayapti. Botni shu kanalga <b>admin</b> qilib qo‘shing.\n\n<code>${esc((e as Error).message)}</code>`,
@@ -112,33 +99,34 @@ export function createBot(api: Api, store: Store, cfg: BotConfig, log: (m: strin
     }
   }
   async function subscribed(user: number, fresh = false) {
-    if (!cfg.channel) return true
-    const c = subCache.get(user)
+    if (!cfg().channel) return true
+    const key = `${cfg().channel}:${user}`
+    const c = subCache.get(key)
     if (!fresh && c?.ok && Date.now() - c.at < 10 * 60_000) return true
-    const ok = await member(cfg.channel, user)
-    if (ok !== null) subCache.set(user, { ok, at: Date.now() })
+    const ok = await member(cfg().channel, user)
+    if (ok !== null) subCache.set(key, { ok, at: Date.now() })
     if (subCache.size > 50_000) subCache.clear()
     return ok
   }
 
   const subscribePrompt = () =>
     [
-      `📢 Davom etish uchun rasmiy kanalimiz <b>${esc(cfg.channel)}</b> ga obuna bo‘ling.`,
+      `📢 Davom etish uchun rasmiy kanalimiz <b>${esc(cfg().channelTitle)}</b> ga obuna bo‘ling.`,
       "",
       "U yerda natijalar, foydali darslar va yangiliklar chiqadi. Obuna bo‘lgach, «✅ Obunani tekshirish» tugmasini bosing.",
     ].join("\n")
-  const subscribeMarkup: Markup = {
+  const subscribeMarkup = (): Markup => ({
     inline_keyboard: [
-      [{ text: "📢 Kanalga o‘tish", url: channelUrl }],
+      [{ text: "📢 Kanalga o‘tish", url: cfg().channelUrl || "https://t.me/inspiringuz" }],
       [{ text: "✅ Obunani tekshirish", callback_data: "sub:check" }],
     ],
-  }
+  })
 
   /** Lets the user into the menu only when subscribed; counts them for their referrer on the way. */
   async function gate(user: User, fresh = false) {
     const ok = await subscribed(user.id, fresh)
     if (ok === false) {
-      await send(user.id, subscribePrompt(), subscribeMarkup)
+      await send(user.id, subscribePrompt(), subscribeMarkup())
       return false
     }
     if (ok === true) await credit(user)
@@ -153,14 +141,14 @@ export function createBot(api: Api, store: Store, cfg: BotConfig, log: (m: strin
     const lead = store.lead(user.id)
     const who = esc(lead ? `${lead.first_name} ${lead.last_name}` : user.name)
     log(`referral ${user.id} → ${user.referrer_id} (${n})`)
-    const lines = [`🎉 Do‘stingiz <b>${who}</b> taklifingiz bilan qo‘shildi!`, "", progress(n, cfg.goal)]
-    if (n === cfg.goal) {
+    const lines = [`🎉 Do‘stingiz <b>${who}</b> taklifingiz bilan qo‘shildi!`, "", progress(n, cfg().goal)]
+    if (n === cfg().goal) {
       lines.push("", "🔓 <b>Tabriklaymiz! Yopiq kurslar siz uchun ochildi.</b>")
       await notify(user.referrer_id, lines.join("\n"), {
         inline_keyboard: [[{ text: "🔓 Yopiq kanalga kirish", callback_data: "cl:open" }]],
       })
     } else {
-      if (n < cfg.goal) lines.push(`Yana <b>${cfg.goal - n}</b> ta do‘st qoldi.`)
+      if (n < cfg().goal) lines.push(`Yana <b>${cfg().goal - n}</b> ta do‘st qoldi.`)
       await notify(user.referrer_id, lines.join("\n"))
     }
   }
@@ -171,18 +159,18 @@ export function createBot(api: Api, store: Store, cfg: BotConfig, log: (m: strin
     const share = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(
       "Inspiring Education botiga qo‘shiling: Prezident va ixtisoslashtirilgan maktablarga tayyorlov, foydali darslar 👇",
     )}`
-    const open = n >= cfg.goal || user.unlocked_at
+    const open = n >= cfg().goal || user.unlocked_at
     const text = [
       "🔒 <b>Yopiq kurslar</b>",
       "",
       "Faqat taklif orqali kiriladigan maxsus darslar kanali.",
       "",
-      `Kirish uchun <b>${cfg.goal} ta do‘stingizni</b> taklif qiling. Do‘stingiz hisoblanadi, agar u:`,
+      `Kirish uchun <b>${cfg().goal} ta do‘stingizni</b> taklif qiling. Do‘stingiz hisoblanadi, agar u:`,
       "1) botga sizning havolangiz orqali birinchi marta kirsa,",
       "2) anketani to‘ldirsa,",
-      `3) ${esc(cfg.channel || "kanal")} ga obuna bo‘lsa.`,
+      cfg().channel ? `3) ${esc(cfg().channelTitle)} ga obuna bo‘lsa.` : "",
       "",
-      `Hisob: ${progress(n, cfg.goal)}`,
+      `Hisob: ${progress(n, cfg().goal)}`,
       "",
       `🔗 Sizning havolangiz:\n${link}`,
     ].join("\n")
@@ -206,7 +194,7 @@ export function createBot(api: Api, store: Store, cfg: BotConfig, log: (m: strin
     return [
       "👥 <b>Mening referallarim</b>",
       "",
-      `Hisob: ${progress(n, cfg.goal)}`,
+      `Hisob: ${progress(n, cfg().goal)}`,
       "",
       rows.length
         ? rows.join("\n")
@@ -216,7 +204,7 @@ export function createBot(api: Api, store: Store, cfg: BotConfig, log: (m: strin
   }
 
   async function openClosed(user: User, cbId: string) {
-    if (!cfg.closedChannel) {
+    if (!cfg().closedChannel) {
       return api.call("answerCallbackQuery", {
         callback_query_id: cbId,
         text: "Yopiq kanal tez orada ochiladi. Hisobingiz saqlanadi.",
@@ -228,20 +216,20 @@ export function createBot(api: Api, store: Store, cfg: BotConfig, log: (m: strin
       let active = 0
       for (const id of store.credited(user.id)) {
         if ((await subscribed(id, true)) !== false) active++
-        if (active >= cfg.goal) break
+        if (active >= cfg().goal) break
       }
-      if (active < cfg.goal) {
+      if (active < cfg().goal) {
         await api.call("answerCallbackQuery", { callback_query_id: cbId })
         return send(
           user.id,
-          `Hozir faol do‘stlaringiz: ${progress(active, cfg.goal)}\n\nBa’zi do‘stlaringiz ${esc(cfg.channel)} kanalidan chiqib ketgan. Ularni qaytarish yoki yangi do‘st taklif qilish kerak.`,
+          `Hozir faol do‘stlaringiz: ${progress(active, cfg().goal)}\n\nBa’zi do‘stlaringiz ${esc(cfg().channelTitle)} kanalidan chiqib ketgan. Ularni qaytarish yoki yangi do‘st taklif qilish kerak.`,
         )
       }
       store.unlock(user.id)
       log(`unlocked ${user.id}`)
     }
     await api.call("answerCallbackQuery", { callback_query_id: cbId })
-    if ((await member(cfg.closedChannel, user.id)) === true) {
+    if ((await member(cfg().closedChannel, user.id)) === true) {
       return send(user.id, "✅ Siz allaqachon yopiq kurslar kanalidasiz.")
     }
     const now = Date.now()
@@ -249,7 +237,7 @@ export function createBot(api: Api, store: Store, cfg: BotConfig, log: (m: strin
     if (!link || !user.invite_expires || user.invite_expires < now + 10 * 60_000) {
       const expires = now + 24 * 3_600_000
       const res = await api.call<{ invite_link: string }>("createChatInviteLink", {
-        chat_id: cfg.closedChannel,
+        chat_id: cfg().closedChannel,
         name: `u${user.id}`,
         creates_join_request: true,
         expire_date: Math.floor(expires / 1000),
@@ -272,7 +260,7 @@ export function createBot(api: Api, store: Store, cfg: BotConfig, log: (m: strin
 
   async function onJoinRequest(r: NonNullable<Update["chat_join_request"]>) {
     const ids = [String(r.chat.id), r.chat.username ? `@${r.chat.username}` : ""]
-    if (!cfg.closedChannel || !ids.includes(cfg.closedChannel)) return
+    if (!cfg().closedChannel || !ids.includes(cfg().closedChannel)) return
     const user = store.user(r.from.id)
     const dm = r.user_chat_id ?? r.from.id
     if (user?.unlocked_at) {
@@ -293,7 +281,7 @@ export function createBot(api: Api, store: Store, cfg: BotConfig, log: (m: strin
         [
           "🔒 Bu havola sizga tegishli emas, shuning uchun so‘rov rad etildi.",
           "",
-          `Yopiq kurslarga kirish uchun botda <b>${cfg.goal} ta do‘stingizni</b> taklif qiling — shunda sizga shaxsiy havola beriladi.`,
+          `Yopiq kurslarga kirish uchun botda <b>${cfg().goal} ta do‘stingizni</b> taklif qiling — shunda sizga shaxsiy havola beriladi.`,
         ].join("\n"),
         { inline_keyboard: [[{ text: "🤖 Botni ochish", url: `https://t.me/${await username()}?start=closed` }]] },
       )
@@ -382,7 +370,7 @@ export function createBot(api: Api, store: Store, cfg: BotConfig, log: (m: strin
     else await send(user.id, done)
 
     const row = store.leadRow(user.id)
-    if (row) for (const a of cfg.admins) void notify(a, leadCard(row, isNew))
+    if (row) for (const a of cfg().admins) void notify(a, leadCard(row, isNew))
 
     await send(
       user.id,
@@ -400,7 +388,7 @@ export function createBot(api: Api, store: Store, cfg: BotConfig, log: (m: strin
       ? [
           "🏠 <b>Asosiy menyu</b>",
           "",
-          `🔒 Do‘stlaringizni taklif qiling: <b>${cfg.goal} ta</b> do‘st qo‘shilsa, maxsus <b>yopiq kurslar</b> ochiladi.`,
+          `🔒 Do‘stlaringizni taklif qiling: <b>${cfg().goal} ta</b> do‘st qo‘shilsa, maxsus <b>yopiq kurslar</b> ochiladi.`,
         ].join("\n")
       : "🏠 <b>Asosiy menyu</b>"
     await send(user.id, text, menuKeyboard)
@@ -433,7 +421,7 @@ export function createBot(api: Api, store: Store, cfg: BotConfig, log: (m: strin
       "📞 <b>Inspiring Education</b>",
       "",
       `☎️ ${CONTACT.phone}`,
-      `🌐 ${cfg.site}`,
+      `🌐 ${cfg().site}`,
       `📢 Telegram: ${CONTACT.handle}`,
       `📸 Instagram: ${CONTACT.instagram.replace("https://", "")}`,
     ].join("\n")
@@ -448,6 +436,8 @@ export function createBot(api: Api, store: Store, cfg: BotConfig, log: (m: strin
       .catch((e) => log(`excel → ${chat}: ${(e as Error).message}`))
   }
 
+  const admin = createAdmin({ api, store, settings, send, edit, notify, sendExcel, me, log })
+
   // ------------------------------------------------------------------ dispatch
   async function onMessage(m: NonNullable<Update["message"]>) {
     const text = (m.text ?? "").trim()
@@ -458,29 +448,7 @@ export function createBot(api: Api, store: Store, cfg: BotConfig, log: (m: strin
     const from = m.from
     const start = text.match(/^\/start(?:\s+(\S+))?$/)
 
-    if (isAdmin(from.id)) {
-      if (start) {
-        return send(
-          from.id,
-          [
-            `<b>Assalomu alaykum, ${esc(from.first_name ?? "admin")}!</b> 👋 Siz bot administratorisiz.`,
-            "",
-            "Yangi lidlar shu yerga darhol keladi.",
-            `📥 /excel — barcha lidlar Excel faylda`,
-            `📊 /stats — statistika`,
-            cfg.reportHour !== null ? `🕗 Har kuni ${cfg.reportHour}:00 da kunlik hisobot keladi.` : "",
-            "",
-            "Foydalanuvchi sifatida sinab ko‘rish: /anketa, menyu: /menu",
-            `🆔 Chat ID: <code>${from.id}</code>`,
-          ]
-            .filter((l, i, a) => l || a[i - 1])
-            .join("\n"),
-          adminKeyboard,
-        )
-      }
-      if (text === "/excel" || text === ADMIN.excel) return sendExcel(from.id)
-      if (text === "/stats" || text === ADMIN.stats) return send(from.id, statsText(store), adminKeyboard)
-    }
+    if (isAdmin(from.id) && (await admin.onMessage(m))) return
 
     // Referral: only a person new to the bot can be invited, and not by themselves.
     const ref = Number(start?.[1]?.match(/^ref_(\d+)$/)?.[1])
@@ -552,6 +520,10 @@ export function createBot(api: Api, store: Store, cfg: BotConfig, log: (m: strin
 
   async function onCallback(c: NonNullable<Update["callback_query"]>) {
     const data = c.data ?? ""
+    if (data.startsWith("a:")) {
+      if (isAdmin(c.from.id)) return admin.onCallback(c)
+      return void (await api.call("answerCallbackQuery", { callback_query_id: c.id }))
+    }
     const done = (text?: string, alert = false) =>
       api.call("answerCallbackQuery", { callback_query_id: c.id, ...(text ? { text, show_alert: alert } : {}) })
     store.addUser(c.from.id, c.from.username ?? null, nameOf(c.from), null)
@@ -584,7 +556,7 @@ export function createBot(api: Api, store: Store, cfg: BotConfig, log: (m: strin
     if (data === "cl:show") {
       if (!(await subscribed(user.id))) {
         await done()
-        return send(user.id, subscribePrompt(), subscribeMarkup)
+        return send(user.id, subscribePrompt(), subscribeMarkup())
       }
       user = store.user(user.id)!
       const s = await closedScreen(user)
@@ -595,7 +567,7 @@ export function createBot(api: Api, store: Store, cfg: BotConfig, log: (m: strin
     if (data === "cl:open") {
       if ((await subscribed(user.id, true)) === false) {
         await done()
-        return send(user.id, subscribePrompt(), subscribeMarkup)
+        return send(user.id, subscribePrompt(), subscribeMarkup())
       }
       return openClosed(store.user(user.id)!, c.id)
     }
@@ -607,20 +579,23 @@ export function createBot(api: Api, store: Store, cfg: BotConfig, log: (m: strin
       if (u.message) return void (await onMessage(u.message))
       if (u.callback_query) return void (await onCallback(u.callback_query))
       if (u.chat_join_request) return void (await onJoinRequest(u.chat_join_request))
+      if (u.my_chat_member) return void (await admin.onMyChatMember(u.my_chat_member))
     },
 
-    /** Call every minute: sends the daily report once, at cfg.reportHour Tashkent time. */
+    /** Call every minute: sends the daily report once, at cfg().reportHour Tashkent time. */
     async tick(now = Date.now()) {
-      if (cfg.reportHour === null || tashkentHour(now) !== cfg.reportHour) return
+      if (cfg().reportHour === null || tashkentHour(now) !== cfg().reportHour) return
       const day = String(tashkentDay(now))
       if (store.meta("daily_report") === day) return
       store.setMeta("daily_report", day)
       const today = store.leads(tashkentDay(now)).length
-      for (const a of cfg.admins) {
+      for (const a of cfg().admins) {
         await notify(a, `🕗 <b>Kunlik hisobot</b>\n\n${statsText(store, now)}`)
         if (today) await sendExcel(a, tashkentDay(now), `📥 Bugungi lidlar: <b>${today}</b> ta. Hammasi: /excel`)
       }
     },
+
+    settings,
   }
 }
 

@@ -73,13 +73,28 @@ Shu server botning foydalanuvchi qismini ham ishlatadi (`server/bot/`):
    kanaldan chiqib ketganlarni qayta tekshiradi va yopiq kanalga **shaxsiy so‘rovli havola** beradi: so‘rovni bot
    faqat huquqini olgan odamdan qabul qiladi, havolani boshqaga bersa ham u kira olmaydi; kirgach havola bekor qilinadi.
 
-Sozlash (bir marta):
-- Botni **@inspiringuz** kanaliga admin qiling (huquqlar shart emas — faqat a’zolarni ko‘rish uchun).
-- Yopiq kurslar uchun **yopiq (private) kanal** oching, botni unga admin qiling va **«Foydalanuvchilarni qo‘shish /
-  Invite users»** huquqini bering. Kanal ID sini (`-100…`) `.env` dagi `CLOSED_CHANNEL_ID` ga yozing
-  (kanaldagi biror postni @userinfobot yoki @getidsbot ga forward qilsangiz, ID ni aytadi).
-- `.env` dagi `REFERRAL_GOAL`, `REPORT_HOUR`, `BOT_DB` — `.env.example` da izohlari bor.
-- `npm run bot:setup` — botning nomi, tavsifi va menyusi (adminlarga alohida `/excel`, `/stats`).
+### Admin panel
+Admin botda `/start` yoki `/admin` (yoki «⚙️ Admin panel» tugmasi) bossa, panel ochiladi:
+
+| Bo‘lim | Nima qiladi |
+|---|---|
+| 📊 Statistika | foydalanuvchilar, lidlar, referallar, eng ko‘p lid kelgan viloyatlar |
+| 📥 Excel | bugun / 7 kun / 30 kun / hammasi |
+| 🔒 Yopiq kanal | kanalni **tanlab ulash** (Telegram’ning o‘z «kanal tanlash» oynasi), holatini tekshirish, almashtirish, uzish |
+| 📢 Majburiy kanal | obuna kanalini almashtirish yoki majburiy obunani o‘chirish |
+| 🎯 Referal soni | yopiq kurs uchun nechta do‘st (1–15) |
+| 🕗 Hisobot vaqti | kunlik Excel hisobot soati yoki o‘chirish |
+| 📣 Xabar yuborish | istalgan xabarni (matn, rasm, video…) hammaga yoki anketa to‘ldirganlarga |
+| 🔍 Foydalanuvchi | ID, @username, telefon yoki ism bo‘yicha qidirish; yopiq kursni qo‘lda ochish yoki olib qo‘yish |
+| 👮 Adminlar | admin qo‘shish/o‘chirish (faqat `.env` dagi asosiy adminlar) |
+
+Panelda o‘zgartirilgan sozlamalar bazada saqlanadi va `.env` dagidan ustun turadi; `.env` faqat boshlang‘ich qiymat.
+
+**Yopiq kanalni ulash:** private kanal oching → admin panel → «🔒 Yopiq kanal» → «🔗 Kanalni ulash» → kanalni
+tanlang. Telegram botni o‘sha kanalga kerakli huquq bilan o‘zi admin qiladi. Yoki botni kanalga qo‘lda admin qiling —
+bot o‘zi «Bu kanal nima uchun?» deb so‘raydi, «🔒 Yopiq kurslar kanali» ni bosasiz. Kanal ID sini qidirish shart emas.
+
+Majburiy kanal uchun ham bot **@inspiringuz** da admin bo‘lishi kerak (a’zolarni tekshirish uchun).
 
 Ma’lumotlar `data/bot.db` (SQLite) faylida. Zaxira nusxa: shu faylni nusxalang
 (`sqlite3 data/bot.db ".backup bot-backup.db"`). `git pull` va `deploy.sh` unga tegmaydi.

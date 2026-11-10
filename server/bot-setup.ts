@@ -84,7 +84,8 @@ for (const chat_id of admins) {
     await bot.call("setMyCommands", {
       scope: { type: "chat", chat_id },
       commands: [
-        { command: "excel", description: "Barcha lidlar Excel faylda" },
+        { command: "admin", description: "Admin panel" },
+        { command: "excel", description: "Lidlar Excel faylda" },
         { command: "stats", description: "Statistika" },
         { command: "anketa", description: "Anketani sinab ko‘rish" },
         { command: "menu", description: "Foydalanuvchi menyusi" },

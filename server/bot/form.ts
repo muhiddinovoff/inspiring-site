@@ -37,7 +37,12 @@ export type Step = (typeof STEPS)[number]
 export type Button = { text: string; callback_data?: string; url?: string }
 export type Markup =
   | { inline_keyboard: Button[][] }
-  | { keyboard: { text: string; request_contact?: boolean }[][]; resize_keyboard: true; is_persistent?: boolean }
+  | {
+      keyboard: { text: string; request_contact?: boolean }[][]
+      resize_keyboard: true
+      is_persistent?: boolean
+      one_time_keyboard?: boolean
+    }
   | { remove_keyboard: true }
 
 export type Input = { text: string } | { data: string } | { contact: string }

@@ -6,6 +6,7 @@ import { openStore, type Store } from "./db.ts"
 
 const ADMIN = 1
 const CLOSED = "-1001"
+const BOT = 999
 
 /** A stand-in Bot API: records every call, knows who is in which channel. */
 function fakeApi() {
@@ -18,10 +19,15 @@ function fakeApi() {
       calls.push({ method, body })
       switch (method) {
         case "getMe":
-          return { username: "inspiring_test_bot" }
+          return { id: BOT, username: "inspiring_test_bot" }
+        case "getChat":
+          return { id: Number(body.chat_id), title: `Kanal ${body.chat_id}` }
+        case "getChatMemberCount":
+          return 42
         case "sendMessage":
           return { message_id: ++msg }
         case "getChatMember":
+          if (body.user_id === BOT) return { status: "administrator", can_invite_users: true }
           return { status: members[String(body.chat_id)]?.has(Number(body.user_id)) ? "member" : "left" }
         case "createChatInviteLink":
           return { invite_link: "https://t.me/+personal" }
@@ -170,6 +176,7 @@ describe("bot", () => {
     t.members["@inspiringuz"].add(100)
     await register(100)
     await bot.handle(msg(ADMIN, "/excel"))
+    await bot.handle(cb(ADMIN, "a:xl:all"))
     expect(t.files[0]).toMatchObject({ chat: String(ADMIN) })
     expect(t.files[0].name).toMatch(/^lidlar_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}\.xlsx$/)
 
@@ -178,5 +185,69 @@ describe("bot", () => {
     await bot.tick(eight)
     await bot.tick(eight + 60_000)
     expect(t.sent(ADMIN).filter((s) => s.includes("Kunlik hisobot"))).toHaveLength(1)
+  })
+
+  it("admin panel: connects the closed channel with the picker and changes the goal", async () => {
+    bot.settings.set({ closedChannel: "", closedTitle: "" })
+    await bot.handle(msg(ADMIN, "/admin"))
+    expect(t.sent(ADMIN).at(-1)).toContain("Yopiq kanal: ⚠️")
+    await bot.handle(cb(ADMIN, "a:cl:pick"))
+    const picker = t.calls.at(-1)?.body.reply_markup as { keyboard: { request_chat?: object }[][] }
+    expect(picker.keyboard[0][0].request_chat).toMatchObject({ request_id: 1, chat_is_channel: true })
+    await bot.handle({
+      update_id: ++id,
+      message: {
+        message_id: ++id,
+        chat: { id: ADMIN, type: "private" },
+        from: { id: ADMIN },
+        chat_shared: { request_id: 1, chat_id: -100777 },
+      },
+    })
+    expect(bot.settings.get()).toMatchObject({ closedChannel: "-100777", closedTitle: "Kanal -100777" })
+
+    await bot.handle(cb(ADMIN, "a:goal:3"))
+    expect(bot.settings.get().goal).toBe(3)
+    // Not an admin: the panel's buttons do nothing.
+    await bot.handle(cb(100, "a:goal:1"))
+    expect(bot.settings.get().goal).toBe(3)
+  })
+
+  it("admin panel: finds a user, opens the closed courses by hand, broadcasts, adds an admin", async () => {
+    t.members["@inspiringuz"].add(100)
+    await register(100)
+    await bot.handle(cb(ADMIN, "a:find"))
+    await bot.handle(msg(ADMIN, "90 123 45 67"))
+    expect(t.sent(ADMIN).at(-1)).toContain("Valiyev Ali Rustamovich")
+    await bot.handle(cb(ADMIN, "a:u:open:100"))
+    expect(store.user(100)?.unlocked_at).toBeTruthy()
+    expect(t.sent(100).at(-1)).toContain("yopiq kurslar ochildi")
+
+    await bot.handle(cb(ADMIN, "a:bc"))
+    await bot.handle(msg(ADMIN, "Ertaga ochiq dars!"))
+    await bot.handle(cb(ADMIN, "a:bc:leads"))
+    await new Promise((r) => setTimeout(r, 100))
+    const copies = t.calls.filter((c) => c.method === "copyMessage")
+    expect(copies.map((c) => c.body.chat_id)).toEqual([100])
+
+    await bot.handle(cb(ADMIN, "a:adm:add"))
+    await bot.handle(msg(ADMIN, "555666777"))
+    expect(bot.settings.get().admins).toContain("555666777")
+    await bot.handle(cb(ADMIN, "a:adm:del:555666777"))
+    expect(bot.settings.get().admins).not.toContain("555666777")
+  })
+
+  it("offers a channel the bot was just made admin of", async () => {
+    await bot.handle({
+      update_id: ++id,
+      my_chat_member: {
+        chat: { id: -100888, type: "channel", title: "Maxsus darslar" },
+        from: { id: ADMIN },
+        new_chat_member: { status: "administrator" },
+      },
+    })
+    const note = t.calls.at(-1)
+    expect(String(note?.body.text)).toContain("Maxsus darslar")
+    await bot.handle(cb(ADMIN, "a:set:cl:-100888"))
+    expect(bot.settings.get().closedChannel).toBe("-100888")
   })
 })

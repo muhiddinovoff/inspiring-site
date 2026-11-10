@@ -57,6 +57,10 @@ export type Update = {
     from?: { id: number; first_name?: string; last_name?: string; username?: string }
     text?: string
     contact?: { phone_number: string; user_id?: number }
+    /** Answer to a "choose a channel" button. */
+    chat_shared?: { request_id: number; chat_id: number; title?: string; username?: string }
+    /** Answer to a "choose a user" button. */
+    users_shared?: { request_id: number; users: { user_id: number; first_name?: string }[] }
   }
   callback_query?: {
     id: string
@@ -69,6 +73,12 @@ export type Update = {
     from: { id: number; first_name?: string; username?: string }
     user_chat_id?: number
     invite_link?: { invite_link: string; name?: string }
+  }
+  /** The bot's own status changed in a chat (e.g. it was made a channel admin). */
+  my_chat_member?: {
+    chat: { id: number; type: string; title?: string; username?: string }
+    from: { id: number }
+    new_chat_member: { status: string; can_invite_users?: boolean }
   }
 }
 
@@ -84,11 +94,16 @@ export async function poll(bot: Telegram, handle: (u: Update) => Promise<void>, 
       const updates = await bot.call<Update[]>("getUpdates", {
         offset,
         timeout: 30,
-        allowed_updates: ["message", "callback_query", "chat_join_request"],
+        allowed_updates: ["message", "callback_query", "chat_join_request", "my_chat_member"],
       })
       for (const u of updates) {
         offset = u.update_id + 1
-        const who = u.message?.chat.id ?? u.callback_query?.from.id ?? u.chat_join_request?.from.id ?? 0
+        const who =
+          u.message?.chat.id ??
+          u.callback_query?.from.id ??
+          u.chat_join_request?.from.id ??
+          u.my_chat_member?.from.id ??
+          0
         const run = (queues.get(who) ?? Promise.resolve())
           .then(() => handle(u))
           .catch((e) => log(`update ${u.update_id}: ${(e as Error).message}`))

@@ -125,12 +125,26 @@ export function openStore(file: string) {
     leadRow: db.prepare(`${LEAD_ROWS} WHERE l.user_id = ?`),
     counts: db.prepare(`
       SELECT (SELECT COUNT(*) FROM users) AS users,
+        (SELECT COUNT(*) FROM users WHERE started_at >= :since) AS users_today,
         (SELECT COUNT(*) FROM leads) AS leads,
         (SELECT COUNT(*) FROM leads WHERE created_at >= :since) AS leads_today,
         (SELECT COUNT(*) FROM leads WHERE is_student = 1) AS students,
         (SELECT COUNT(*) FROM users WHERE credited_at IS NOT NULL) AS referrals,
         (SELECT COUNT(*) FROM users WHERE unlocked_at IS NOT NULL) AS unlocked,
         (SELECT COUNT(*) FROM users WHERE joined_at IS NOT NULL) AS joined`),
+    revoke: db.prepare(
+      "UPDATE users SET unlocked_at = NULL, joined_at = NULL, invite_link = NULL, invite_expires = NULL WHERE id = ?",
+    ),
+    allIds: db.prepare("SELECT id FROM users ORDER BY id"),
+    leadIds: db.prepare("SELECT user_id AS id FROM leads ORDER BY user_id"),
+    findById: db.prepare("SELECT id FROM users WHERE id = ?"),
+    findByUsername: db.prepare("SELECT id FROM users WHERE username = ? COLLATE NOCASE"),
+    findByPhone: db.prepare("SELECT user_id AS id FROM leads WHERE REPLACE(phone, '+', '') LIKE ? LIMIT 10"),
+    findByName: db.prepare(`
+      SELECT user_id AS id FROM leads
+      WHERE (last_name || ' ' || first_name || ' ' || middle_name) LIKE ? OR (first_name || ' ' || last_name) LIKE ?
+      ORDER BY updated_at DESC LIMIT 10`),
+    topRegions: db.prepare("SELECT region, COUNT(*) AS n FROM leads GROUP BY region ORDER BY n DESC LIMIT 5"),
     getMeta: db.prepare("SELECT value FROM meta WHERE key = ?"),
     setMeta: db.prepare(
       "INSERT INTO meta (key, value) VALUES (?, ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value",
@@ -165,9 +179,27 @@ export function openStore(file: string) {
       q.invited.all(referrer) as { id: number; name: string; credited_at: number | null; lead: string | null }[],
     counts: (since: number) =>
       q.counts.get({ since }) as Record<
-        "users" | "leads" | "leads_today" | "students" | "referrals" | "unlocked" | "joined",
+        "users" | "users_today" | "leads" | "leads_today" | "students" | "referrals" | "unlocked" | "joined",
         number
       >,
+    /** Takes the closed courses away again (the admin decided so). */
+    revoke: (id: number) => q.revoke.run(id),
+    /** Everyone to send a broadcast to. */
+    userIds: (leadsOnly = false) => ((leadsOnly ? q.leadIds : q.allIds).all() as { id: number }[]).map((r) => r.id),
+    /** By Telegram ID, @username, phone (7+ digits) or name. */
+    find: (query: string) => {
+      const s = query.trim()
+      const ids = (rows: unknown[]) => (rows as { id: number }[]).map((r) => r.id)
+      if (/^@\w{3,}$/.test(s)) return ids(q.findByUsername.all(s.slice(1)))
+      const digits = s.replace(/[\s()+-]/g, "")
+      if (/^\d{7,}$/.test(digits)) {
+        const byId = ids(q.findById.all(Number(digits)))
+        return [...new Set([...byId, ...ids(q.findByPhone.all(`%${digits.slice(-9)}`))])]
+      }
+      if (s.length >= 2) return ids(q.findByName.all(`%${s}%`, `%${s}%`))
+      return []
+    },
+    topRegions: () => q.topRegions.all() as { region: string; n: number }[],
     meta: (key: string) => (q.getMeta.get(key) as { value: string } | undefined)?.value,
     setMeta: (key: string, value: string) => q.setMeta.run(key, value),
     close: () => db.close(),

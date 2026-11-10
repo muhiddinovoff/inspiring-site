@@ -126,8 +126,8 @@ export function openStore(file: string) {
     counts: db.prepare(`
       SELECT (SELECT COUNT(*) FROM users) AS users,
         (SELECT COUNT(*) FROM users WHERE started_at >= :since) AS users_today,
-        (SELECT COUNT(*) FROM leads) AS leads,
-        (SELECT COUNT(*) FROM leads WHERE created_at >= :since) AS leads_today,
+        (SELECT COUNT(*) FROM leads WHERE is_student = 0) AS leads,
+        (SELECT COUNT(*) FROM leads WHERE is_student = 0 AND created_at >= :since) AS leads_today,
         (SELECT COUNT(*) FROM leads WHERE is_student = 1) AS students,
         (SELECT COUNT(*) FROM users WHERE credited_at IS NOT NULL) AS referrals,
         (SELECT COUNT(*) FROM users WHERE unlocked_at IS NOT NULL) AS unlocked,
@@ -144,7 +144,9 @@ export function openStore(file: string) {
       SELECT user_id AS id FROM leads
       WHERE (last_name || ' ' || first_name || ' ' || middle_name) LIKE ? OR (first_name || ' ' || last_name) LIKE ?
       ORDER BY updated_at DESC LIMIT 10`),
-    topRegions: db.prepare("SELECT region, COUNT(*) AS n FROM leads GROUP BY region ORDER BY n DESC LIMIT 5"),
+    topRegions: db.prepare(
+      "SELECT region, COUNT(*) AS n FROM leads WHERE is_student = 0 GROUP BY region ORDER BY n DESC LIMIT 5",
+    ),
     getMeta: db.prepare("SELECT value FROM meta WHERE key = ?"),
     setMeta: db.prepare(
       "INSERT INTO meta (key, value) VALUES (?, ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value",
@@ -166,11 +168,11 @@ export function openStore(file: string) {
     setInvite: (id: number, link: string | null, expires: number | null) => q.invite.run(link, expires, id),
     joined: (id: number, now = Date.now()) => q.joined.run(now, id),
     lead: (id: number) => q.lead.get(id) as Lead | undefined,
-    /** Saves (or replaces) the user's form; true when it is their first. */
+    /** Saves (or replaces) the user's form; returns the one it replaced, if any. */
     saveLead: (l: Omit<Lead, "created_at" | "updated_at">, now = Date.now()) => {
-      const isNew = !q.lead.get(l.user_id)
+      const prev = q.lead.get(l.user_id) as Lead | undefined
       q.saveLead.run({ ...l, now })
-      return isNew
+      return prev
     },
     leads: (since = 0) => q.leadRows.all(since) as LeadRow[],
     leadRow: (id: number) => q.leadRow.get(id) as LeadRow | undefined,

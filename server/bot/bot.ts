@@ -13,7 +13,7 @@ import type { Telegram, Update } from "../telegram.ts"
 import { createAdmin } from "./admin.ts"
 import type { Store, User } from "./db.ts"
 import { answer, type Button, complete, type Draft, isStep, type Markup, question, type Step, summary } from "./form.ts"
-import { fileName, leadCard, leadsWorkbook, statsText, tashkentDay, tashkentHour, XLSX_TYPE } from "./report.ts"
+import { fileName, isLead, leadCard, leadsWorkbook, statsText, tashkentDay, tashkentHour, XLSX_TYPE } from "./report.ts"
 import { REGIONS } from "./regions.ts"
 import { type BotConfig, settingsStore } from "./settings.ts"
 
@@ -351,7 +351,7 @@ export function createBot(api: Api, store: Store, env: BotConfig, log: (m: strin
 
   async function finish(user: User, d: Draft, message?: number) {
     if (!complete(d)) return startForm(user)
-    const isNew = store.saveLead({
+    const prev = store.saveLead({
       user_id: user.id,
       first_name: d.firstName,
       last_name: d.lastName,
@@ -363,14 +363,19 @@ export function createBot(api: Api, store: Store, env: BotConfig, log: (m: strin
       branch: d.isStudent ? (d.branch ?? null) : null,
       phone: d.phone,
     })
+    const isNew = !prev
     store.setStep(user.id, null)
-    log(`${isNew ? "new" : "updated"} lead from bot: ${user.id}`)
+    log(`${isNew ? "new" : "updated"} form from bot: ${user.id}${d.isStudent ? " (Inspiring student)" : ""}`)
     const done = `✅ <b>Ma’lumotlaringiz qabul qilindi!</b>\n\n${summary(d)}`
     if (message) await edit(user.id, message, done).catch(() => send(user.id, done))
     else await send(user.id, done)
 
     const row = store.leadRow(user.id)
-    if (row) for (const a of cfg().admins) void notify(a, leadCard(row, isNew))
+    // Only people who don't study with us yet are leads for the call centre.
+    if (row && isLead(row)) {
+      const newLead = !prev || !isLead(prev)
+      for (const a of cfg().admins) void notify(a, leadCard(row, newLead))
+    }
 
     await send(
       user.id,
@@ -428,11 +433,15 @@ export function createBot(api: Api, store: Store, env: BotConfig, log: (m: strin
 
   async function sendExcel(chat: number | string, since = 0, caption?: string) {
     const rows = store.leads(since)
-    if (!rows.length) return notify(chat, since ? "Bugun yangi lid yo‘q." : "Hozircha lid yo‘q.")
+    if (!rows.length) return notify(chat, since ? "Bu davrda anketa to‘ldirganlar yo‘q." : "Hozircha anketa yo‘q.")
     const data = leadsWorkbook(rows)
     const name = fileName(since ? "lidlar_bugun" : "lidlar", Date.now())
     return api
-      .sendFile(String(chat), { name, data, type: XLSX_TYPE }, caption ?? `📥 Barcha lidlar: <b>${rows.length}</b> ta`)
+      .sendFile(
+        String(chat),
+        { name, data, type: XLSX_TYPE },
+        caption ?? `📥 Lidlar: <b>${rows.filter(isLead).length}</b> ta`,
+      )
       .catch((e) => log(`excel → ${chat}: ${(e as Error).message}`))
   }
 
@@ -588,7 +597,7 @@ export function createBot(api: Api, store: Store, env: BotConfig, log: (m: strin
       const day = String(tashkentDay(now))
       if (store.meta("daily_report") === day) return
       store.setMeta("daily_report", day)
-      const today = store.leads(tashkentDay(now)).length
+      const today = store.leads(tashkentDay(now)).filter(isLead).length
       for (const a of cfg().admins) {
         await notify(a, `🕗 <b>Kunlik hisobot</b>\n\n${statsText(store, now)}`)
         if (today) await sendExcel(a, tashkentDay(now), `📥 Bugungi lidlar: <b>${today}</b> ta. Hammasi: /excel`)

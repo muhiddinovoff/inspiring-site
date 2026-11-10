@@ -94,7 +94,7 @@ describe("bot", () => {
     )
   })
 
-  async function register(user: number, start = "/start") {
+  async function register(user: number, start = "/start", student = false) {
     for (const u of [
       msg(user, start),
       msg(user, "Ali"),
@@ -103,7 +103,7 @@ describe("bot", () => {
       cb(user, "f:grade:6"),
       cb(user, "f:region:5"),
       cb(user, "f:district:0"),
-      cb(user, "f:isStudent:0"),
+      ...(student ? [cb(user, "f:isStudent:1"), cb(user, "f:branch:0")] : [cb(user, "f:isStudent:0")]),
       contact(user, "+998901234567"),
       cb(user, "f:ok"),
     ]) {
@@ -249,5 +249,18 @@ describe("bot", () => {
     expect(String(note?.body.text)).toContain("Maxsus darslar")
     await bot.handle(cb(ADMIN, "a:set:cl:-100888"))
     expect(bot.settings.get().closedChannel).toBe("-100888")
+  })
+
+  it("sends only people who don't study at Inspiring as leads", async () => {
+    t.members["@inspiringuz"].add(400)
+    await register(400, "/start", true)
+    expect(store.lead(400)).toMatchObject({ is_student: 1, branch: "Chilonzor" })
+    expect(t.sent(ADMIN).some((m) => m.includes("Yangi lid"))).toBe(false)
+    expect(store.counts(0)).toMatchObject({ leads: 0, students: 1 })
+
+    // Fills the form again, now as someone who doesn't study with us: that is a new lead.
+    await register(400, "/anketa")
+    expect(t.sent(ADMIN).filter((m) => m.includes("Yangi lid"))).toHaveLength(1)
+    expect(store.counts(0)).toMatchObject({ leads: 1, students: 0 })
   })
 })

@@ -43,7 +43,6 @@ export function leadCard(l: LeadRow, isNew: boolean) {
     `👤 <b>${esc(fullName(l))}</b>`,
     `🎓 <b>Sinf:</b> ${l.grade}`,
     `📍 <b>Manzil:</b> ${esc(l.region)}, ${esc(l.district)}`,
-    `🏫 <b>Inspiring o‘quvchisi:</b> ${l.is_student ? `ha — ${esc(l.branch ?? "")} filiali` : "yo‘q"}`,
     `📞 <b>Telefon:</b> <code>${prettyPhone(l.phone)}</code>`,
     `💬 <b>Telegram:</b> <a href="tg://user?id=${l.user_id}">${tg}</a> · <code>${l.user_id}</code>`,
     ...(l.referrer_id
@@ -53,9 +52,15 @@ export function leadCard(l: LeadRow, isNew: boolean) {
   ].join("\n")
 }
 
+/** A lead is someone who does not study at Inspiring Education yet; students who sign up are kept apart. */
+export const isLead = (l: Pick<LeadRow, "is_student">) => !l.is_student
+
+/** "Lidlar" (not studying with us), "Inspiring o‘quvchilari", and lead counts by region and grade. */
 export function leadsWorkbook(rows: LeadRow[]) {
-  const leads: Sheet = {
-    name: "Lidlar",
+  const leads = rows.filter(isLead)
+  const students = rows.filter((l) => !isLead(l))
+  const people = (name: string, list: LeadRow[], branch: boolean): Sheet => ({
+    name,
     columns: [
       { header: "№", width: 6 },
       { header: "Ro‘yxatdan o‘tgan", width: 17 },
@@ -65,8 +70,7 @@ export function leadsWorkbook(rows: LeadRow[]) {
       { header: "Sinf", width: 6 },
       { header: "Viloyat", width: 22 },
       { header: "Shahar / tuman", width: 22 },
-      { header: "Inspiring o‘quvchisi", width: 12 },
-      { header: "Filial", width: 16 },
+      ...(branch ? [{ header: "Filial", width: 16 }] : []),
       { header: "Telefon", width: 18 },
       { header: "Telegram", width: 18 },
       { header: "Telegram ID", width: 13 },
@@ -74,7 +78,7 @@ export function leadsWorkbook(rows: LeadRow[]) {
       { header: "Taklif qilganlari", width: 10 },
       { header: "Yopiq kanal", width: 12 },
     ],
-    rows: rows.map((l, i) => [
+    rows: list.map((l, i) => [
       i + 1,
       when(l.created_at),
       l.last_name,
@@ -83,8 +87,7 @@ export function leadsWorkbook(rows: LeadRow[]) {
       l.grade,
       l.region,
       l.district,
-      l.is_student ? "Ha" : "Yo‘q",
-      l.branch,
+      ...(branch ? [l.branch] : []),
       prettyPhone(l.phone),
       l.username ? `@${l.username}` : l.tg_name,
       l.user_id,
@@ -92,14 +95,14 @@ export function leadsWorkbook(rows: LeadRow[]) {
       l.referrals,
       l.joined_at ? "Qo‘shilgan" : l.unlocked_at ? "Ochilgan" : "",
     ]),
-  }
+  })
 
   const group = (key: (l: LeadRow) => string | number, order: (string | number)[]) => {
-    const map = new Map<string | number, { all: number; students: number }>()
+    const map = new Map<string | number, { leads: number; students: number }>()
     for (const l of rows) {
-      const g = map.get(key(l)) ?? { all: 0, students: 0 }
-      g.all++
-      g.students += l.is_student
+      const g = map.get(key(l)) ?? { leads: 0, students: 0 }
+      if (isLead(l)) g.leads++
+      else g.students++
       map.set(key(l), g)
     }
     const extra = [...map.keys()].filter((k) => !order.includes(k))
@@ -107,17 +110,17 @@ export function leadsWorkbook(rows: LeadRow[]) {
       .filter((k) => map.has(k))
       .map((k) => {
         const g = map.get(k)!
-        return [k, g.all, g.students, g.all - g.students]
+        return [k, g.leads, g.students]
       })
   }
   const cols = (first: string) => [
     { header: first, width: 30 },
     { header: "Lidlar", width: 10 },
     { header: "Inspiring o‘quvchilari", width: 14 },
-    { header: "Yangi (o‘qimaydi)", width: 14 },
   ]
   return xlsx([
-    leads,
+    people("Lidlar", leads, false),
+    people("Inspiring o‘quvchilari", students, true),
     {
       name: "Viloyatlar",
       columns: cols("Viloyat"),
@@ -150,8 +153,8 @@ export function statsText(store: Store, now = Date.now()) {
     "<b>📊 Bot statistikasi</b>",
     "",
     `👥 Botga kirganlar: <b>${c.users}</b>`,
-    `📝 Lidlar (anketa to‘ldirgan): <b>${c.leads}</b>, bugun: <b>${c.leads_today}</b>`,
-    `🏫 Shundan Inspiring o‘quvchilari: <b>${c.students}</b>, yangilar: <b>${c.leads - c.students}</b>`,
+    `📝 Lidlar (Inspiring’da o‘qimaydi): <b>${c.leads}</b>, bugun: <b>${c.leads_today}</b>`,
+    `🏫 Anketa to‘ldirgan Inspiring o‘quvchilari: <b>${c.students}</b>`,
     `🤝 Hisoblangan referallar: <b>${c.referrals}</b>`,
     `🔓 Yopiq kursni ochganlar: <b>${c.unlocked}</b>, kanalga qo‘shilganlar: <b>${c.joined}</b>`,
     "",

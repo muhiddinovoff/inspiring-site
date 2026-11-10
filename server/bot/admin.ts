@@ -13,7 +13,7 @@
 import type { Update } from "../telegram.ts"
 import type { Store } from "./db.ts"
 import { type Markup, prettyPhone } from "./form.ts"
-import { statsText, tashkentDay, when } from "./report.ts"
+import { isLead, statsText, tashkentDay, when } from "./report.ts"
 import type { SettingsStore } from "./settings.ts"
 
 export type AdminContext = {
@@ -196,7 +196,8 @@ export function createAdmin(ctx: AdminContext) {
         "⚙️ <b>Admin panel</b>",
         "",
         `👥 Foydalanuvchilar: <b>${c.users}</b> (bugun +${c.users_today})`,
-        `📝 Lidlar: <b>${c.leads}</b> (bugun +${c.leads_today})`,
+        `📝 Lidlar (Inspiring’da o‘qimaydi): <b>${c.leads}</b> (bugun +${c.leads_today})`,
+        `🏫 Anketa to‘ldirgan o‘quvchilar: <b>${c.students}</b>`,
         "",
         `🔒 Yopiq kanal: ${st.closedChannel ? `<b>${esc(st.closedTitle)}</b> ✅` : "⚠️ <b>ulanmagan</b>"}`,
         `📢 Majburiy obuna: ${st.channel ? `<b>${esc(st.channelTitle)}</b> ✅` : "o‘chirilgan"}`,
@@ -230,7 +231,7 @@ export function createAdmin(ctx: AdminContext) {
     const text = [
       statsText(store),
       ...(top.length
-        ? ["", "<b>📍 Eng ko‘p lid:</b>", ...top.map((r, i) => `${i + 1}. ${esc(r.region)} — ${r.n}`)]
+        ? ["", "<b>📍 Eng ko‘p lid kelgan hududlar:</b>", ...top.map((r, i) => `${i + 1}. ${esc(r.region)} — ${r.n}`)]
         : []),
     ].join("\n")
     return [text, inline([[{ text: "🔄 Yangilash", callback_data: "a:stats" }], [home]])]
@@ -639,8 +640,13 @@ export function createAdmin(ctx: AdminContext) {
         const since = { today: day, week: day - 6 * 86_400_000, month: day - 29 * 86_400_000, all: 0 }[arg] ?? 0
         const label =
           { today: "Bugungi", week: "Oxirgi 7 kundagi", month: "Oxirgi 30 kundagi", all: "Barcha" }[arg] ?? "Barcha"
-        const n = store.leads(since).length
-        return ctx.sendExcel(admin, since, `📥 ${label} lidlar: <b>${n}</b> ta`)
+        const all = store.leads(since)
+        const n = all.filter(isLead).length
+        return ctx.sendExcel(
+          admin,
+          since,
+          `📥 ${label} lidlar: <b>${n}</b> ta\n🏫 Inspiring o‘quvchilari (alohida varaqda): ${all.length - n} ta`,
+        )
       }
       case "cl":
         if (arg === "pick") {

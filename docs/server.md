@@ -63,8 +63,8 @@ Shu server botning foydalanuvchi qismini ham ishlatadi (`server/bot/`):
 1. **Lid.** `/start` → qisqa anketa: ism, familiya, otasining ismi, sinf (tugmalar), viloyat → shahar/tuman
    (tugmalar; ro‘yxatda bo‘lmasa yozish mumkin), Inspiring Education’da o‘qiydimi (ha bo‘lsa — filial), telefon
    (bir tugma bilan yuboriladi), tasdiqlash. Har bir savolda «⬅️ Orqaga» bor.
-   Har bir yangi lid `TELEGRAM_CHAT_IDS` dagilarga kartochka bo‘lib darhol keladi.
-2. **Excel.** Admin botda `/excel` (yoki «📥 Excel») — barcha lidlar: «Lidlar», «Viloyatlar», «Sinflar» varaqlari,
+   Lid — Inspiring’da o‘qimaydigan odam: u `TELEGRAM_CHAT_IDS` dagilarga kartochka bo‘lib darhol keladi. Inspiring o‘quvchilari ham anketa to‘ldiradi (referal uchun), lekin lid sifatida yuborilmaydi — Excel’da alohida varaqda.
+2. **Excel.** Admin botda `/excel` (yoki «📥 Excel») — barcha lidlar: «Lidlar» (Inspiring’da o‘qimaydiganlar), «Inspiring o‘quvchilari», «Viloyatlar», «Sinflar» varaqlari,
    filtr va qotirilgan sarlavha bilan. Har kuni `REPORT_HOUR` da (standart 20:00, Toshkent) kunlik hisobot va
    bugungi lidlar fayli keladi. `/stats` — qisqa statistika.
 3. **Majburiy obuna.** Anketadan keyin menyu faqat `REQUIRED_CHANNEL` (@inspiringuz) ga obuna bo‘lgach ochiladi.

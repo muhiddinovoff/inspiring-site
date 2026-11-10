@@ -57,6 +57,33 @@ Rasm: @BotFather → `/setuserpic` → botni tanlang → `docs/assets/bot-avatar
 
 > Token chatda yoki biror joyda ochiq yozilgan bo‘lsa, @BotFather → `/revoke` bilan yangilang va yangisini `.env` ga qo‘ying.
 
+## 4a. Foydalanuvchilar uchun bot: lidlar, majburiy obuna, yopiq kurslar
+Shu server botning foydalanuvchi qismini ham ishlatadi (`server/bot/`):
+
+1. **Lid.** `/start` → qisqa anketa: ism, familiya, otasining ismi, sinf (tugmalar), viloyat → shahar/tuman
+   (tugmalar; ro‘yxatda bo‘lmasa yozish mumkin), Inspiring Education’da o‘qiydimi (ha bo‘lsa — filial), telefon
+   (bir tugma bilan yuboriladi), tasdiqlash. Har bir savolda «⬅️ Orqaga» bor.
+   Har bir yangi lid `TELEGRAM_CHAT_IDS` dagilarga kartochka bo‘lib darhol keladi.
+2. **Excel.** Admin botda `/excel` (yoki «📥 Excel») — barcha lidlar: «Lidlar», «Viloyatlar», «Sinflar» varaqlari,
+   filtr va qotirilgan sarlavha bilan. Har kuni `REPORT_HOUR` da (standart 20:00, Toshkent) kunlik hisobot va
+   bugungi lidlar fayli keladi. `/stats` — qisqa statistika.
+3. **Majburiy obuna.** Anketadan keyin menyu faqat `REQUIRED_CHANNEL` (@inspiringuz) ga obuna bo‘lgach ochiladi.
+4. **Yopiq kurslar.** Har kimning shaxsiy taklif havolasi bor. Do‘st faqat shunda hisoblanadi: botga **birinchi marta**
+   shu havola orqali kirgan, anketani to‘ldirgan va kanalga obuna bo‘lgan. `REFERRAL_GOAL` (5) ta bo‘lganda bot
+   kanaldan chiqib ketganlarni qayta tekshiradi va yopiq kanalga **shaxsiy so‘rovli havola** beradi: so‘rovni bot
+   faqat huquqini olgan odamdan qabul qiladi, havolani boshqaga bersa ham u kira olmaydi; kirgach havola bekor qilinadi.
+
+Sozlash (bir marta):
+- Botni **@inspiringuz** kanaliga admin qiling (huquqlar shart emas — faqat a’zolarni ko‘rish uchun).
+- Yopiq kurslar uchun **yopiq (private) kanal** oching, botni unga admin qiling va **«Foydalanuvchilarni qo‘shish /
+  Invite users»** huquqini bering. Kanal ID sini (`-100…`) `.env` dagi `CLOSED_CHANNEL_ID` ga yozing
+  (kanaldagi biror postni @userinfobot yoki @getidsbot ga forward qilsangiz, ID ni aytadi).
+- `.env` dagi `REFERRAL_GOAL`, `REPORT_HOUR`, `BOT_DB` — `.env.example` da izohlari bor.
+- `npm run bot:setup` — botning nomi, tavsifi va menyusi (adminlarga alohida `/excel`, `/stats`).
+
+Ma’lumotlar `data/bot.db` (SQLite) faylida. Zaxira nusxa: shu faylni nusxalang
+(`sqlite3 data/bot.db ".backup bot-backup.db"`). `git pull` va `deploy.sh` unga tegmaydi.
+
 ## 5. Serverni doimiy ishlatish (systemd)
 ```bash
 sudo tee /etc/systemd/system/inspiring.service >/dev/null <<EOF
@@ -104,5 +131,7 @@ cd /var/www/inspiring-site && git pull && npm ci && npm run build && sudo system
 ## Tekshirish va muammolar
 - Jurnal: `journalctl -u inspiring -f` — har bir ariza va Telegram xatolari shu yerda.
 - `telegram → 123…: Forbidden: bot can't initiate conversation` — o‘sha odam botda Start bosmagan.
+- `getChatMember @inspiringuz…: member list is inaccessible` — bot kanalga admin qilinmagan (adminlarga ham ogohlantirish keladi).
+- Adminlar `/start` bossa admin paneli chiqadi; foydalanuvchi sifatida sinash: `/anketa`.
 - Spamga qarshi: bitta IP dan 10 daqiqada 5 tadan ortiq ariza qabul qilinmaydi; robotlar uchun yashirin maydon bor.
 - GitHub Pages'dagi nusxada server yo‘q: u yerda forma arizani Telegram orqali qo‘lda yuborishni taklif qiladi.

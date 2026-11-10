@@ -24,6 +24,7 @@
 - **Silliq animatsiyalar** — Lenis inersion skroll, bosh ekrandagi 3D “ekran” (scroll animatsiya), sanab ko‘tariladigan raqamlar, skroll bilan to‘ladigan yo‘l xaritasi, parallax.
 - **Matnlarni to‘ldirish** — ustozlar, ota-onalar fikrlari, filial koordinatalari qayerda turishi: [qo‘llanma](docs/content.md).
 - **Ariza formasi** — ism, familiya, `+998` telefon maskasi va ixtiyoriy joylashuv (eng yaqin filial bilan); o‘z serverimiz orqali Telegram botga, call-markazga boradi ([qo‘llanma](docs/server.md)).
+- **Telegram bot** — `/start` bosganlar anketa to‘ldiradi (viloyat va tumanlar tugmali), lidlar adminlarga kartochka va Excel bo‘lib keladi; @inspiringuz ga majburiy obuna; 5 ta do‘st taklif qilganlar yopiq kurslar kanaliga shaxsiy havola oladi ([qo‘llanma](docs/server.md#4a-foydalanuvchilar-uchun-bot-lidlar-majburiy-obuna-yopiq-kurslar)).
 - **3 xil ko‘rinish** — Yorug‘, Tun va Aralash (qurilma sozlamasiga qarab o‘zi almashadi). Tugma tepada, tanlov eslab qolinadi, almashganda sahifa silliq o‘tadi.
 - **Qulaylik** — bosiladigan telefon va xarita havolalari, shahar bo‘yicha filial filtri, mobil pastki panel.
 - **Sifat** — klaviatura bilan boshqarish, “harakatni kamaytirish” sozlamasini hurmat qilish, SEO va ulashish teglari, sitemap.
@@ -62,7 +63,7 @@ npm run dev        # http://localhost:5173
 | `npm run check` | lint + format + test + build (push'dan oldin) |
 | `npm run format` | kodni formatlash |
 | `npm run server` | saytni va ariza serverini ishga tushiradi (avval `npm run build`; [qo‘llanma](docs/server.md)) |
-| `npm run bot:setup` | Telegram botning nomi, tavsifi va menyusini o‘rnatadi |
+| `npm run bot:setup` | Telegram botning nomi, tavsifi va menyusini (adminlarga alohida) o‘rnatadi |
 | `npm run cutout` | bosh ekrandagi o‘quvchilar rasmidan fonni olib tashlaydi (`scripts/cutout.py`; avval `pip install "rembg[cpu]" pillow numpy`) |
 
 ## Tuzilma

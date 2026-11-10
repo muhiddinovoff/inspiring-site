@@ -18,27 +18,37 @@ const bot = telegram(token)
 
 const TEXTS = {
   uz: {
-    name: "Inspiring Education — Arizalar",
-    short: "Inspiring Education saytidan kelgan arizalar call-markaz uchun.",
+    name: "Inspiring Education",
+    short:
+      "Prezident va ixtisoslashtirilgan maktablarga tayyorlov markazi. Ro‘yxatdan o‘ting va yopiq kurslarni oching.",
     description:
-      "Inspiring Education — Prezident va ixtisoslashtirilgan maktablarga tayyorlov markazi.\n\nBu bot saytdagi har bir yangi arizani call-markazga yetkazadi: ism, familiya, telefon raqami va (ota-ona ruxsat bersa) joylashuv hamda eng yaqin filial.",
-    start: "Bot haqida va chat ID",
+      "Inspiring Education — Prezident va ixtisoslashtirilgan maktablarga tayyorlov markazi.\n\nBotda:\n• qisqa anketani to‘ldirasiz — mutaxassislarimiz siz bilan bog‘lanishadi;\n• do‘stlaringizni taklif qilib, maxsus yopiq kurslarga kirish huquqini olasiz.",
+    start: "Boshlash",
+    menu: "Asosiy menyu",
+    closed: "Yopiq kurslar va taklif havolasi",
+    anketa: "Anketani qayta to‘ldirish",
     id: "Mening chat ID raqamim",
   },
   ru: {
-    name: "Inspiring Education — Заявки",
-    short: "Заявки с сайта Inspiring Education для колл-центра.",
+    name: "Inspiring Education",
+    short: "Центр подготовки в Президентские и специализированные школы. Регистрируйтесь и откройте закрытые курсы.",
     description:
-      "Inspiring Education — центр подготовки в Президентские и специализированные школы.\n\nБот доставляет в колл-центр каждую новую заявку с сайта: имя, фамилию, телефон и (если родитель разрешил) местоположение и ближайший филиал.",
-    start: "О боте и chat ID",
+      "Inspiring Education — центр подготовки в Президентские и специализированные школы.\n\nВ боте:\n• заполните короткую анкету — наши специалисты свяжутся с вами;\n• пригласите друзей и получите доступ к закрытым курсам.",
+    start: "Начать",
+    menu: "Главное меню",
+    closed: "Закрытые курсы и ссылка-приглашение",
+    anketa: "Заполнить анкету заново",
     id: "Мой chat ID",
   },
   en: {
-    name: "Inspiring Education — Requests",
-    short: "Requests from the Inspiring Education website, for the call centre.",
+    name: "Inspiring Education",
+    short: "Preparation for Presidential and specialised schools. Sign up and unlock the closed courses.",
     description:
-      "Inspiring Education prepares children for Presidential and specialised schools.\n\nThis bot brings every new request from the website to the call centre: first name, last name, phone and (if the parent allowed it) location and nearest branch.",
-    start: "About the bot and chat ID",
+      "Inspiring Education prepares children for Presidential and specialised schools.\n\nIn this bot:\n• fill in a short form and our team will contact you;\n• invite friends to unlock the closed courses.",
+    start: "Start",
+    menu: "Main menu",
+    closed: "Closed courses and invite link",
+    anketa: "Fill in the form again",
     id: "My chat ID",
   },
 }
@@ -54,11 +64,36 @@ for (const [lang, t] of Object.entries(TEXTS)) {
     await bot.call("setMyCommands", {
       commands: [
         { command: "start", description: t.start },
-        { command: "id", description: t.id },
+        { command: "menu", description: t.menu },
+        { command: "closed", description: t.closed },
+        { command: "anketa", description: t.anketa },
       ],
       ...scope,
     })
   }
   console.log(`✓ ${lang}`)
+}
+
+// Admins (TELEGRAM_CHAT_IDS) also see their own commands. Each must have pressed Start in the bot.
+const admins = (process.env.TELEGRAM_CHAT_IDS ?? "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean)
+for (const chat_id of admins) {
+  try {
+    await bot.call("setMyCommands", {
+      scope: { type: "chat", chat_id },
+      commands: [
+        { command: "excel", description: "Barcha lidlar Excel faylda" },
+        { command: "stats", description: "Statistika" },
+        { command: "anketa", description: "Anketani sinab ko‘rish" },
+        { command: "menu", description: "Foydalanuvchi menyusi" },
+        { command: "id", description: "Chat ID" },
+      ],
+    })
+    console.log(`✓ admin ${chat_id}`)
+  } catch (e) {
+    console.log(`✗ admin ${chat_id}: ${(e as Error).message}`)
+  }
 }
 console.log("Done. Profile picture: @BotFather → /setuserpic → docs/assets/bot-avatar.png")

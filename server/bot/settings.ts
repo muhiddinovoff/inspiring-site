@@ -31,6 +31,28 @@ type Saved = {
   extraAdmins: string[]
   /** Chats that get leads and the daily report. */
   callCenter: string[]
+  monitoring: Monitoring
+}
+
+/** The monitoring test: one date for every branch in Tashkent. */
+export type Monitoring = {
+  /** "2026-11-15", Tashkent date. */
+  date: string
+  /** "10:00", or "" while not announced. */
+  time: string
+  grades: number[]
+  /** Registration open. */
+  open: boolean
+  /** Daily reminders to those registered. */
+  reminders: boolean
+}
+
+export const MONITORING_DEFAULT: Monitoring = {
+  date: "2026-11-15",
+  time: "",
+  grades: [5, 6, 7, 8],
+  open: true,
+  reminders: true,
 }
 
 export type Settings = Saved & { mainAdmins: string[]; admins: string[]; site: string }
@@ -62,6 +84,7 @@ export function settingsStore(store: Store, env: BotConfig) {
         reportHour: s.reportHour === undefined ? env.reportHour : s.reportHour,
         extraAdmins,
         callCenter: s.callCenter ?? (env.callCenter?.length ? env.callCenter : env.admins),
+        monitoring: { ...MONITORING_DEFAULT, ...s.monitoring },
         mainAdmins: env.admins,
         admins: [...env.admins, ...extraAdmins],
         site: env.site,

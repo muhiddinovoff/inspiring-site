@@ -47,7 +47,14 @@ function fakeApi() {
     calls
       .filter((c) => c.method === "sendMessage" && String(c.body.chat_id) === String(to))
       .map((c) => String(c.body.text))
-  return { api, calls, files, members, sent }
+  /** What the user sees last: a new message or an edited one. */
+  const shown = (to: number) =>
+    String(
+      calls
+        .filter((c) => ["sendMessage", "editMessageText"].includes(c.method) && String(c.body.chat_id) === String(to))
+        .at(-1)?.body.text,
+    )
+  return { api, calls, files, members, sent, shown }
 }
 
 let id = 0
@@ -346,13 +353,13 @@ describe("bot", () => {
         t.members["@inspiringuz"].add(f)
         await register(f, "/start ref_100")
       }
-      await bot.handle(msg(100, "🏅 Reyting"))
-      expect(t.sent(100).at(-1)).toMatch(/🥇 Ali V\. — <b>2<\/b> ← siz/)
+      await bot.handle(cb(100, "o:rating"))
+      expect(t.shown(100)).toMatch(/🥇 Ali V\. — <b>2<\/b> ← siz/)
       await bot.handle(msg(100, "🏆 Natijalarimiz"))
       expect(t.sent(100).at(-1)).toContain("Prezident maktablari")
       await bot.handle(msg(100, "📍 Filiallar"))
       expect(t.sent(100).at(-1)).toContain("yandex.uz/maps")
-      await bot.handle(msg(100, "🎓 Online darsga qo‘shilish"))
+      await bot.handle(msg(100, "🎓 Online dars"))
       expect(t.sent(100).at(-1)).toContain("2/5")
     })
 
@@ -363,6 +370,79 @@ describe("bot", () => {
       await bot.tick(later)
       await bot.tick(later + 60_000)
       expect(t.sent(900).filter((m) => m.includes("Anketani oxiriga yetkazmadingiz"))).toHaveLength(1)
+    })
+  })
+
+  describe("monitoring test", () => {
+    const NOV12 = Date.UTC(2026, 10, 12, 14, 0) // 19:00 Tashkent, 3 days before
+    const NOV14 = Date.UTC(2026, 10, 14, 14, 0) // 19:00, the eve
+    const NOV15 = Date.UTC(2026, 10, 15, 2, 0) // 07:00 on the day
+
+    async function signUp(user: number, grade = 6, branch = 0) {
+      await bot.handle(cb(user, "m:reg"))
+      await bot.handle(cb(user, `m:g:${grade}`))
+      await bot.handle(cb(user, `m:b:${branch}`))
+    }
+
+    it("registers for the test with a grade and a Tashkent branch", async () => {
+      t.members["@inspiringuz"].add(100)
+      await register(100)
+      await bot.handle(msg(100, "📝 Monitoring testi"))
+      expect(t.sent(100).at(-1)).toContain("Yutuqli monitoring test")
+      expect(t.sent(100).at(-1)).toContain("15-noyabr, yakshanba")
+      await signUp(100, 7, 1)
+      expect(store.monitoring(100)).toMatchObject({ grade: 7, branch: "Sergeli" })
+      expect(t.shown(100)).not.toBe("")
+      const congrats = t.calls.filter((c) => String(c.body.text).includes("Tabriklaymiz! Siz monitoring"))
+      expect(congrats).toHaveLength(1)
+      // Grades outside 5–8 are not offered.
+      await bot.handle(cb(100, "m:g:9"))
+      expect(store.monitoring(100)?.grade).toBe(7)
+    })
+
+    it("gives +1 point for each friend who registers through the link, counted apart", async () => {
+      for (const u of [100, 201, 202]) t.members["@inspiringuz"].add(u)
+      await register(100)
+      await signUp(100)
+      await register(201, "/start mon_100")
+      expect(t.sent(201).at(-1)).toContain("Yutuqli monitoring test") // lands on the test
+      await signUp(201)
+      await register(202, "/start mon_100") // starts but doesn't register for the test
+      expect(store.monitoringPoints(100)).toBe(1)
+      expect(t.sent(100).some((m) => m.includes("+1 ball"))).toBe(true)
+      await bot.handle(cb(100, "m:pts"))
+      expect(t.shown(100)).toContain("Sizning ballaringiz: <b>1</b>")
+      expect(t.shown(100)).toContain("hali ro‘yxatdan o‘tmagan")
+    })
+
+    it("reminds every evening, in detail on the eve and on the morning", async () => {
+      t.members["@inspiringuz"].add(100)
+      await register(100)
+      await signUp(100, 5, 0)
+      await bot.tick(NOV12)
+      await bot.tick(NOV12 + 60_000)
+      await bot.tick(NOV14)
+      await bot.tick(NOV15)
+      const notes = t.sent(100).filter((m) => /monitoring test/i.test(m) && /qoldi|Ertaga|Bugun/.test(m))
+      expect(notes).toHaveLength(3)
+      expect(notes[0]).toContain("3 kun</b> qoldi")
+      expect(notes[1]).toContain("Ertaga — monitoring test!")
+      expect(notes[1]).toContain("Novza metro")
+      expect(notes[2]).toContain("Bugun — monitoring test!")
+    })
+
+    it("lets admins download the list and close registration", async () => {
+      t.members["@inspiringuz"].add(100)
+      await register(100)
+      await signUp(100)
+      await bot.handle(cb(ADMIN, "a:mon"))
+      expect(t.shown(ADMIN)).toContain("Ro‘yxatdan o‘tganlar: <b>1</b>")
+      await bot.handle(cb(ADMIN, "a:mon:xl"))
+      expect(t.files.at(-1)?.name).toMatch(/^monitoring_/)
+      await bot.handle(cb(ADMIN, "a:mon:open"))
+      expect(bot.settings.get().monitoring.open).toBe(false)
+      await bot.handle(cb(100, "m:reg"))
+      expect(t.calls.at(-1)?.body.text).toContain("yopilgan")
     })
   })
 })

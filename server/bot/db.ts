@@ -78,6 +78,24 @@ export type SiteLead = {
   status_at: number | null
 }
 
+/** A monitoring-test registration with what the list needs. */
+export type MonitoringRow = {
+  id: number
+  user_id: number
+  grade: number
+  branch: string
+  created_at: number
+  first_name: string | null
+  last_name: string | null
+  middle_name: string | null
+  phone: string | null
+  is_student: number | null
+  username: string | null
+  tg_name: string
+  source: string | null
+  points: number
+}
+
 export type Source = { code: string; name: string; created_at: number; users: number; leads: number; enrolled: number }
 
 /** A lead with what the reports need about its user. */
@@ -139,6 +157,14 @@ CREATE TABLE IF NOT EXISTS site_leads (
   status_at INTEGER
 );
 CREATE TABLE IF NOT EXISTS sources (code TEXT PRIMARY KEY, name TEXT NOT NULL, created_at INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS monitoring (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL UNIQUE REFERENCES users (id),
+  grade INTEGER NOT NULL,
+  branch TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL
+);
 `
 
 /** Columns added after the first release; created on start when an older database lacks them. */
@@ -259,6 +285,26 @@ export function openStore(file: string) {
       SELECT r.id, COALESCE(l.first_name || ' ' || SUBSTR(l.last_name, 1, 1) || '.', r.name) AS name, COUNT(*) AS n
       FROM users x JOIN users r ON r.id = x.referrer_id LEFT JOIN leads l ON l.user_id = r.id
       WHERE x.credited_at >= ? GROUP BY r.id ORDER BY n DESC, MIN(x.credited_at) LIMIT ?`),
+    mon: db.prepare("SELECT * FROM monitoring WHERE user_id = ?"),
+    monSave: db.prepare(`
+      INSERT INTO monitoring (user_id, grade, branch, created_at, updated_at) VALUES (?, ?, ?, ?, ?)
+      ON CONFLICT (user_id) DO UPDATE SET grade = excluded.grade, branch = excluded.branch, updated_at = excluded.updated_at`),
+    monDelete: db.prepare("DELETE FROM monitoring WHERE user_id = ?"),
+    monRows: db.prepare(`
+      SELECT m.*, l.first_name, l.last_name, l.middle_name, l.phone, l.is_student, u.username, u.name AS tg_name, u.source,
+        (SELECT COUNT(*) FROM users x JOIN monitoring xm ON xm.user_id = x.id WHERE x.referrer_id = m.user_id) AS points
+      FROM monitoring m JOIN users u ON u.id = m.user_id LEFT JOIN leads l ON l.user_id = m.user_id
+      ORDER BY m.created_at`),
+    monIds: db.prepare("SELECT user_id AS id FROM monitoring ORDER BY id"),
+    monFriends: db.prepare(`
+      SELECT x.id, COALESCE(l.first_name || ' ' || l.last_name, x.name) AS name, xm.id IS NOT NULL AS registered
+      FROM users x LEFT JOIN monitoring xm ON xm.user_id = x.id LEFT JOIN leads l ON l.user_id = x.id
+      WHERE x.referrer_id = ? ORDER BY registered DESC, x.started_at`),
+    monTop: db.prepare(`
+      SELECT r.id, COALESCE(l.first_name || ' ' || SUBSTR(l.last_name, 1, 1) || '.', r.name) AS name, COUNT(*) AS n
+      FROM users x JOIN monitoring xm ON xm.user_id = x.id JOIN users r ON r.id = x.referrer_id
+      JOIN monitoring rm ON rm.user_id = r.id LEFT JOIN leads l ON l.user_id = r.id
+      GROUP BY r.id ORDER BY n DESC, MIN(xm.created_at) LIMIT ?`),
     getMeta: db.prepare("SELECT value FROM meta WHERE key = ?"),
     setMeta: db.prepare(
       "INSERT INTO meta (key, value) VALUES (?, ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value",
@@ -359,6 +405,27 @@ export function openStore(file: string) {
     reminded: (id: number, now = Date.now()) => q.reminded.run(now, id),
     /** Who brought the most friends since `since`. */
     leaders: (since: number, limit = 10) => q.leaders.all(since, limit) as { id: number; name: string; n: number }[],
+    /** Monitoring test registration (one per user). */
+    monitoring: (id: number) =>
+      q.mon.get(id) as { id: number; user_id: number; grade: number; branch: string; created_at: number } | undefined,
+    /** Saves the registration; true when it is new. */
+    saveMonitoring: (id: number, grade: number, branch: string, now = Date.now()) => {
+      const isNew = !q.mon.get(id)
+      q.monSave.run(id, grade, branch, now, now)
+      return isNew
+    },
+    cancelMonitoring: (id: number) => Number(q.monDelete.run(id).changes) > 0,
+    monitoringRows: () => q.monRows.all() as MonitoringRow[],
+    monitoringIds: () => (q.monIds.all() as { id: number }[]).map((r) => r.id),
+    /** Extra points: friends who came through the user's link and registered for the test too. */
+    monitoringPoints: (id: number) =>
+      (q.monFriends.all(id) as { registered: number }[]).filter((f) => f.registered).length,
+    monitoringFriends: (id: number) =>
+      (q.monFriends.all(id) as { id: number; name: string; registered: number }[]).map((f) => ({
+        ...f,
+        registered: Boolean(f.registered),
+      })),
+    monitoringTop: (limit = 10) => q.monTop.all(limit) as { id: number; name: string; n: number }[],
     meta: (key: string) => (q.getMeta.get(key) as { value: string } | undefined)?.value,
     setMeta: (key: string, value: string) => q.setMeta.run(key, value),
     close: () => db.close(),

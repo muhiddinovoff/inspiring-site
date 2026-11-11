@@ -73,20 +73,29 @@ kartochkada, Excel’da va statistikada ko‘rinadi. Sayt arizalari ham bazaga y
 
 | Tugma | Nima |
 |---|---|
-| 🎓 Online darsga qo‘shilish | shaxsiy taklif havolasi; `REFERRAL_GOAL` (5) ta do‘st → yopiq online dars kanaliga shaxsiy havola |
+| 📝 Monitoring testi | yutuqli monitoring testga ro‘yxat (sinf 5–8, Toshkentdagi filial tugmalari) — «chipta», qo‘shimcha ballar, eslatmalar (pastda) |
+| 🎓 Online dars | bitta bo‘lim: shaxsiy taklif havolasi, 👥 Do‘stlarim, 🏅 haftalik reyting; `REFERRAL_GOAL` (5) ta do‘st → yopiq online dars kanaliga shaxsiy havola |
 | 🏆 Natijalarimiz · 📚 Kurslar · 📍 Filiallar | saytdagi ma’lumotlar (`src/data`, `src/i18n/uz.ts`) |
 | 📞 Konsultatsiya olish | bir tugma — call-markazga «🔥 Konsultatsiya so‘radi» kartochkasi |
-| 👥 Do‘stlarim · 🏅 Reyting | kim hisoblangani, kim nima qilishi kerak; haftalik eng faol taklif qiluvchilar |
 | 📝 Ma’lumotlarim · 🌐 Biz bilan bog‘lanish | anketani o‘zgartirish; telefon, sayt, Telegram, Instagram |
 
 Do‘st hisoblanadi: botga **birinchi marta** shu havola orqali kirgan, anketani to‘ldirgan va kanalga obuna bo‘lgan.
 Kanalga kirish havolasi so‘rovli va shaxsiy: bot faqat huquqi borni qabul qiladi, kirgach havola bekor qilinadi.
+
+**Monitoring test.** Sana, vaqt, sinflar va ro‘yxat holati admin panelda («📝 Monitoring»): standart 15-noyabr, 5–8-sinf,
+Toshkentdagi filiallar (`src/data/site.ts` dagi `tashkent` filiallari). Ro‘yxatdan o‘tgach «🎉 Tabriklaymiz» va chipta
+(№, sinf, filial, mo‘ljal, xarita). Eslatmalar: har kuni 19:00 da, test arafasida (1 kun qolganda) batafsil, test kuni
+7:00 da. **Qo‘shimcha ball:** foydalanuvchining `?start=mon_…` havolasi orqali botga kirib monitoringga ro‘yxatdan
+o‘tgan har bir do‘st — +1 ball (online dars referallaridan alohida hisoblanadi), ballar reytingi bor.
+Admin: ro‘yxat soni filial/sinf bo‘yicha, Excel («Monitoring» va «Filiallar» varaqlari), ishtirokchilarga xabar,
+sana/vaqtni o‘zgartirish, ro‘yxatni yopish, eslatmalarni o‘chirish.
 
 ### Admin panel
 `/admin` (yoki «⚙️ Admin panel»):
 
 | Bo‘lim | Nima qiladi |
 |---|---|
+| 📝 Monitoring | ro‘yxatdan o‘tganlar, Excel, ishtirokchilarga xabar, sana/vaqt, ro‘yxat va eslatmalarni yoqish/o‘chirish |
 | 🆕 Yangi lidlar | ishlov berilmagan (yangi / javob bermagan) lidlar, bosilsa kartochka holat tugmalari bilan |
 | 📊 Statistika | foydalanuvchilar, bot va sayt lidlari, call-markaz natijalari (%), referallar, top viloyatlar |
 | 📥 Excel | bugun / 7 / 30 kun / hammasi: «Lidlar», «Sayt arizalari», «Inspiring o‘quvchilari», «Viloyatlar», «Sinflar»; holat, manba ustunlari |

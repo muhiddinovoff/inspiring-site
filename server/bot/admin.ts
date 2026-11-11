@@ -16,6 +16,8 @@ import type { Update } from "../telegram.ts"
 import type { Store } from "./db.ts"
 import { type Markup, prettyPhone } from "./form.ts"
 import { isLead, siteCard, sourceLabel, statsText, statusButtons, tashkentDay, when, leadCard } from "./report.ts"
+import { countsText, dateLabel, daysLeft, isOpen, monitoringWorkbook } from "./monitoring.ts"
+import { fileName, XLSX_TYPE } from "./report.ts"
 import type { SettingsStore } from "./settings.ts"
 
 export type AdminContext = {
@@ -26,6 +28,7 @@ export type AdminContext = {
   edit: (chat: number, message: number, text: string, markup?: Markup) => Promise<unknown>
   notify: (chat: number | string, text: string, markup?: Markup) => Promise<unknown>
   sendExcel: (chat: number | string, since?: number, caption?: string) => Promise<unknown>
+  sendFile: (chat: string, file: { name: string; data: Uint8Array; type: string }, caption?: string) => Promise<unknown>
   me: () => Promise<{ id: number; username: string }>
   log: (m: string) => void
 }
@@ -109,7 +112,16 @@ export function slug(name: string) {
 }
 
 type State = {
-  kind: "broadcast" | "find" | "addAdmin" | "addCallCenter" | "pickClosed" | "pickRequired" | "newSource"
+  kind:
+    | "broadcast"
+    | "find"
+    | "addAdmin"
+    | "addCallCenter"
+    | "pickClosed"
+    | "pickRequired"
+    | "newSource"
+    | "monDate"
+    | "monTime"
 }
 
 export function createAdmin(ctx: AdminContext) {
@@ -118,6 +130,8 @@ export function createAdmin(ctx: AdminContext) {
   const states = new Map<number, State>()
   /** Broadcast drafts: admin → the message they want to send. */
   const drafts = new Map<number, number>()
+  /** Where the broadcast was started from (the monitoring screen suggests its participants first). */
+  const broadcastTarget = new Map<number, string>()
   let broadcasting = false
 
   // ------------------------------------------------------------------ channels
@@ -218,6 +232,7 @@ export function createAdmin(ctx: AdminContext) {
       ].join("\n"),
       inline([
         [{ text: `🆕 Yangi lidlar (${fresh})`, callback_data: "a:new" }],
+        [{ text: `📝 Monitoring (${store.monitoringIds().length})`, callback_data: "a:mon" }],
         [
           { text: "📊 Statistika", callback_data: "a:stats" },
           { text: "📥 Excel", callback_data: "a:xl" },
@@ -319,6 +334,39 @@ export function createAdmin(ctx: AdminContext) {
             ]
           : []),
         [home],
+      ]),
+    ]
+  }
+
+  function monitoringScreen(): Screen {
+    const m = s().monitoring
+    const rows = store.monitoringRows()
+    const n = daysLeft(m)
+    return [
+      [
+        "📝 <b>Monitoring test</b>",
+        "",
+        `🗓 ${dateLabel(m)}${n >= 0 ? ` — ${n === 0 ? "bugun" : `${n} kun qoldi`}` : " — o‘tgan"}`,
+        `⏰ Vaqt: ${m.time ? `<b>${m.time}</b>` : "⚠️ <b>kiritilmagan</b> (eslatmalarda «alohida e’lon qilinadi» deyiladi)"}`,
+        `🎓 Sinflar: ${m.grades.join(", ")}`,
+        `📋 Ro‘yxat: ${isOpen(m) ? "✅ ochiq" : "🔒 yopiq"} · 🔔 Eslatmalar: ${m.reminders ? "yoqilgan" : "o‘chirilgan"}`,
+        "",
+        countsText(rows),
+        "",
+        "Eslatmalar: har kuni 19:00 da, test arafasida batafsil, test kuni ertalab 7:00 da.",
+      ].join("\n"),
+      inline([
+        [{ text: "📥 Excel ro‘yxat", callback_data: "a:mon:xl" }],
+        [{ text: "📣 Ishtirokchilarga xabar", callback_data: "a:bc:mon" }],
+        [
+          { text: "🗓 Sana", callback_data: "a:mon:date" },
+          { text: "⏰ Vaqt", callback_data: "a:mon:time" },
+        ],
+        [
+          { text: m.open ? "🔒 Ro‘yxatni yopish" : "✅ Ro‘yxatni ochish", callback_data: "a:mon:open" },
+          { text: m.reminders ? "🔕 Eslatmani o‘chirish" : "🔔 Eslatmani yoqish", callback_data: "a:mon:rem" },
+        ],
+        [{ text: "🔄 Yangilash", callback_data: "a:mon" }, home],
       ]),
     ]
   }
@@ -536,9 +584,11 @@ export function createAdmin(ctx: AdminContext) {
   }
 
   // ------------------------------------------------------------------ broadcast
-  async function broadcast(admin: number, message: number, leadsOnly: boolean, status: number) {
+  async function broadcast(admin: number, message: number, target: "all" | "leads" | "mon", status: number) {
     broadcasting = true
-    const ids = store.userIds(leadsOnly).filter((id) => id !== admin)
+    const ids = (target === "mon" ? store.monitoringIds() : store.userIds(target === "leads")).filter(
+      (id) => id !== admin,
+    )
     let ok = 0
     let failed = 0
     const started = Date.now()
@@ -657,6 +707,29 @@ export function createAdmin(ctx: AdminContext) {
       await addCallCenter(from, Number(text))
       return true
     }
+    if ((state?.kind === "monDate" || state?.kind === "monTime") && text && !text.startsWith("/")) {
+      const m = s().monitoring
+      if (state.kind === "monDate") {
+        const d = text.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/)
+        if (!d) {
+          await send(from, "Sanani shunday yozing: <b>15.11.2026</b>")
+          return true
+        }
+        settings.set({ monitoring: { ...m, date: `${d[3]}-${d[2].padStart(2, "0")}-${d[1].padStart(2, "0")}` } })
+      } else {
+        const t = text.match(/^(\d{1,2})[:.](\d{2})$/)
+        if (!t && text !== "-") {
+          await send(from, "Vaqtni shunday yozing: <b>10:00</b> (olib tashlash uchun: -)")
+          return true
+        }
+        settings.set({ monitoring: { ...m, time: t ? `${t[1].padStart(2, "0")}:${t[2]}` : "" } })
+      }
+      states.delete(from)
+      log(`monitoring ${state.kind} set by ${from}`)
+      await send(from, "✅ Saqlandi.", adminKeyboard)
+      await send(from, ...monitoringScreen())
+      return true
+    }
     if (state?.kind === "newSource" && text && !text.startsWith("/")) {
       const name = text.replace(/\s+/g, " ").slice(0, 60)
       let code = slug(name) || `link${Date.now() % 100000}`
@@ -679,10 +752,18 @@ export function createAdmin(ctx: AdminContext) {
       drafts.set(from, m.message_id)
       const all = store.userIds().length
       const leads = store.userIds(true).length
+      const mon = store.monitoringIds().length
+      const target = broadcastTarget.get(from)
       await send(from, "👆 Shu xabar yuboriladi. Kimga?", {
         inline_keyboard: [
+          ...(target === "mon"
+            ? [[{ text: `📝 Monitoring ishtirokchilariga (${mon})`, callback_data: "a:bc:mon" }]]
+            : []),
           [{ text: `👥 Hammaga (${all})`, callback_data: "a:bc:all" }],
           [{ text: `📝 Anketa to‘ldirganlarga (${leads})`, callback_data: "a:bc:leads" }],
+          ...(target === "mon"
+            ? []
+            : [[{ text: `📝 Monitoring ishtirokchilariga (${mon})`, callback_data: "a:bc:mon" }]]),
           [{ text: CANCEL, callback_data: "a:bc:no" }],
         ],
       })
@@ -776,6 +857,41 @@ export function createAdmin(ctx: AdminContext) {
         return show(panel())
       case "new":
         return show(newLeads())
+      case "mon": {
+        const m = s().monitoring
+        if (arg === "xl") {
+          const rows = store.monitoringRows()
+          if (!rows.length) return done("Hali hech kim ro‘yxatdan o‘tmagan.", true)
+          await done("Tayyorlanmoqda…")
+          return ctx
+            .sendFile(
+              String(admin),
+              { name: fileName("monitoring", Date.now()), data: monitoringWorkbook(rows, store), type: XLSX_TYPE },
+              `📝 Monitoring (${dateLabel(m, false)}): <b>${rows.length}</b> ta o‘quvchi`,
+            )
+            .catch((e) => log(`monitoring excel: ${(e as Error).message}`))
+        }
+        if (arg === "date" || arg === "time") {
+          await done()
+          states.set(admin, { kind: arg === "date" ? "monDate" : "monTime" })
+          return send(
+            admin,
+            arg === "date"
+              ? `🗓 Yangi sanani yozing (hozir ${dateLabel(m, false)}): <b>15.11.2026</b>`
+              : "⏰ Boshlanish vaqtini yozing: <b>10:00</b>. Olib tashlash uchun: <b>-</b>",
+            { keyboard: [[{ text: CANCEL }]], resize_keyboard: true },
+          )
+        }
+        if (arg === "open") {
+          settings.set({ monitoring: { ...m, open: !m.open } })
+          await done(m.open ? "Ro‘yxat yopildi" : "Ro‘yxat ochildi")
+        }
+        if (arg === "rem") {
+          settings.set({ monitoring: { ...m, reminders: !m.reminders } })
+          await done(m.reminders ? "Eslatmalar o‘chirildi" : "Eslatmalar yoqildi")
+        }
+        return show(monitoringScreen())
+      }
       case "lead": {
         await done()
         const id = Number(extra)
@@ -917,7 +1033,9 @@ export function createAdmin(ctx: AdminContext) {
         }
         return show(reportScreen())
       case "bc": {
-        if (!arg) {
+        if (!arg || (arg === "mon" && !drafts.has(admin))) {
+          if (arg === "mon") broadcastTarget.set(admin, "mon")
+          else broadcastTarget.delete(admin)
           if (broadcasting) return done("Oldingi xabar hali yuborilmoqda, tugashini kuting.", true)
           await done()
           states.set(admin, { kind: "broadcast" })
@@ -939,7 +1057,7 @@ export function createAdmin(ctx: AdminContext) {
         if (msg) await edit(admin, msg, "⏳ Yuborilmoqda…").catch(() => {})
         await send(admin, "Yuborish fon rejimida ketyapti, tugagach xabar beraman.", adminKeyboard)
         // In the background, so the admin can keep using the bot.
-        void broadcast(admin, draft, arg === "leads", msg ?? 0).catch((e) => {
+        void broadcast(admin, draft, arg === "leads" || arg === "mon" ? arg : "all", msg ?? 0).catch((e) => {
           broadcasting = false
           log(`broadcast: ${(e as Error).message}`)
         })

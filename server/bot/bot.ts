@@ -32,6 +32,22 @@ import {
   tashkentHour,
   XLSX_TYPE,
 } from "./report.ts"
+import {
+  aboutText,
+  branchButtons,
+  branchListText,
+  gradeButtons,
+  isOpen,
+  daysLeft,
+  pointsButtons,
+  pointsText,
+  reminderText,
+  TEST_BRANCHES,
+  ticketButtons,
+  ticketText,
+  topText,
+  dateLabel,
+} from "./monitoring.ts"
 import { REGIONS } from "./regions.ts"
 import { type BotConfig, settingsStore } from "./settings.ts"
 
@@ -40,23 +56,21 @@ export type { BotConfig } from "./settings.ts"
 export type Api = Pick<Telegram, "call" | "sendFile">
 
 export const MENU = {
-  online: "🎓 Online darsga qo‘shilish",
+  monitoring: "📝 Monitoring testi",
+  online: "🎓 Online dars",
   results: "🏆 Natijalarimiz",
   courses: "📚 Kurslar",
   consult: "📞 Konsultatsiya olish",
   branches: "📍 Filiallar",
-  friends: "👥 Do‘stlarim",
-  rating: "🏅 Reyting",
-  me: "📝 Ma’lumotlarim",
+  me: "👤 Ma’lumotlarim",
   social: "🌐 Biz bilan bog‘lanish",
 } as const
 
 const menuKeyboard: Markup = {
   keyboard: [
-    [{ text: MENU.online }],
+    [{ text: MENU.monitoring }, { text: MENU.online }],
     [{ text: MENU.results }, { text: MENU.courses }],
     [{ text: MENU.consult }, { text: MENU.branches }],
-    [{ text: MENU.friends }, { text: MENU.rating }],
     [{ text: MENU.me }, { text: MENU.social }],
   ],
   resize_keyboard: true,
@@ -65,7 +79,11 @@ const menuKeyboard: Markup = {
 /** Older button texts people may still have on screen. */
 const OLD_MENU: Record<string, string> = {
   "🔒 Yopiq kurslar": MENU.online,
-  "👥 Mening referallarim": MENU.friends,
+  "🎓 Online darsga qo‘shilish": MENU.online,
+  "👥 Mening referallarim": MENU.online,
+  "👥 Do‘stlarim": MENU.online,
+  "🏅 Reyting": MENU.online,
+  "📝 Ma’lumotlarim": MENU.me,
   "📞 Aloqa": MENU.social,
 }
 
@@ -214,7 +232,7 @@ export function createBot(api: Api, store: Store, env: BotConfig, log: (m: strin
     const link = await refLink(user.id)
     const open = n >= goal || user.unlocked_at
     const text = [
-      "🎓 <b>Online darsga qo‘shilish</b>",
+      "🎓 <b>Online dars</b>",
       "",
       "Inspiring Education ustozlarining maxsus online darslari — faqat taklif orqali kiriladigan yopiq kanalda.",
       "",
@@ -233,9 +251,10 @@ export function createBot(api: Api, store: Store, env: BotConfig, log: (m: strin
       ...(open ? [[{ text: "🎓 Online darsga kirish", callback_data: "cl:open" }]] : []),
       [{ text: "📤 Do‘stlarga yuborish", url: shareUrl(link) }],
       [
-        { text: "👥 Do‘stlarim", callback_data: "u:friends" },
-        { text: "🔄 Yangilash", callback_data: "cl:show" },
+        { text: "👥 Do‘stlarim", callback_data: "o:friends" },
+        { text: "🏅 Reyting", callback_data: "o:rating" },
       ],
+      [{ text: "🔄 Yangilash", callback_data: "cl:show" }],
     ]
     return { text, markup: { inline_keyboard: kb } as Markup }
   }
@@ -256,13 +275,15 @@ export function createBot(api: Api, store: Store, env: BotConfig, log: (m: strin
       "",
       rows.length
         ? rows.join("\n")
-        : `Hali hech kim taklifingiz bilan kirmagan. «${MENU.online}» bo‘limidan havolangizni oling.`,
+        : "Hali hech kim taklifingiz bilan kirmagan. Havolangizni sinfdoshlar va ota-onalar guruhiga yuboring.",
       ...(list.length > 30 ? ["", `… jami ${list.length} ta`] : []),
       ...(rows.some((r) => r.startsWith("⏳"))
         ? ["", "⏳ belgili do‘stlaringizga anketani tugatish va kanalga obuna bo‘lishni eslating."]
         : []),
     ].join("\n")
   }
+
+  const backToOnline: Markup = { inline_keyboard: [[{ text: "⬅️ Online dars", callback_data: "cl:show" }]] }
 
   function ratingText(user: User, now = Date.now()) {
     const since = weekStart(now)
@@ -436,6 +457,193 @@ export function createBot(api: Api, store: Store, env: BotConfig, log: (m: strin
     await edit(c.message!.chat.id, msg, text, markup).catch(() => {})
   }
 
+  // ------------------------------------------------------------------ monitoring test
+  const mon = () => cfg().monitoring
+  const monLink = async (id: number) => `https://t.me/${await username()}?start=mon_${id}`
+  const studentName = (id: number) => {
+    const l = store.lead(id)
+    return l ? `${l.last_name} ${l.first_name}` : (store.user(id)?.name ?? "")
+  }
+  type MonDraft = { grade?: number }
+  const monDraft = (id: number): MonDraft => {
+    try {
+      return JSON.parse(store.meta(`mdraft:${id}`) ?? "{}") as MonDraft
+    } catch {
+      return {}
+    }
+  }
+
+  /** The monitoring section: the ticket for those registered, otherwise what it is and a button to register. */
+  function monitoringScreen(user: User): { text: string; markup: Markup } {
+    const reg = store.monitoring(user.id)
+    if (reg) {
+      return {
+        text: ticketText(mon(), reg, studentName(user.id), store.monitoringPoints(user.id)),
+        markup: { inline_keyboard: ticketButtons(reg) },
+      }
+    }
+    const open = isOpen(mon())
+    return {
+      text: [
+        aboutText(mon()),
+        "",
+        open ? "👇 Ro‘yxatdan o‘tish — bir daqiqa: sinf va filialni tanlaysiz." : "🔒 Ro‘yxatdan o‘tish yopilgan.",
+      ].join("\n"),
+      markup: {
+        inline_keyboard: open ? [[{ text: "✅ Ro‘yxatdan o‘tish", callback_data: "m:reg" }]] : [],
+      },
+    }
+  }
+
+  async function onMonitoring(c: NonNullable<Update["callback_query"]>, user: User) {
+    const data = c.data ?? ""
+    const message = c.message?.message_id
+    const done = (text?: string, alert = false) =>
+      api.call("answerCallbackQuery", { callback_query_id: c.id, ...(text ? { text, show_alert: alert } : {}) })
+    const show = async (text: string, markup: Markup) => {
+      if (message) {
+        try {
+          return await edit(user.id, message, text, markup)
+        } catch (e) {
+          if (/not modified/.test((e as Error).message)) return
+        }
+      }
+      return send(user.id, text, markup)
+    }
+    const [, action, arg] = data.split(":")
+    const m = mon()
+    const reg = store.monitoring(user.id)
+
+    if (["reg", "g", "b", "ok"].includes(action) && !isOpen(m)) {
+      return done("Ro‘yxatdan o‘tish yopilgan.", true)
+    }
+    switch (action) {
+      case "show": {
+        await done()
+        const s = monitoringScreen(user)
+        return show(s.text, s.markup)
+      }
+      case "reg": {
+        await done()
+        const l = store.lead(user.id)
+        const suggested = reg?.grade ?? (l && m.grades.includes(l.grade) ? l.grade : undefined)
+        return show(
+          [
+            "📝 <b>Monitoringga ro‘yxatdan o‘tish</b>",
+            "",
+            `👤 O‘quvchi: <b>${esc(studentName(user.id))}</b>`,
+            "",
+            "🎓 <b>Nechanchi sinfda o‘qiydi?</b>",
+            ...(l && !m.grades.includes(l.grade)
+              ? [
+                  "",
+                  `<i>Monitoring ${m.grades.join(", ")}-sinflar uchun. Anketada ${l.grade}-sinf ko‘rsatilgan — to‘g‘ri sinfni tanlang.</i>`,
+                ]
+              : []),
+          ].join("\n"),
+          { inline_keyboard: gradeButtons(m, suggested) },
+        )
+      }
+      case "g": {
+        const grade = Number(arg)
+        if (!m.grades.includes(grade)) return done()
+        await done()
+        store.setMeta(`mdraft:${user.id}`, JSON.stringify({ grade }))
+        return show(branchListText(grade), { inline_keyboard: branchButtons() })
+      }
+      case "b": {
+        const branch = TEST_BRANCHES[Number(arg)]
+        const grade = monDraft(user.id).grade
+        if (!branch || !grade) return done("Avval sinfni tanlang.", true)
+        await done()
+        const isNew = store.saveMonitoring(user.id, grade, branch.name)
+        store.setMeta(`mdraft:${user.id}`, "{}")
+        log(`monitoring ${isNew ? "registered" : "changed"}: ${user.id} ${grade} ${branch.name}`)
+        const saved = store.monitoring(user.id)!
+        const ticket = ticketText(m, saved, studentName(user.id), store.monitoringPoints(user.id))
+        await show(
+          isNew
+            ? `🎉 <b>Tabriklaymiz! Siz monitoring testiga ro‘yxatdan o‘tdingiz.</b>\n\n${ticket.split("\n").slice(2).join("\n")}\n\n🔔 Test kunigacha har kuni eslatib turamiz.`
+            : `✅ <b>O‘zgartirildi.</b>\n\n${ticket.split("\n").slice(2).join("\n")}`,
+          { inline_keyboard: ticketButtons(saved) },
+        )
+        // A friend who came through this user's link and registered: +1 point for the inviter.
+        if (isNew && user.referrer_id && store.monitoring(user.referrer_id)) {
+          const pts = store.monitoringPoints(user.referrer_id)
+          await notify(
+            user.referrer_id,
+            `⭐ <b>+1 ball!</b> Do‘stingiz <b>${esc(studentName(user.id))}</b> monitoringga ro‘yxatdan o‘tdi.\nSizning ballaringiz: <b>${pts}</b>`,
+            { inline_keyboard: [[{ text: "⭐ Ballarim", callback_data: "m:pts" }]] },
+          )
+        }
+        if (isNew) {
+          const link = await monLink(user.id)
+          await send(user.id, pointsText(store, user.id, link), { inline_keyboard: pointsButtons(link, m) })
+        }
+        return
+      }
+      case "pts": {
+        await done()
+        if (!reg) return show(...monScreenArgs(user))
+        const link = await monLink(user.id)
+        return show(pointsText(store, user.id, link), { inline_keyboard: pointsButtons(link, m) })
+      }
+      case "top":
+        await done()
+        return show(topText(store, user.id), { inline_keyboard: [[{ text: "⬅️ Ballarim", callback_data: "m:pts" }]] })
+      case "cancel":
+        if (!reg) return done()
+        if (arg !== "yes") {
+          await done()
+          return show("❌ Monitoring testidan ro‘yxatni bekor qilasizmi?", {
+            inline_keyboard: [
+              [{ text: "Ha, bekor qilish", callback_data: "m:cancel:yes" }],
+              [{ text: "⬅️ Yo‘q, qolaman", callback_data: "m:show" }],
+            ],
+          })
+        }
+        store.cancelMonitoring(user.id)
+        log(`monitoring cancelled: ${user.id}`)
+        await done("Bekor qilindi")
+        return show(...monScreenArgs(store.user(user.id)!))
+    }
+    return done()
+  }
+  const monScreenArgs = (user: User): [string, Markup] => {
+    const s = monitoringScreen(user)
+    return [s.text, s.markup]
+  }
+
+  let reminding = false
+  /** Daily reminders at 19:00 until the eve (detailed), and one on the morning of the test. */
+  async function remindMonitoring(now: number) {
+    const m = mon()
+    if (!m.reminders || reminding) return
+    const n = daysLeft(m, now)
+    const hour = tashkentHour(now)
+    const kind =
+      n >= 2 && hour === 19 ? "daily" : n === 1 && hour === 19 ? "eve" : n === 0 && hour === 7 ? "today" : null
+    if (!kind) return
+    const key = `mon_remind:${tashkentDay(now)}:${kind}`
+    if (store.meta(key)) return
+    store.setMeta(key, "1")
+    reminding = true
+    try {
+      const ids = store.monitoringIds()
+      log(`monitoring reminder ${kind} → ${ids.length}`)
+      for (const id of ids) {
+        const reg = store.monitoring(id)
+        if (!reg) continue
+        await notify(id, reminderText(kind, m, reg, store.monitoringPoints(id), now), {
+          inline_keyboard: ticketButtons(reg).slice(0, kind === "daily" ? 1 : 2),
+        })
+        await new Promise((r) => setTimeout(r, 40))
+      }
+    } finally {
+      reminding = false
+    }
+  }
+
   // ------------------------------------------------------------------ registration
   const draftOf = (u: User): Draft => {
     try {
@@ -530,17 +738,29 @@ export function createBot(api: Api, store: Store, env: BotConfig, log: (m: strin
         : "🙏 Rahmat! Ma’lumotlaringiz yangilandi.",
     )
     const fresh = store.user(user.id)!
-    if (await gate(fresh, true)) await showMenu(fresh, isNew)
+    if (await gate(fresh, true)) {
+      await showMenu(fresh, isNew)
+      if (isNew && store.meta(`landing:${user.id}`) === "mon") {
+        const s = monitoringScreen(fresh)
+        await send(user.id, s.text, s.markup)
+      }
+    }
   }
 
   // ------------------------------------------------------------------ screens
   async function showMenu(user: User, intro = false) {
+    const m = mon()
     const text = intro
       ? [
           "🏠 <b>Asosiy menyu</b>",
           "",
-          `🎓 <b>Online darsga qo‘shiling:</b> ${cfg().goal} ta do‘stingizni taklif qiling — maxsus online darslar kanali ochiladi.`,
-          "🏆 Natijalarimiz, 📚 kurslar va 📍 filiallar bilan tanishing.",
+          ...(isOpen(m)
+            ? [
+                `📝 <b>Monitoring testi</b> — ${dateLabel(m, false)}, ${m.grades.join("-")}-sinflar uchun. Ro‘yxatdan o‘ting!`,
+              ]
+            : []),
+          `🎓 <b>Online dars</b> — ${cfg().goal} ta do‘stingizni taklif qiling va maxsus online darslarga qo‘shiling.`,
+          "🏆 Natijalar, 📚 kurslar, 📍 filiallar — pastdagi tugmalarda.",
           "📞 Savolingiz bo‘lsa — «Konsultatsiya olish», mutaxassis qo‘ng‘iroq qiladi.",
         ].join("\n")
       : "🏠 <b>Asosiy menyu</b>"
@@ -598,7 +818,7 @@ export function createBot(api: Api, store: Store, env: BotConfig, log: (m: strin
       .catch((e) => log(`excel → ${chat}: ${(e as Error).message}`))
   }
 
-  const admin = createAdmin({ api, store, settings, send, edit, notify, sendExcel, me, log })
+  const admin = createAdmin({ api, store, settings, send, edit, notify, sendExcel, sendFile: api.sendFile, me, log })
 
   // ------------------------------------------------------------------ dispatch
   async function onMessage(m: NonNullable<Update["message"]>) {
@@ -614,7 +834,7 @@ export function createBot(api: Api, store: Store, env: BotConfig, log: (m: strin
 
     // Referral: only a person new to the bot can be invited, and not by themselves.
     const payload = start?.[1] ?? ""
-    const ref = Number(payload.match(/^ref_(\d+)$/)?.[1])
+    const ref = Number(payload.match(/^(?:ref|mon)_(\d+)$/)?.[1])
     const referrer = ref && ref !== from.id && store.user(ref) ? ref : null
     const ad = payload.match(/^src_([a-z0-9_]{1,40})$/)?.[1]
     const source = referrer ? "referral" : ad && store.sourceName(ad) ? ad : null
@@ -637,12 +857,16 @@ export function createBot(api: Api, store: Store, env: BotConfig, log: (m: strin
             "<b>Inspiring Education</b> — Prezident va ixtisoslashtirilgan maktablarga tayyorlov markazi botiga xush kelibsiz.",
             "",
             "📝 Qisqa anketani to‘ldiring (1 daqiqa) — shundan so‘ng:",
+            ...(isOpen(mon())
+              ? [`📝 <b>yutuqli monitoring test</b>ga (${dateLabel(mon(), false)}) ro‘yxatdan o‘tasiz;`]
+              : []),
             `🎓 do‘stlaringizni taklif qilib, <b>online darsga</b> qo‘shilasiz;`,
             "🏆 natijalarimiz, 📚 kurslar va 📍 filiallar bilan tanishasiz;",
             "📞 mutaxassisdan konsultatsiya olasiz.",
           ].join("\n"),
         )
         if (referrer) log(`invited ${from.id} by ${referrer}`)
+        if (payload.startsWith("mon")) store.setMeta(`landing:${from.id}`, "mon")
         if (source && source !== "referral") log(`ad link ${source}: ${from.id}`)
       }
       if (isStep(user.step)) {
@@ -653,6 +877,10 @@ export function createBot(api: Api, store: Store, env: BotConfig, log: (m: strin
       if (await gate(user)) {
         if (payload === "online" || payload === "closed") {
           const s = await onlineScreen(store.user(from.id)!)
+          return send(from.id, s.text, s.markup)
+        }
+        if (payload === "monitoring" || payload.startsWith("mon_")) {
+          const s = monitoringScreen(store.user(from.id)!)
           return send(from.id, s.text, s.markup)
         }
         await showMenu(user)
@@ -676,10 +904,11 @@ export function createBot(api: Api, store: Store, env: BotConfig, log: (m: strin
         const s = await onlineScreen(user)
         return send(from.id, s.text, s.markup)
       }
-      case MENU.friends:
-        return send(from.id, friendsText(user))
-      case MENU.rating:
-        return send(from.id, ratingText(user))
+      case MENU.monitoring:
+      case "/monitoring": {
+        const s = monitoringScreen(user)
+        return send(from.id, s.text, s.markup)
+      }
       case MENU.results:
         return send(from.id, resultsText(), {
           inline_keyboard: [[{ text: "📞 Farzandim uchun konsultatsiya", callback_data: "u:consult" }]],
@@ -759,9 +988,18 @@ export function createBot(api: Api, store: Store, env: BotConfig, log: (m: strin
       if (message) return edit(user.id, message, t).catch(() => send(user.id, t))
       return send(user.id, t)
     }
-    if (data === "u:friends") {
+    if (data.startsWith("m:")) {
+      if (!(await subscribed(user.id))) {
+        await done()
+        return send(user.id, subscribePrompt(), subscribeMarkup())
+      }
+      return onMonitoring(c, store.user(user.id)!)
+    }
+    if (data === "o:friends" || data === "o:rating" || data === "u:friends") {
       await done()
-      return send(user.id, friendsText(user))
+      const text = data === "o:rating" ? ratingText(user) : friendsText(user)
+      if (message && data !== "u:friends") return edit(user.id, message, text, backToOnline).catch(() => {})
+      return send(user.id, text, backToOnline)
     }
     if (data === "cl:show") {
       if (!(await subscribed(user.id))) {
@@ -811,6 +1049,7 @@ export function createBot(api: Api, store: Store, env: BotConfig, log: (m: strin
     /** Call every minute: form reminders, and the daily report once at reportHour (Tashkent) to the call centre. */
     async tick(now = Date.now()) {
       await remind(now).catch((e) => log(`remind: ${(e as Error).message}`))
+      await remindMonitoring(now).catch((e) => log(`monitoring remind: ${(e as Error).message}`))
       const hour = cfg().reportHour
       if (hour === null || tashkentHour(now) !== hour) return
       const day = String(tashkentDay(now))

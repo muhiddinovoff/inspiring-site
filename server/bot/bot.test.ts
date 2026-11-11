@@ -3,8 +3,11 @@ import { beforeEach, describe, expect, it } from "vitest"
 import type { Update } from "../telegram.ts"
 import { type Api, createBot } from "./bot.ts"
 import { openStore, type Store } from "./db.ts"
+import { slug } from "./admin.ts"
 
 const ADMIN = 1
+const OTHER_ADMIN = 2
+const CALL = 3
 const CLOSED = "-1001"
 const BOT = 999
 
@@ -141,7 +144,7 @@ describe("bot", () => {
     expect(store.credited(100)).toEqual([201, 202, 203, 204, 205])
     const notes = t.sent(100).filter((s) => s.includes("Do‘stingiz"))
     expect(notes).toHaveLength(5)
-    expect(notes.at(-1)).toContain("Yopiq kurslar siz uchun ochildi")
+    expect(notes.at(-1)).toContain("Online darsga qo‘shilish huquqini oldingiz")
 
     await bot.handle(cb(100, "cl:open"))
     const link = t.calls.find((c) => c.method === "createChatInviteLink")
@@ -190,7 +193,7 @@ describe("bot", () => {
   it("admin panel: connects the closed channel with the picker and changes the goal", async () => {
     bot.settings.set({ closedChannel: "", closedTitle: "" })
     await bot.handle(msg(ADMIN, "/admin"))
-    expect(t.sent(ADMIN).at(-1)).toContain("Yopiq kanal: ⚠️")
+    expect(t.sent(ADMIN).at(-1)).toContain("Online dars kanali: ⚠️")
     await bot.handle(cb(ADMIN, "a:cl:pick"))
     const picker = t.calls.at(-1)?.body.reply_markup as { keyboard: { request_chat?: object }[][] }
     expect(picker.keyboard[0][0].request_chat).toMatchObject({ request_id: 1, chat_is_channel: true })
@@ -220,7 +223,7 @@ describe("bot", () => {
     expect(t.sent(ADMIN).at(-1)).toContain("Valiyev Ali Rustamovich")
     await bot.handle(cb(ADMIN, "a:u:open:100"))
     expect(store.user(100)?.unlocked_at).toBeTruthy()
-    expect(t.sent(100).at(-1)).toContain("yopiq kurslar ochildi")
+    expect(t.sent(100).at(-1)).toContain("online dars ochildi")
 
     await bot.handle(cb(ADMIN, "a:bc"))
     await bot.handle(msg(ADMIN, "Ertaga ochiq dars!"))
@@ -262,5 +265,104 @@ describe("bot", () => {
     await register(400, "/anketa")
     expect(t.sent(ADMIN).filter((m) => m.includes("Yangi lid"))).toHaveLength(1)
     expect(store.counts(0)).toMatchObject({ leads: 1, students: 0 })
+  })
+
+  describe("call centre and marketing", () => {
+    beforeEach(() => {
+      bot = createBot(
+        t.api,
+        store,
+        {
+          admins: [String(ADMIN), String(OTHER_ADMIN)],
+          callCenter: [String(CALL)],
+          channel: "@inspiringuz",
+          closedChannel: CLOSED,
+          goal: 5,
+          reportHour: 20,
+          site: "https://x",
+        },
+        () => {},
+      )
+    })
+
+    it("sends bot leads and site applications only to the call centre, with status buttons", async () => {
+      t.members["@inspiringuz"].add(100)
+      await register(100)
+      expect(t.sent(CALL).at(-1)).toContain("Yangi lid")
+      expect(t.sent(ADMIN).some((m) => m.includes("Yangi lid"))).toBe(false)
+      expect(t.sent(OTHER_ADMIN)).toEqual([])
+
+      const delivered = await bot.siteLead({
+        firstName: "Dilnoza",
+        lastName: "Karimova",
+        phone: "+998901112233",
+        lang: "uz",
+      })
+      expect(delivered).toBe(1)
+      expect(t.sent(CALL).at(-1)).toContain("Yangi ariza")
+      const site = store.siteLeads()[0]
+      expect(site).toMatchObject({ first_name: "Dilnoza", status: "new" })
+
+      // The operator marks both leads.
+      const press = (data: string) => bot.handle({ ...cb(CALL, data) })
+      await press("ld:b:100:contacted")
+      await press(`ld:s:${site.id}:enrolled`)
+      expect(store.lead(100)?.status).toBe("contacted")
+      expect(store.siteLead(site.id)).toMatchObject({ status: "enrolled" })
+      const edited = t.calls.filter((c) => c.method === "editMessageText").at(-1)
+      expect(String(edited?.body.text)).toContain("✅ Yozildi")
+      // Someone else can't change it.
+      await bot.handle(cb(555, "ld:b:100:refused"))
+      expect(store.lead(100)?.status).toBe("contacted")
+      expect(store.statusCounts()).toMatchObject({ contacted: 1, enrolled: 1 })
+    })
+
+    it("sends a consultation request to the call centre once", async () => {
+      t.members["@inspiringuz"].add(100)
+      await register(100)
+      await bot.handle(msg(100, "📞 Konsultatsiya olish"))
+      await bot.handle(cb(100, "u:consult"))
+      await bot.handle(cb(100, "u:consult"))
+      expect(t.sent(CALL).filter((m) => m.includes("Konsultatsiya so‘radi"))).toHaveLength(1)
+    })
+
+    it("counts people from an ad link and shows it on the card", async () => {
+      expect(slug("Instagram Stories, 12-noyabr")).toBe("instagram_stories_12_noyabr")
+      store.addSource("insta_bio", "Instagram bio")
+      t.members["@inspiringuz"].add(700)
+      await register(700, "/start src_insta_bio")
+      expect(store.user(700)?.source).toBe("insta_bio")
+      expect(t.sent(CALL).at(-1)).toContain("Manba:</b> Instagram bio")
+      expect(store.sources()[0]).toMatchObject({ code: "insta_bio", users: 1, leads: 1 })
+      // Unknown codes are ignored.
+      await register(701, "/start src_nope")
+      expect(store.user(701)?.source).toBeNull()
+    })
+
+    it("shows the new menu screens and the weekly rating", async () => {
+      t.members["@inspiringuz"].add(100)
+      await register(100)
+      for (const f of [801, 802]) {
+        t.members["@inspiringuz"].add(f)
+        await register(f, "/start ref_100")
+      }
+      await bot.handle(msg(100, "🏅 Reyting"))
+      expect(t.sent(100).at(-1)).toMatch(/🥇 Ali V\. — <b>2<\/b> ← siz/)
+      await bot.handle(msg(100, "🏆 Natijalarimiz"))
+      expect(t.sent(100).at(-1)).toContain("Prezident maktablari")
+      await bot.handle(msg(100, "📍 Filiallar"))
+      expect(t.sent(100).at(-1)).toContain("yandex.uz/maps")
+      await bot.handle(msg(100, "🎓 Online darsga qo‘shilish"))
+      expect(t.sent(100).at(-1)).toContain("2/5")
+    })
+
+    it("reminds once about an unfinished form", async () => {
+      await bot.handle(msg(900, "/start"))
+      await bot.handle(msg(900, "Ali"))
+      const later = Date.now() + 2 * 3_600_000
+      await bot.tick(later)
+      await bot.tick(later + 60_000)
+      expect(t.sent(900).filter((m) => m.includes("Anketani oxiriga yetkazmadingiz"))).toHaveLength(1)
+    })
   })
 })

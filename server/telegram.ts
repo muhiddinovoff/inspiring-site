@@ -65,7 +65,7 @@ export type Update = {
   callback_query?: {
     id: string
     from: { id: number; first_name?: string; last_name?: string; username?: string }
-    message?: { message_id: number; chat: { id: number; type: string } }
+    message?: { message_id: number; chat: { id: number; type: string }; text?: string }
     data?: string
   }
   chat_join_request?: {

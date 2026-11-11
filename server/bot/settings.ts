@@ -5,8 +5,10 @@
 import type { Store } from "./db.ts"
 
 export type BotConfig = {
-  /** Main admins from .env (TELEGRAM_CHAT_IDS): get lead cards, manage other admins. */
+  /** Main admins from .env (TELEGRAM_CHAT_IDS): admin panel, manage other admins. */
   admins: string[]
+  /** Who receives leads (site and bot) and the daily report: CALL_CENTER_IDS, else the main admins. */
+  callCenter?: string[]
   /** Required channel: "@inspiringuz" or a numeric ID; empty turns the subscription gate off. */
   channel: string
   /** Private channel with the closed courses ("-100…"); empty: not set up yet. */
@@ -27,6 +29,8 @@ type Saved = {
   reportHour: number | null
   /** Admins added in the bot. */
   extraAdmins: string[]
+  /** Chats that get leads and the daily report. */
+  callCenter: string[]
 }
 
 export type Settings = Saved & { mainAdmins: string[]; admins: string[]; site: string }
@@ -57,6 +61,7 @@ export function settingsStore(store: Store, env: BotConfig) {
         goal: s.goal ?? env.goal,
         reportHour: s.reportHour === undefined ? env.reportHour : s.reportHour,
         extraAdmins,
+        callCenter: s.callCenter ?? (env.callCenter?.length ? env.callCenter : env.admins),
         mainAdmins: env.admins,
         admins: [...env.admins, ...extraAdmins],
         site: env.site,

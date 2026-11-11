@@ -389,6 +389,12 @@ describe("bot", () => {
       expect(t.sent(100).at(-1)).toContain("yandex.uz/maps")
       await bot.handle(msg(100, "🎓 Online dars"))
       expect(t.sent(100).at(-1)).toContain("2/5")
+      expect(t.sent(100).at(-1)).toContain("Yana <b>3 ta</b> do‘st kerak")
+      await bot.handle(cb(100, "o:help"))
+      expect(t.shown(100)).toContain("Online darsga qanday kiraman?")
+      expect(t.shown(100)).toContain("@inspiringuz kanaliga obuna bo‘ladi")
+      await bot.handle(cb(100, "o:friends"))
+      expect(t.shown(100)).toMatch(/✅ .* — sanaldi/)
     })
 
     it("reminds once about an unfinished form", async () => {

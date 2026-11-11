@@ -6,7 +6,8 @@
  *
  * Settings (.env next to package.json, see .env.example):
  *   TELEGRAM_BOT_TOKEN   from @BotFather
- *   TELEGRAM_CHAT_IDS    who gets the applications, comma-separated (each must have pressed Start in the bot)
+ *   TELEGRAM_CHAT_IDS    main bot admins, comma-separated (each must have pressed Start in the bot)
+ *   CALL_CENTER_IDS      who gets the applications (site and bot); default TELEGRAM_CHAT_IDS. Editable in the bot.
  *   PORT                 default 3000;  HOST  default 127.0.0.1 (behind nginx)
  *   TRUST_PROXY=1        behind nginx: take the visitor's IP from X-Forwarded-For (for the rate limit)
  *
@@ -19,7 +20,7 @@ import { createReadStream, existsSync, statSync } from "node:fs"
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http"
 import { extname, join, normalize, resolve } from "node:path"
 
-import { leadMessage, parseLead } from "./lead.ts"
+import { parseLead } from "./lead.ts"
 import { createBot } from "./bot/bot.ts"
 import { openStore } from "./bot/db.ts"
 import { poll, telegram } from "./telegram.ts"
@@ -89,13 +90,11 @@ async function handleLead(req: IncomingMessage, res: ServerResponse) {
   if ((body as { website?: unknown })?.website) return json(res, 200, { ok: true })
   const parsed = parseLead(body)
   if ("error" in parsed) return json(res, 400, { ok: false, error: parsed.error })
-  if (!bot || !CHATS.length) return json(res, 503, { ok: false, error: "not configured" })
+  if (!users || !CHATS.length) return json(res, 503, { ok: false, error: "not configured" })
 
-  const { text, buttons } = leadMessage(parsed.lead)
-  const results = await Promise.allSettled(CHATS.map((id) => bot.send(id, text, buttons)))
-  results.forEach((r, i) => r.status === "rejected" && log(`telegram → ${CHATS[i]}: ${r.reason}`))
-  const delivered = results.filter((r) => r.status === "fulfilled").length
-  log(`lead ${parsed.lead.phone.slice(0, 6)}… delivered to ${delivered}/${CHATS.length}`)
+  // Saved in the bot's database and sent to the call centre with status buttons.
+  const delivered = await users.siteLead(parsed.lead)
+  log(`lead ${parsed.lead.phone.slice(0, 6)}… delivered to ${delivered}/${users.settings.get().callCenter.length}`)
   return delivered ? json(res, 200, { ok: true }) : json(res, 502, { ok: false, error: "telegram" })
 }
 
@@ -141,28 +140,36 @@ createServer((req, res) => {
     })
     return
   }
-  if (url === "/api/health") return json(res, 200, { ok: true, bot: Boolean(bot), chats: CHATS.length })
+  if (url === "/api/health") {
+    return json(res, 200, { ok: true, bot: Boolean(bot), chats: users?.settings.get().callCenter.length ?? 0 })
+  }
   if (req.method !== "GET" && req.method !== "HEAD") return json(res, 405, { ok: false })
   serveStatic(req, res)
 }).listen(PORT, HOST, () => log(`Inspiring site on http://${HOST}:${PORT} (dist: ${DIST})`))
 
-if (bot) {
-  const hour = process.env.REPORT_HOUR ?? "20"
-  const users = createBot(
-    bot,
-    openStore(resolve(ROOT, process.env.BOT_DB || "data/bot.db")),
-    {
-      admins: CHATS,
-      channel: process.env.REQUIRED_CHANNEL ?? "@inspiringuz",
-      closedChannel: (process.env.CLOSED_CHANNEL_ID ?? "").trim(),
-      goal: Math.max(1, Number(process.env.REFERRAL_GOAL) || 5),
-      reportHour: /^\d{1,2}$/.test(hour) && Number(hour) < 24 ? Number(hour) : null,
-      site: process.env.SITE_DOMAIN
-        ? `https://${process.env.SITE_DOMAIN}`
-        : "https://muhiddinovoff.github.io/inspiring-site/",
-    },
-    log,
-  )
+const hour = process.env.REPORT_HOUR ?? "20"
+const users = bot
+  ? createBot(
+      bot,
+      openStore(resolve(ROOT, process.env.BOT_DB || "data/bot.db")),
+      {
+        admins: CHATS,
+        callCenter: (process.env.CALL_CENTER_IDS ?? "")
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
+        channel: process.env.REQUIRED_CHANNEL ?? "@inspiringuz",
+        closedChannel: (process.env.CLOSED_CHANNEL_ID ?? "").trim(),
+        goal: Math.max(1, Number(process.env.REFERRAL_GOAL) || 5),
+        reportHour: /^\d{1,2}$/.test(hour) && Number(hour) < 24 ? Number(hour) : null,
+        site: process.env.SITE_DOMAIN
+          ? `https://${process.env.SITE_DOMAIN}`
+          : "https://muhiddinovoff.github.io/inspiring-site/",
+      },
+      log,
+    )
+  : null
+if (bot && users) {
   void poll(bot, users.handle, log)
   setInterval(() => void users.tick().catch((e) => log(`daily report: ${(e as Error).message}`)), 60_000)
 }

@@ -57,44 +57,51 @@ Rasm: @BotFather → `/setuserpic` → botni tanlang → `docs/assets/bot-avatar
 
 > Token chatda yoki biror joyda ochiq yozilgan bo‘lsa, @BotFather → `/revoke` bilan yangilang va yangisini `.env` ga qo‘ying.
 
-## 4a. Foydalanuvchilar uchun bot: lidlar, majburiy obuna, yopiq kurslar
-Shu server botning foydalanuvchi qismini ham ishlatadi (`server/bot/`):
+## 4a. Telegram bot: lidlar, call-markaz, online dars, marketing
+Shu server botni ham ishlatadi (`server/bot/`).
 
-1. **Lid.** `/start` → qisqa anketa: ism, familiya, otasining ismi, sinf (tugmalar), viloyat → shahar/tuman
-   (tugmalar; ro‘yxatda bo‘lmasa yozish mumkin), Inspiring Education’da o‘qiydimi (ha bo‘lsa — filial), telefon
-   (bir tugma bilan yuboriladi), tasdiqlash. Har bir savolda «⬅️ Orqaga» bor.
-   Lid — Inspiring’da o‘qimaydigan odam: u `TELEGRAM_CHAT_IDS` dagilarga kartochka bo‘lib darhol keladi. Inspiring o‘quvchilari ham anketa to‘ldiradi (referal uchun), lekin lid sifatida yuborilmaydi — Excel’da alohida varaqda.
-2. **Excel.** Admin botda `/excel` (yoki «📥 Excel») — barcha lidlar: «Lidlar» (Inspiring’da o‘qimaydiganlar), «Inspiring o‘quvchilari», «Viloyatlar», «Sinflar» varaqlari,
-   filtr va qotirilgan sarlavha bilan. Har kuni `REPORT_HOUR` da (standart 20:00, Toshkent) kunlik hisobot va
-   bugungi lidlar fayli keladi. `/stats` — qisqa statistika.
-3. **Majburiy obuna.** Anketadan keyin menyu faqat `REQUIRED_CHANNEL` (@inspiringuz) ga obuna bo‘lgach ochiladi.
-4. **Yopiq kurslar.** Har kimning shaxsiy taklif havolasi bor. Do‘st faqat shunda hisoblanadi: botga **birinchi marta**
-   shu havola orqali kirgan, anketani to‘ldirgan va kanalga obuna bo‘lgan. `REFERRAL_GOAL` (5) ta bo‘lganda bot
-   kanaldan chiqib ketganlarni qayta tekshiradi va yopiq kanalga **shaxsiy so‘rovli havola** beradi: so‘rovni bot
-   faqat huquqini olgan odamdan qabul qiladi, havolani boshqaga bersa ham u kira olmaydi; kirgach havola bekor qilinadi.
+**1. Lid.** `/start` → qisqa anketa: ism, familiya, otasining ismi, sinf, viloyat → shahar/tuman (tugmalar; ro‘yxatda
+bo‘lmasa yozish mumkin), Inspiring Education’da o‘qiydimi (ha bo‘lsa — filial), telefon (bir tugma), tasdiqlash.
+Har bir savolda «⬅️ Orqaga». Anketani boshlab tashlab ketganlarga 1 soatdan keyin bir marta eslatma boradi.
+
+**Lid — Inspiring’da o‘qimaydigan odam.** Uning kartochkasi va **saytdagi har bir ariza** faqat **call-markazga**
+(`CALL_CENTER_IDS`, botda: `/admin` → «📞 Call-markaz») keladi; boshqa adminlarga lid xabari bormaydi.
+Kartochka ostida holat tugmalari: 📞 Bog‘lanildi · 📵 Javob bermadi · ✅ Yozildi · ❌ Rad etdi — kim va qachon bosgani
+kartochkada, Excel’da va statistikada ko‘rinadi. Sayt arizalari ham bazaga yoziladi.
+
+**2. Foydalanuvchi menyusi** (anketa va @inspiringuz obunasidan keyin):
+
+| Tugma | Nima |
+|---|---|
+| 🎓 Online darsga qo‘shilish | shaxsiy taklif havolasi; `REFERRAL_GOAL` (5) ta do‘st → yopiq online dars kanaliga shaxsiy havola |
+| 🏆 Natijalarimiz · 📚 Kurslar · 📍 Filiallar | saytdagi ma’lumotlar (`src/data`, `src/i18n/uz.ts`) |
+| 📞 Konsultatsiya olish | bir tugma — call-markazga «🔥 Konsultatsiya so‘radi» kartochkasi |
+| 👥 Do‘stlarim · 🏅 Reyting | kim hisoblangani, kim nima qilishi kerak; haftalik eng faol taklif qiluvchilar |
+| 📝 Ma’lumotlarim · 🌐 Biz bilan bog‘lanish | anketani o‘zgartirish; telefon, sayt, Telegram, Instagram |
+
+Do‘st hisoblanadi: botga **birinchi marta** shu havola orqali kirgan, anketani to‘ldirgan va kanalga obuna bo‘lgan.
+Kanalga kirish havolasi so‘rovli va shaxsiy: bot faqat huquqi borni qabul qiladi, kirgach havola bekor qilinadi.
 
 ### Admin panel
-Admin botda `/start` yoki `/admin` (yoki «⚙️ Admin panel» tugmasi) bossa, panel ochiladi:
+`/admin` (yoki «⚙️ Admin panel»):
 
 | Bo‘lim | Nima qiladi |
 |---|---|
-| 📊 Statistika | foydalanuvchilar, lidlar, referallar, eng ko‘p lid kelgan viloyatlar |
-| 📥 Excel | bugun / 7 kun / 30 kun / hammasi |
-| 🔒 Yopiq kanal | kanalni **tanlab ulash** (Telegram’ning o‘z «kanal tanlash» oynasi), holatini tekshirish, almashtirish, uzish |
-| 📢 Majburiy kanal | obuna kanalini almashtirish yoki majburiy obunani o‘chirish |
-| 🎯 Referal soni | yopiq kurs uchun nechta do‘st (1–15) |
-| 🕗 Hisobot vaqti | kunlik Excel hisobot soati yoki o‘chirish |
-| 📣 Xabar yuborish | istalgan xabarni (matn, rasm, video…) hammaga yoki anketa to‘ldirganlarga |
-| 🔍 Foydalanuvchi | ID, @username, telefon yoki ism bo‘yicha qidirish; yopiq kursni qo‘lda ochish yoki olib qo‘yish |
-| 👮 Adminlar | admin qo‘shish/o‘chirish (faqat `.env` dagi asosiy adminlar) |
+| 🆕 Yangi lidlar | ishlov berilmagan (yangi / javob bermagan) lidlar, bosilsa kartochka holat tugmalari bilan |
+| 📊 Statistika | foydalanuvchilar, bot va sayt lidlari, call-markaz natijalari (%), referallar, top viloyatlar |
+| 📥 Excel | bugun / 7 / 30 kun / hammasi: «Lidlar», «Sayt arizalari», «Inspiring o‘quvchilari», «Viloyatlar», «Sinflar»; holat, manba ustunlari |
+| 📈 Reklama havolalari | post, stories, reklama uchun alohida havola (`?start=src_…`): har biri nechta odam, lid, yozilgan olib kelgani |
+| 📣 Xabar yuborish | istalgan xabar hammaga yoki anketa to‘ldirganlarga |
+| 🎓 Online dars kanali · 📢 Majburiy kanal | kanalni tanlab ulash, tekshirish, almashtirish, o‘chirish |
+| 🎯 Referal soni · 🕗 Hisobot vaqti | nechta do‘st; kunlik hisobot soati (call-markazga) |
+| 🔍 Foydalanuvchi | ID, @username, telefon yoki ism bo‘yicha; online darsni qo‘lda ochish / olib qo‘yish |
+| 📞 Call-markaz · 👮 Adminlar | lid oluvchilar va adminlarni qo‘shish / olib tashlash (asosiy adminlar) |
 
-Panelda o‘zgartirilgan sozlamalar bazada saqlanadi va `.env` dagidan ustun turadi; `.env` faqat boshlang‘ich qiymat.
+Panelda o‘zgartirilgan sozlamalar bazada saqlanadi va `.env` dagidan ustun turadi.
 
-**Yopiq kanalni ulash:** private kanal oching → admin panel → «🔒 Yopiq kanal» → «🔗 Kanalni ulash» → kanalni
-tanlang. Telegram botni o‘sha kanalga kerakli huquq bilan o‘zi admin qiladi. Yoki botni kanalga qo‘lda admin qiling —
-bot o‘zi «Bu kanal nima uchun?» deb so‘raydi, «🔒 Yopiq kurslar kanali» ni bosasiz. Kanal ID sini qidirish shart emas.
-
-Majburiy kanal uchun ham bot **@inspiringuz** da admin bo‘lishi kerak (a’zolarni tekshirish uchun).
+**Online dars kanalini ulash:** private kanal oching → `/admin` → «🎓 Online dars kanali» → «🔗 Kanalni ulash» →
+kanalni tanlang (Telegram botni o‘zi admin qiladi). Yoki botni kanalga qo‘lda admin qiling — bot «Bu kanal nima
+uchun?» deb so‘raydi. Majburiy kanal uchun bot **@inspiringuz** da admin bo‘lishi kerak.
 
 Ma’lumotlar `data/bot.db` (SQLite) faylida. Zaxira nusxa: shu faylni nusxalang
 (`sqlite3 data/bot.db ".backup bot-backup.db"`). `git pull` va `deploy.sh` unga tegmaydi.
@@ -147,6 +154,6 @@ cd /var/www/inspiring-site && git pull && npm ci && npm run build && sudo system
 - Jurnal: `journalctl -u inspiring -f` — har bir ariza va Telegram xatolari shu yerda.
 - `telegram → 123…: Forbidden: bot can't initiate conversation` — o‘sha odam botda Start bosmagan.
 - `getChatMember @inspiringuz…: member list is inaccessible` — bot kanalga admin qilinmagan (adminlarga ham ogohlantirish keladi).
-- Adminlar `/start` bossa admin paneli chiqadi; foydalanuvchi sifatida sinash: `/anketa`.
+- Adminlar `/start` bossa admin paneli chiqadi; foydalanuvchi sifatida sinash: `/anketa`, menyu: `/menu`.
 - Spamga qarshi: bitta IP dan 10 daqiqada 5 tadan ortiq ariza qabul qilinmaydi; robotlar uchun yashirin maydon bor.
 - GitHub Pages'dagi nusxada server yo‘q: u yerda forma arizani Telegram orqali qo‘lda yuborishni taklif qiladi.

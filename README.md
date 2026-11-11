@@ -24,7 +24,7 @@
 - **Silliq animatsiyalar** — Lenis inersion skroll, bosh ekrandagi 3D “ekran” (scroll animatsiya), sanab ko‘tariladigan raqamlar, skroll bilan to‘ladigan yo‘l xaritasi, parallax.
 - **Matnlarni to‘ldirish** — ustozlar, ota-onalar fikrlari, filial koordinatalari qayerda turishi: [qo‘llanma](docs/content.md).
 - **Ariza formasi** — ism, familiya, `+998` telefon maskasi va ixtiyoriy joylashuv (eng yaqin filial bilan); o‘z serverimiz orqali Telegram botga, call-markazga boradi ([qo‘llanma](docs/server.md)).
-- **Telegram bot** — `/start` bosganlar anketa to‘ldiradi (viloyat va tumanlar tugmali), lidlar adminlarga kartochka va Excel bo‘lib keladi; @inspiringuz ga majburiy obuna; 5 ta do‘st taklif qilganlar yopiq kurslar kanaliga shaxsiy havola oladi ([qo‘llanma](docs/server.md#4a-foydalanuvchilar-uchun-bot-lidlar-majburiy-obuna-yopiq-kurslar)).
+- **Telegram bot** — anketa (viloyat va tumanlar tugmali); bot lidlari va sayt arizalari faqat call-markazga, holat tugmalari bilan; @inspiringuz ga majburiy obuna; 5 ta do‘st taklif qilganlar online darsga qo‘shiladi; natijalar, kurslar, filiallar, haftalik reyting; reklama havolalari statistikasi; admin panel ([qo‘llanma](docs/server.md#4a-telegram-bot-lidlar-call-markaz-online-dars-marketing)).
 - **3 xil ko‘rinish** — Yorug‘, Tun va Aralash (qurilma sozlamasiga qarab o‘zi almashadi). Tugma tepada, tanlov eslab qolinadi, almashganda sahifa silliq o‘tadi.
 - **Qulaylik** — bosiladigan telefon va xarita havolalari, shahar bo‘yicha filial filtri, mobil pastki panel.
 - **Sifat** — klaviatura bilan boshqarish, “harakatni kamaytirish” sozlamasini hurmat qilish, SEO va ulashish teglari, sitemap.

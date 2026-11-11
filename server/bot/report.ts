@@ -1,7 +1,8 @@
 /** What the admins get: a card for each new lead, the Excel file and short statistics. */
 import { type Sheet, xlsx } from "../xlsx.ts"
-import type { LeadRow, Store } from "./db.ts"
-import { prettyPhone } from "./form.ts"
+import { leadMessage } from "../lead.ts"
+import { type LeadRow, type SiteLead, STATUSES, type Status, type Store } from "./db.ts"
+import { type Button, prettyPhone } from "./form.ts"
 import { REGIONS } from "./regions.ts"
 
 const TZ = "Asia/Tashkent"
@@ -35,10 +36,44 @@ export const tashkentHour = (ms: number) => new Date(ms + 5 * 3_600_000).getUTCH
 const fullName = (l: Pick<LeadRow, "last_name" | "first_name" | "middle_name">) =>
   `${l.last_name} ${l.first_name} ${l.middle_name}`.trim()
 
-export function leadCard(l: LeadRow, isNew: boolean) {
+/** "📌 Holat: ✅ Yozildi — Dilnoza, 11.11.2026 10:20" once the call centre has touched the lead. */
+const statusLine = (l: { status: Status; status_by: string | null; status_at: number | null }) =>
+  l.status === "new" || !l.status
+    ? []
+    : [
+        `📌 <b>Holat:</b> ${STATUSES[l.status]}${l.status_by ? ` — ${esc(l.status_by)}` : ""}${l.status_at ? `, ${when(l.status_at)}` : ""}`,
+      ]
+
+/** Call-centre buttons under a lead: kind b = bot, s = site. */
+export function statusButtons(kind: "b" | "s", id: number, current: Status): Button[][] {
+  const b = (st: Exclude<Status, "new">): Button => ({
+    text: current === st ? `• ${STATUSES[st]} •` : STATUSES[st],
+    callback_data: `ld:${kind}:${id}:${st}`,
+  })
+  return [
+    [b("contacted"), b("noanswer")],
+    [b("enrolled"), b("refused")],
+  ]
+}
+
+export type CardKind = "new" | "updated" | "consult"
+const HEAD: Record<CardKind, string> = {
+  new: "<b>🆕 Yangi lid — Telegram bot</b>",
+  updated: "<b>✏️ Lid ma’lumotlarini yangiladi — Telegram bot</b>",
+  consult: "<b>🔥 Konsultatsiya so‘radi — Telegram bot</b>",
+}
+
+export function sourceLabel(code: string | null, store?: Pick<Store, "sourceName">) {
+  if (!code) return "To‘g‘ridan-to‘g‘ri"
+  if (code === "referral") return "Do‘st taklifi"
+  return store?.sourceName(code) ?? code
+}
+
+export function leadCard(l: LeadRow, kind: CardKind | boolean, store?: Pick<Store, "sourceName">) {
+  const k: CardKind = typeof kind === "boolean" ? (kind ? "new" : "updated") : kind
   const tg = l.username ? `@${esc(l.username)}` : esc(l.tg_name || "profil")
   return [
-    isNew ? "<b>🆕 Yangi lid — Telegram bot</b>" : "<b>✏️ Lid ma’lumotlarini yangiladi — Telegram bot</b>",
+    HEAD[k],
     "",
     `👤 <b>${esc(fullName(l))}</b>`,
     `🎓 <b>Sinf:</b> ${l.grade}`,
@@ -48,15 +83,39 @@ export function leadCard(l: LeadRow, isNew: boolean) {
     ...(l.referrer_id
       ? [`🤝 <b>Taklif qilgan:</b> ${esc(l.referrer_name || "—")} (<code>${l.referrer_id}</code>)`]
       : []),
+    ...(l.source && l.source !== "referral" ? [`📈 <b>Manba:</b> ${esc(sourceLabel(l.source, store))}`] : []),
     `🕒 ${when(l.updated_at)} (Toshkent)`,
+    ...statusLine(l),
   ].join("\n")
+}
+
+/** The website application card (same text as before) with the call-centre buttons. */
+export function siteCard(sl: SiteLead) {
+  const { text, buttons } = leadMessage(
+    {
+      firstName: sl.first_name,
+      lastName: sl.last_name,
+      phone: sl.phone,
+      lang: sl.lang === "ru" || sl.lang === "en" ? sl.lang : "uz",
+      ...(sl.lat !== null && sl.lng !== null
+        ? { location: { lat: sl.lat, lng: sl.lng, ...(sl.accuracy !== null ? { accuracy: sl.accuracy } : {}) } }
+        : {}),
+      ...(sl.nearest && sl.nearest_km !== null ? { nearest: { name: sl.nearest, km: sl.nearest_km } } : {}),
+      ...(sl.page ? { page: sl.page } : {}),
+    },
+    new Date(sl.created_at),
+  )
+  return {
+    text: [text, ...statusLine(sl)].join("\n"),
+    buttons: [...buttons, ...statusButtons("s", sl.id, sl.status)] as Button[][],
+  }
 }
 
 /** A lead is someone who does not study at Inspiring Education yet; students who sign up are kept apart. */
 export const isLead = (l: Pick<LeadRow, "is_student">) => !l.is_student
 
 /** "Lidlar" (not studying with us), "Inspiring o‘quvchilari", and lead counts by region and grade. */
-export function leadsWorkbook(rows: LeadRow[]) {
+export function leadsWorkbook(rows: LeadRow[], site: SiteLead[] = [], store?: Pick<Store, "sourceName">) {
   const leads = rows.filter(isLead)
   const students = rows.filter((l) => !isLead(l))
   const people = (name: string, list: LeadRow[], branch: boolean): Sheet => ({
@@ -76,7 +135,10 @@ export function leadsWorkbook(rows: LeadRow[]) {
       { header: "Telegram ID", width: 13 },
       { header: "Kim taklif qilgan", width: 24 },
       { header: "Taklif qilganlari", width: 10 },
-      { header: "Yopiq kanal", width: 12 },
+      { header: "Online dars", width: 12 },
+      { header: "Manba", width: 18 },
+      { header: "Holat", width: 16 },
+      { header: "Kim ishladi", width: 16 },
     ],
     rows: list.map((l, i) => [
       i + 1,
@@ -94,8 +156,40 @@ export function leadsWorkbook(rows: LeadRow[]) {
       l.referrer_id ? `${l.referrer_name || ""} (${l.referrer_id})`.trim() : "",
       l.referrals,
       l.joined_at ? "Qo‘shilgan" : l.unlocked_at ? "Ochilgan" : "",
+      sourceLabel(l.source, store),
+      STATUSES[l.status] ?? "",
+      l.status_by,
     ]),
   })
+  const siteSheet: Sheet = {
+    name: "Sayt arizalari",
+    columns: [
+      { header: "№", width: 6 },
+      { header: "Sana", width: 17 },
+      { header: "Familiya", width: 16 },
+      { header: "Ism", width: 14 },
+      { header: "Telefon", width: 18 },
+      { header: "Sayt tili", width: 8 },
+      { header: "Eng yaqin filial", width: 18 },
+      { header: "Masofa, km", width: 10 },
+      { header: "Xarita", width: 30 },
+      { header: "Holat", width: 16 },
+      { header: "Kim ishladi", width: 16 },
+    ],
+    rows: site.map((l, i) => [
+      i + 1,
+      when(l.created_at),
+      l.last_name,
+      l.first_name,
+      prettyPhone(l.phone),
+      l.lang,
+      l.nearest,
+      l.nearest_km === null ? null : Math.round(l.nearest_km * 10) / 10,
+      l.lat !== null && l.lng !== null ? `https://www.google.com/maps/search/?api=1&query=${l.lat},${l.lng}` : null,
+      STATUSES[l.status] ?? "",
+      l.status_by,
+    ]),
+  }
 
   const group = (key: (l: LeadRow) => string | number, order: (string | number)[]) => {
     const map = new Map<string | number, { leads: number; students: number }>()
@@ -120,6 +214,7 @@ export function leadsWorkbook(rows: LeadRow[]) {
   ]
   return xlsx([
     people("Lidlar", leads, false),
+    siteSheet,
     people("Inspiring o‘quvchilari", students, true),
     {
       name: "Viloyatlar",
@@ -149,14 +244,23 @@ export function fileName(prefix: string, ms: number) {
 
 export function statsText(store: Store, now = Date.now()) {
   const c = store.counts(tashkentDay(now))
+  const st = store.statusCounts()
+  const site = store.siteLeads().length
+  const all = c.leads + site
+  const pct = (n: number) => (all ? ` (${Math.round((n / all) * 100)}%)` : "")
   return [
-    "<b>📊 Bot statistikasi</b>",
+    "<b>📊 Statistika</b>",
     "",
-    `👥 Botga kirganlar: <b>${c.users}</b>`,
-    `📝 Lidlar (Inspiring’da o‘qimaydi): <b>${c.leads}</b>, bugun: <b>${c.leads_today}</b>`,
+    `👥 Botga kirganlar: <b>${c.users}</b> (bugun +${c.users_today})`,
+    `📝 Lidlar: <b>${all}</b> — bot: ${c.leads}, sayt: ${site}; bugun bot: +${c.leads_today}`,
     `🏫 Anketa to‘ldirgan Inspiring o‘quvchilari: <b>${c.students}</b>`,
-    `🤝 Hisoblangan referallar: <b>${c.referrals}</b>`,
-    `🔓 Yopiq kursni ochganlar: <b>${c.unlocked}</b>, kanalga qo‘shilganlar: <b>${c.joined}</b>`,
+    "",
+    "<b>📞 Call-markaz:</b>",
+    ...(["new", "contacted", "noanswer", "enrolled", "refused"] as Status[]).map(
+      (k) => `${STATUSES[k]}: <b>${st[k] ?? 0}</b>${pct(st[k] ?? 0)}`,
+    ),
+    "",
+    `🤝 Referallar: <b>${c.referrals}</b> · 🎓 online darsni ochganlar: <b>${c.unlocked}</b>, kanalda: <b>${c.joined}</b>`,
     "",
     `🕒 ${when(now)} (Toshkent)`,
   ].join("\n")

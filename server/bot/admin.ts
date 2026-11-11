@@ -1,7 +1,9 @@
 /**
  * Admin panel: everything an admin needs without touching the server.
  *
- *  • Statistics and Excel (all leads, today, last 7 days).
+ *  • Statistics (with the call-centre funnel) and Excel (today, 7 / 30 days, all).
+ *  • New leads not yet handled by the call centre; who receives leads (call centre).
+ *  • Ad links (/start src_…) for posts and pages, with how many people and leads each brought.
  *  • Closed courses channel and the required channel: connected with Telegram's own "choose a channel" button —
  *    Telegram adds the bot there as an admin with the rights it needs. Also offered on its own when someone makes
  *    the bot an admin of a channel.
@@ -13,7 +15,7 @@
 import type { Update } from "../telegram.ts"
 import type { Store } from "./db.ts"
 import { type Markup, prettyPhone } from "./form.ts"
-import { isLead, statsText, tashkentDay, when } from "./report.ts"
+import { isLead, siteCard, sourceLabel, statsText, statusButtons, tashkentDay, when, leadCard } from "./report.ts"
 import type { SettingsStore } from "./settings.ts"
 
 export type AdminContext = {
@@ -40,7 +42,7 @@ export const adminKeyboard: Markup = {
 }
 
 /** request_id of Telegram's chat/user pickers. */
-const PICK = { closed: 1, required: 2, admin: 3 } as const
+const PICK = { closed: 1, required: 2, admin: 3, callCenter: 4 } as const
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
 const inline = (rows: Btn[][]): Markup => ({ inline_keyboard: rows })
@@ -69,7 +71,7 @@ const pickChannel = (kind: "closed" | "required"): Markup =>
     keyboard: [
       [
         {
-          text: kind === "closed" ? "🔒 Yopiq kanalni tanlash" : "📢 Majburiy kanalni tanlash",
+          text: kind === "closed" ? "🎓 Online dars kanalini tanlash" : "📢 Majburiy kanalni tanlash",
           request_chat: {
             request_id: PICK[kind],
             chat_is_channel: true,
@@ -86,21 +88,29 @@ const pickChannel = (kind: "closed" | "required"): Markup =>
     one_time_keyboard: true,
   }) as unknown as Markup
 
-const pickAdmin: Markup = {
-  keyboard: [
-    [
-      {
-        text: "👤 Foydalanuvchini tanlash",
-        request_users: { request_id: PICK.admin, user_is_bot: false, max_quantity: 1 },
-      },
+const pickUser = (request_id: number): Markup =>
+  ({
+    keyboard: [
+      [{ text: "👤 Foydalanuvchini tanlash", request_users: { request_id, user_is_bot: false, max_quantity: 1 } }],
+      [{ text: CANCEL }],
     ],
-    [{ text: CANCEL }],
-  ],
-  resize_keyboard: true,
-  one_time_keyboard: true,
-} as unknown as Markup
+    resize_keyboard: true,
+    one_time_keyboard: true,
+  }) as unknown as Markup
 
-type State = { kind: "broadcast" | "find" | "addAdmin" | "pickClosed" | "pickRequired" }
+/** "Instagram stories, noyabr" → "instagram_stories_noyabr" */
+export function slug(name: string) {
+  return name
+    .toLowerCase()
+    .replace(/[‘’'ʻʼ`]/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 30)
+}
+
+type State = {
+  kind: "broadcast" | "find" | "addAdmin" | "addCallCenter" | "pickClosed" | "pickRequired" | "newSource"
+}
 
 export function createAdmin(ctx: AdminContext) {
   const { api, store, settings, send, edit, notify, log } = ctx
@@ -159,7 +169,7 @@ export function createAdmin(ctx: AdminContext) {
       if (c.username) {
         await notify(
           admin,
-          "ℹ️ Bu kanal ochiq (public). Yopiq kurslar uchun <b>private</b> kanal tavsiya etiladi — aks holda har kim havolasiz kira oladi.",
+          "ℹ️ Bu kanal ochiq (public). Online dars uchun <b>private</b> kanal tavsiya etiladi — aks holda har kim havolasiz kira oladi.",
         )
       }
       settings.set({ closedChannel: c.id, closedTitle: c.title })
@@ -179,7 +189,7 @@ export function createAdmin(ctx: AdminContext) {
     states.delete(admin)
     await send(
       admin,
-      `✅ «${esc(c.title)}» ${kind === "closed" ? "yopiq kurslar kanali" : "majburiy obuna kanali"} sifatida ulandi.`,
+      `✅ «${esc(c.title)}» ${kind === "closed" ? "online dars kanali" : "majburiy obuna kanali"} sifatida ulandi.`,
       adminKeyboard,
     )
     return send(admin, ...(kind === "closed" ? await closedScreen() : await requiredScreen()))
@@ -191,26 +201,33 @@ export function createAdmin(ctx: AdminContext) {
   function panel(): Screen {
     const st = s()
     const c = store.counts(tashkentDay(Date.now()))
+    const fresh = store.unhandledCount()
     return [
       [
         "⚙️ <b>Admin panel</b>",
         "",
         `👥 Foydalanuvchilar: <b>${c.users}</b> (bugun +${c.users_today})`,
-        `📝 Lidlar (Inspiring’da o‘qimaydi): <b>${c.leads}</b> (bugun +${c.leads_today})`,
-        `🏫 Anketa to‘ldirgan o‘quvchilar: <b>${c.students}</b>`,
+        `📝 Lidlar: bot <b>${c.leads}</b> (bugun +${c.leads_today}), sayt <b>${store.siteLeads().length}</b>`,
+        `🆕 Ishlov berilmagan: <b>${fresh}</b>`,
         "",
-        `🔒 Yopiq kanal: ${st.closedChannel ? `<b>${esc(st.closedTitle)}</b> ✅` : "⚠️ <b>ulanmagan</b>"}`,
+        `📞 Call-markaz: <b>${st.callCenter.length}</b> kishi (lidlar faqat ularga)`,
+        `🎓 Online dars kanali: ${st.closedChannel ? `<b>${esc(st.closedTitle)}</b> ✅` : "⚠️ <b>ulanmagan</b>"}`,
         `📢 Majburiy obuna: ${st.channel ? `<b>${esc(st.channelTitle)}</b> ✅` : "o‘chirilgan"}`,
-        `🎯 Yopiq kurs uchun: <b>${st.goal}</b> ta do‘st`,
+        `🎯 Online dars uchun: <b>${st.goal}</b> ta do‘st`,
         `🕗 Kunlik hisobot: ${st.reportHour === null ? "o‘chirilgan" : `<b>${String(st.reportHour).padStart(2, "0")}:00</b>`}`,
       ].join("\n"),
       inline([
+        [{ text: `🆕 Yangi lidlar (${fresh})`, callback_data: "a:new" }],
         [
           { text: "📊 Statistika", callback_data: "a:stats" },
           { text: "📥 Excel", callback_data: "a:xl" },
         ],
         [
-          { text: "🔒 Yopiq kanal", callback_data: "a:cl" },
+          { text: "📈 Reklama havolalari", callback_data: "a:src" },
+          { text: "📣 Xabar yuborish", callback_data: "a:bc" },
+        ],
+        [
+          { text: "🎓 Online dars kanali", callback_data: "a:cl" },
           { text: "📢 Majburiy kanal", callback_data: "a:rq" },
         ],
         [
@@ -218,12 +235,99 @@ export function createAdmin(ctx: AdminContext) {
           { text: "🕗 Hisobot vaqti", callback_data: "a:rep" },
         ],
         [
-          { text: "📣 Xabar yuborish", callback_data: "a:bc" },
           { text: "🔍 Foydalanuvchi", callback_data: "a:find" },
+          { text: "📞 Call-markaz", callback_data: "a:cc" },
         ],
         [{ text: "👮 Adminlar", callback_data: "a:adm" }],
       ]),
     ]
+  }
+
+  function newLeads(): Screen {
+    const list = store.unhandled()
+    if (!list.length) return ["🆕 <b>Yangi lidlar</b>\n\nHammasiga ishlov berilgan 👍", inline([[home]])]
+    return [
+      [
+        "🆕 <b>Ishlov berilmagan lidlar</b> (yangi va javob bermaganlar, oxirgi 15 ta)",
+        "",
+        "Lidni bosing — kartochkasi holat tugmalari bilan chiqadi.",
+      ].join("\n"),
+      inline([
+        ...list.map((l) => [
+          {
+            text: `${l.kind === "s" ? "🌐" : "🤖"} ${l.name} · ${prettyPhone(l.phone)} · ${when(l.created_at).slice(0, 5)}`,
+            callback_data: `a:lead:${l.kind}:${l.id}`,
+          },
+        ]),
+        [{ text: "🔄 Yangilash", callback_data: "a:new" }],
+        [home],
+      ]),
+    ]
+  }
+
+  function sourcesScreen(): Promise<Screen> {
+    return ctx.me().then((bot) => {
+      const list = store.sources()
+      const other = Object.fromEntries(store.otherSources().map((o) => [o.code, o]))
+      const lines = list.map(
+        (x) =>
+          `• <b>${esc(x.name)}</b> — 👥 ${x.users} · 📝 ${x.leads} · ✅ ${x.enrolled}\n   <code>https://t.me/${bot.username}?start=src_${x.code}</code>`,
+      )
+      return [
+        [
+          "📈 <b>Reklama havolalari</b>",
+          "",
+          "Har bir post, reklama yoki sahifa uchun alohida havola yarating — qaysi biri qancha odam va lid olib kelganini ko‘rasiz.",
+          "",
+          ...(lines.length ? lines : ["Hali havola yo‘q."]),
+          "",
+          `• ${sourceLabel(null)} — 👥 ${other[""]?.users ?? 0} · 📝 ${other[""]?.leads ?? 0}`,
+          `• ${sourceLabel("referral")} — 👥 ${other.referral?.users ?? 0} · 📝 ${other.referral?.leads ?? 0}`,
+          "",
+          "👥 botga kirgan · 📝 lid · ✅ yozilgan",
+        ].join("\n"),
+        inline([
+          [{ text: "➕ Yangi havola", callback_data: "a:src:add" }],
+          ...list.map((x) => [{ text: `🗑 ${x.name}`, callback_data: `a:src:del:${x.code}` }]),
+          [home],
+        ]),
+      ] as Screen
+    })
+  }
+
+  function callCenterScreen(viewer: number): Screen {
+    const st = s()
+    const main = st.mainAdmins.includes(String(viewer))
+    return [
+      [
+        "📞 <b>Call-markaz</b>",
+        "",
+        "Sayt arizalari, botdagi yangi lidlar, konsultatsiya so‘rovlari va kunlik hisobot <b>faqat shularga</b> keladi:",
+        "",
+        ...st.callCenter.map((id) => `• ${personLine(id)}`),
+        "",
+        "Kartochka ostidagi tugmalar bilan lid holatini belgilashadi: 📞 bog‘lanildi, 📵 javob bermadi, ✅ yozildi, ❌ rad etdi.",
+        ...(main ? [] : ["", "O‘zgartirish faqat asosiy adminlarda."]),
+      ].join("\n"),
+      inline([
+        ...(main
+          ? [
+              [{ text: "➕ Qo‘shish", callback_data: "a:cc:add" }],
+              ...(st.callCenter.length > 1
+                ? st.callCenter.map((id) => [{ text: `➖ ${id} ni olib tashlash`, callback_data: `a:cc:del:${id}` }])
+                : []),
+            ]
+          : []),
+        [home],
+      ]),
+    ]
+  }
+
+  function personLine(id: string) {
+    const u = store.user(Number(id))
+    const l = store.lead(Number(id))
+    const name = l ? `${l.first_name} ${l.last_name}` : u?.name || ""
+    return `${name ? `${esc(name)} ` : ""}<code>${id}</code>${u?.username ? ` @${esc(u.username)}` : ""}`
   }
 
   function stats(): Screen {
@@ -243,11 +347,11 @@ export function createAdmin(ctx: AdminContext) {
     if (!st.closedChannel) {
       return [
         [
-          "🔒 <b>Yopiq kurslar kanali</b> — ⚠️ ulanmagan",
+          "🔒 <b>Online dars kanali</b> — ⚠️ ulanmagan",
           "",
           "Qanday ulanadi:",
           "1) Telegram’da <b>private</b> kanal oching (agar hali bo‘lmasa).",
-          "2) Pastdagi «🔗 Kanalni ulash» → «🔒 Yopiq kanalni tanlash» ni bosib, kanalni tanlang.",
+          "2) Pastdagi «🔗 Kanalni ulash» → «🎓 Online dars kanalini tanlash» ni bosib, kanalni tanlang.",
           "3) Telegram botni o‘zi admin qiladi (havola yaratish huquqi bilan) — tayyor.",
           "",
           "Kanal ulanmaguncha, 5 ta do‘st yig‘ganlarga «tez orada» deyiladi va hisobi saqlanadi.",
@@ -264,7 +368,7 @@ export function createAdmin(ctx: AdminContext) {
           : "⚠️ Botda «Invite users» huquqi yo‘q — havola berib bo‘lmaydi"
     return [
       [
-        "🔒 <b>Yopiq kurslar kanali</b>",
+        "🔒 <b>Online dars kanali</b>",
         "",
         `Kanal: <b>${esc(st.closedTitle)}</b> (<code>${esc(st.closedChannel)}</code>)`,
         status,
@@ -323,7 +427,7 @@ export function createAdmin(ctx: AdminContext) {
   function goalScreen(): Screen {
     const g = s().goal
     return [
-      `🎯 <b>Yopiq kurslar uchun nechta do‘st kerak?</b>\n\nHozir: <b>${g}</b>. Huquqni allaqachon olganlarniki saqlanadi.`,
+      `🎯 <b>Online darsga qo‘shilish uchun nechta do‘st kerak?</b>\n\nHozir: <b>${g}</b>. Huquqni allaqachon olganlarniki saqlanadi.`,
       inline([
         [1, 3, 5, 7, 10, 15].map((n) => ({ text: n === g ? `• ${n} •` : String(n), callback_data: `a:goal:${n}` })),
         [home],
@@ -365,12 +469,7 @@ export function createAdmin(ctx: AdminContext) {
   function adminsScreen(viewer: number): Screen {
     const st = s()
     const main = st.mainAdmins.includes(String(viewer))
-    const line = (id: string) => {
-      const u = store.user(Number(id))
-      const l = store.lead(Number(id))
-      const name = l ? `${l.first_name} ${l.last_name}` : u?.name || ""
-      return `${name ? `${esc(name)} ` : ""}<code>${id}</code>${u?.username ? ` @${esc(u.username)}` : ""}`
-    }
+    const line = personLine
     return [
       [
         "👮 <b>Adminlar</b>",
@@ -381,7 +480,7 @@ export function createAdmin(ctx: AdminContext) {
         "<b>Botda qo‘shilganlar:</b>",
         ...(st.extraAdmins.length ? st.extraAdmins.map((a) => `• ${line(a)}`) : ["— yo‘q"]),
         "",
-        "Adminlarga yangi lidlar, kunlik hisobot keladi va admin panel ochiladi.",
+        "Adminlar panelni boshqaradi. Lidlar adminlarga emas, faqat «📞 Call-markaz» ga keladi.",
         ...(main ? [] : ["", "Admin qo‘shish/o‘chirish faqat asosiy adminlarda."]),
       ].join("\n"),
       inline([
@@ -424,12 +523,12 @@ export function createAdmin(ctx: AdminContext) {
         `📅 Botga kirgan: ${when(u.started_at)}`,
         ...(u.referrer_id ? [`🤝 Taklif qilgan: ${esc(ref?.name || "")} <code>${u.referrer_id}</code>`] : []),
         `👥 Referallar: <b>${refs}/${st.goal}</b> (havola orqali kirgan: ${invited})`,
-        `🔒 Yopiq kurs: ${closed}`,
+        `🎓 Online dars: ${closed}`,
       ].join("\n"),
       inline([
         u.unlocked_at
           ? [{ text: "🔒 Huquqni olib qo‘yish", callback_data: `a:u:close:${id}` }]
-          : [{ text: "🔓 Yopiq kursni qo‘lda ochish", callback_data: `a:u:open:${id}` }],
+          : [{ text: "🎓 Online darsni qo‘lda ochish", callback_data: `a:u:open:${id}` }],
         [{ text: "🔍 Boshqa qidirish", callback_data: "a:find" }],
         [home],
       ]),
@@ -503,10 +602,31 @@ export function createAdmin(ctx: AdminContext) {
     )
     await send(
       admin,
-      `✅ <code>${id}</code> admin qilindi.${reached ? "" : "\n\n⚠️ Unga xabar yetmadi: u botni ochib /start bosishi kerak, shundan keyin lidlar unga ham keladi."}`,
+      `✅ <code>${id}</code> admin qilindi.${reached ? "" : "\n\n⚠️ Unga xabar yetmadi: u botni ochib /start bosishi kerak."}`,
       adminKeyboard,
     )
     return send(admin, ...adminsScreen(admin))
+  }
+
+  async function addCallCenter(admin: number, id: number) {
+    const st = s()
+    states.delete(admin)
+    if (st.callCenter.includes(String(id))) return send(admin, "Bu odam allaqachon call-markazda.", adminKeyboard)
+    settings.set({ callCenter: [...st.callCenter, String(id)] })
+    log(`call centre added: ${id} by ${admin}`)
+    const reached = await send(
+      id,
+      "📞 Siz <b>Inspiring Education</b> call-markaziga qo‘shildingiz: yangi lidlar shu yerga keladi.",
+    ).then(
+      () => true,
+      () => false,
+    )
+    await send(
+      admin,
+      `✅ <code>${id}</code> call-markazga qo‘shildi.${reached ? "" : "\n\n⚠️ Unga xabar yetmadi: u botni ochib /start bosishi kerak, aks holda lidlar unga yetmaydi."}`,
+      adminKeyboard,
+    )
+    return send(admin, ...callCenterScreen(admin))
   }
 
   /** An admin's message. Returns false when it isn't for the admin panel (then the user side handles it). */
@@ -527,6 +647,30 @@ export function createAdmin(ctx: AdminContext) {
     }
     if (m.users_shared?.request_id === PICK.admin && m.users_shared.users[0]) {
       await addAdmin(from, m.users_shared.users[0].user_id)
+      return true
+    }
+    if (m.users_shared?.request_id === PICK.callCenter && m.users_shared.users[0]) {
+      await addCallCenter(from, m.users_shared.users[0].user_id)
+      return true
+    }
+    if (state?.kind === "addCallCenter" && /^-?\d{5,15}$/.test(text)) {
+      await addCallCenter(from, Number(text))
+      return true
+    }
+    if (state?.kind === "newSource" && text && !text.startsWith("/")) {
+      const name = text.replace(/\s+/g, " ").slice(0, 60)
+      let code = slug(name) || `link${Date.now() % 100000}`
+      for (let i = 2; store.sourceName(code); i++) code = `${slug(name).slice(0, 26)}_${i}`
+      store.addSource(code, name)
+      states.delete(from)
+      log(`ad link ${code} by ${from}`)
+      const bot = await ctx.me()
+      await send(
+        from,
+        `✅ Havola tayyor — «${esc(name)}»:\n\n<code>https://t.me/${bot.username}?start=src_${code}</code>\n\nUni post, stories yoki reklamaga qo‘ying. Kim shu havola orqali kirsa, «📈 Reklama havolalari» da hisoblanadi.`,
+        adminKeyboard,
+      )
+      await send(from, ...(await sourcesScreen()))
       return true
     }
 
@@ -584,7 +728,7 @@ export function createAdmin(ctx: AdminContext) {
       if (text === "/start") {
         await send(
           from,
-          `👋 Assalomu alaykum! Siz bot administratorisiz. Yangi lidlar shu yerga keladi.`,
+          `👋 Assalomu alaykum! Siz bot administratorisiz.${s().callCenter.includes(String(from)) ? " Yangi lidlar shu yerga keladi." : ""}`,
           adminKeyboard,
         )
       }
@@ -630,6 +774,64 @@ export function createAdmin(ctx: AdminContext) {
       case "home":
         states.delete(admin)
         return show(panel())
+      case "new":
+        return show(newLeads())
+      case "lead": {
+        await done()
+        const id = Number(extra)
+        if (arg === "s") {
+          const sl = store.siteLead(id)
+          if (!sl) return
+          const card = siteCard(sl)
+          return send(admin, card.text, { inline_keyboard: card.buttons })
+        }
+        const row = store.leadRow(id)
+        if (!row) return
+        return send(admin, leadCard(row, "new", store), { inline_keyboard: statusButtons("b", id, row.status) })
+      }
+      case "src":
+        if (arg === "add") {
+          await done()
+          states.set(admin, { kind: "newSource" })
+          return send(
+            admin,
+            "📈 Havola nomini yozing — qayerga qo‘yasiz? Masalan: <i>Instagram bio</i>, <i>Stories 12-noyabr</i>, <i>Ota-onalar guruhi</i>.\n\nBekor qilish: /cancel",
+            { keyboard: [[{ text: CANCEL }]], resize_keyboard: true },
+          )
+        }
+        if (arg === "del" && extra) {
+          if (extra && !data.endsWith(":yes")) {
+            await done()
+            return show([
+              `🗑 «${esc(store.sourceName(extra) ?? extra)}» havolasini o‘chiraymi? Havola ishlashda davom etadi, lekin hisobda ko‘rinmaydi.`,
+              inline([
+                [{ text: "✅ Ha, o‘chirish", callback_data: `a:src:del:${extra}:yes` }],
+                [{ text: "⬅️ Yo‘q", callback_data: "a:src" }],
+              ]),
+            ])
+          }
+          store.deleteSource(extra)
+          await done("O‘chirildi")
+        }
+        return show(await sourcesScreen())
+      case "cc": {
+        const main = s().mainAdmins.includes(String(admin))
+        if (arg === "add" && main) {
+          await done()
+          states.set(admin, { kind: "addCallCenter" })
+          return send(
+            admin,
+            "➕ Call-markaz xodimini pastdagi tugma orqali tanlang yoki Telegram ID raqamini yozing (guruh bo‘lsa, guruh ID si: -100…).\n\nXodim avval botni ochib /start bosgan bo‘lishi kerak.",
+            pickUser(PICK.callCenter),
+          )
+        }
+        if (arg === "del" && main && extra && s().callCenter.length > 1) {
+          settings.set({ callCenter: s().callCenter.filter((x) => x !== extra) })
+          log(`call centre removed: ${extra} by ${admin}`)
+          await done("Olib tashlandi")
+        }
+        return show(callCenterScreen(admin))
+      }
       case "stats":
         await done("Yangilandi")
         return show(stats())
@@ -645,7 +847,7 @@ export function createAdmin(ctx: AdminContext) {
         return ctx.sendExcel(
           admin,
           since,
-          `📥 ${label} lidlar: <b>${n}</b> ta\n🏫 Inspiring o‘quvchilari (alohida varaqda): ${all.length - n} ta`,
+          `📥 ${label} lidlar: bot <b>${n}</b>, sayt <b>${store.siteLeads(since).length}</b>\n🏫 Inspiring o‘quvchilari (alohida varaqda): ${all.length - n} ta`,
         )
       }
       case "cl":
@@ -654,7 +856,7 @@ export function createAdmin(ctx: AdminContext) {
           states.set(admin, { kind: "pickClosed" })
           return send(
             admin,
-            "👇 Pastdagi <b>«🔒 Yopiq kanalni tanlash»</b> tugmasini bosing va kanalni tanlang. Telegram botni o‘sha kanalga kerakli huquqlar bilan admin qiladi.",
+            "👇 Pastdagi <b>«🎓 Online dars kanalini tanlash»</b> tugmasini bosing va kanalni tanlang. Telegram botni o‘sha kanalga kerakli huquqlar bilan admin qiladi.",
             pickChannel("closed"),
           )
         }
@@ -662,7 +864,7 @@ export function createAdmin(ctx: AdminContext) {
           if (extra !== "yes") {
             await done()
             return show([
-              "🔌 Yopiq kanalni uzaymi? Yangi havolalar berilmaydi (huquq olganlar saqlanadi, qayta ulasangiz ishlaydi).",
+              "🔌 Online dars kanalini uzaymi? Yangi havolalar berilmaydi (huquq olganlar saqlanadi, qayta ulasangiz ishlaydi).",
               inline([
                 [{ text: "✅ Ha, uzish", callback_data: "a:cl:off:yes" }],
                 [{ text: "⬅️ Yo‘q", callback_data: "a:cl" }],
@@ -752,8 +954,8 @@ export function createAdmin(ctx: AdminContext) {
         if (arg === "open") {
           store.unlock(id)
           log(`manual unlock ${id} by ${admin}`)
-          await notify(id, "🎁 <b>Sizga yopiq kurslar ochildi!</b> Kanalga kirish uchun tugmani bosing.", {
-            inline_keyboard: [[{ text: "🔓 Yopiq kanalga kirish", callback_data: "cl:open" }]],
+          await notify(id, "🎁 <b>Sizga online dars ochildi!</b> Kanalga kirish uchun tugmani bosing.", {
+            inline_keyboard: [[{ text: "🎓 Online darsga kirish", callback_data: "cl:open" }]],
           })
           await done("✅ Ochildi, foydalanuvchiga xabar yuborildi")
         } else if (arg === "close") {
@@ -784,7 +986,7 @@ export function createAdmin(ctx: AdminContext) {
           return send(
             admin,
             "➕ Yangi adminni pastdagi tugma orqali tanlang yoki uning Telegram ID raqamini yozing.\n\n(U avval botni ochib /start bosgan bo‘lishi kerak.)",
-            pickAdmin,
+            pickUser(PICK.admin),
           )
         }
         if (arg === "del" && main && extra) {
@@ -819,7 +1021,7 @@ export function createAdmin(ctx: AdminContext) {
           a,
           `📢 Bot «<b>${title}</b>» kanaliga admin qilindi. Bu kanal nima uchun?`,
           inline([
-            [{ text: "🔒 Yopiq kurslar kanali", callback_data: `a:set:cl:${chat}` }],
+            [{ text: "🔒 Online dars kanali", callback_data: `a:set:cl:${chat}` }],
             [{ text: "📢 Majburiy obuna kanali", callback_data: `a:set:rq:${chat}` }],
           ]),
         )
@@ -829,7 +1031,7 @@ export function createAdmin(ctx: AdminContext) {
       (status === "left" || status === "kicked" || status === "member") &&
       (chat === st.closedChannel || chat === st.channel)
     ) {
-      const which = chat === st.closedChannel ? "yopiq kurslar" : "majburiy obuna"
+      const which = chat === st.closedChannel ? "online dars" : "majburiy obuna"
       for (const a of st.admins) {
         await notify(
           a,

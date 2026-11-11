@@ -19,35 +19,34 @@ const bot = telegram(token)
 const TEXTS = {
   uz: {
     name: "Inspiring Education",
-    short:
-      "Prezident va ixtisoslashtirilgan maktablarga tayyorlov markazi. Ro‘yxatdan o‘ting va yopiq kurslarni oching.",
+    short: "Prezident va ixtisoslashtirilgan maktablarga tayyorlov. Natijalar, kurslar, konsultatsiya va online dars.",
     description:
-      "Inspiring Education — Prezident va ixtisoslashtirilgan maktablarga tayyorlov markazi.\n\nBotda:\n• qisqa anketani to‘ldirasiz — mutaxassislarimiz siz bilan bog‘lanishadi;\n• do‘stlaringizni taklif qilib, maxsus yopiq kurslarga kirish huquqini olasiz.",
+      "Inspiring Education — Prezident va ixtisoslashtirilgan maktablarga tayyorlov markazi.\n\nBotda:\n• qisqa anketani to‘ldirasiz — mutaxassislarimiz siz bilan bog‘lanishadi;\n• natijalarimiz, kurslar va filiallar bilan tanishasiz;\n• do‘stlaringizni taklif qilib, maxsus online darsga qo‘shilasiz.",
     start: "Boshlash",
     menu: "Asosiy menyu",
-    closed: "Yopiq kurslar va taklif havolasi",
+    closed: "Online darsga qo‘shilish",
     anketa: "Anketani qayta to‘ldirish",
     id: "Mening chat ID raqamim",
   },
   ru: {
     name: "Inspiring Education",
-    short: "Центр подготовки в Президентские и специализированные школы. Регистрируйтесь и откройте закрытые курсы.",
+    short: "Подготовка в Президентские и специализированные школы. Результаты, курсы, консультация и онлайн-урок.",
     description:
-      "Inspiring Education — центр подготовки в Президентские и специализированные школы.\n\nВ боте:\n• заполните короткую анкету — наши специалисты свяжутся с вами;\n• пригласите друзей и получите доступ к закрытым курсам.",
+      "Inspiring Education — центр подготовки в Президентские и специализированные школы.\n\nВ боте:\n• заполните короткую анкету — наши специалисты свяжутся с вами;\n• пригласите друзей и присоединитесь к онлайн-уроку.",
     start: "Начать",
     menu: "Главное меню",
-    closed: "Закрытые курсы и ссылка-приглашение",
+    closed: "Онлайн-урок",
     anketa: "Заполнить анкету заново",
     id: "Мой chat ID",
   },
   en: {
     name: "Inspiring Education",
-    short: "Preparation for Presidential and specialised schools. Sign up and unlock the closed courses.",
+    short: "Preparation for Presidential and specialised schools. Results, courses, consultation and an online lesson.",
     description:
-      "Inspiring Education prepares children for Presidential and specialised schools.\n\nIn this bot:\n• fill in a short form and our team will contact you;\n• invite friends to unlock the closed courses.",
+      "Inspiring Education prepares children for Presidential and specialised schools.\n\nIn this bot:\n• fill in a short form and our team will contact you;\n• invite friends to join the online lesson.",
     start: "Start",
     menu: "Main menu",
-    closed: "Closed courses and invite link",
+    closed: "Join the online lesson",
     anketa: "Fill in the form again",
     id: "My chat ID",
   },
@@ -65,7 +64,7 @@ for (const [lang, t] of Object.entries(TEXTS)) {
       commands: [
         { command: "start", description: t.start },
         { command: "menu", description: t.menu },
-        { command: "closed", description: t.closed },
+        { command: "online", description: t.closed },
         { command: "anketa", description: t.anketa },
       ],
       ...scope,

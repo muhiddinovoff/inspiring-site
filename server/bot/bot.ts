@@ -222,40 +222,47 @@ export function createBot(api: Api, store: Store, env: BotConfig, log: (m: strin
         inline_keyboard: [[{ text: "🎓 Online darsga qo‘shilish", callback_data: "cl:open" }]],
       })
     } else {
-      if (n < goal) lines.push(`Yana <b>${goal - n}</b> ta do‘st — va online darsga qo‘shilasiz.`)
+      if (n < goal) lines.push(`💪 Yana <b>${goal - n} ta</b> do‘st — va online darsga kirasiz!`)
       await notify(user.referrer_id, lines.join("\n"))
     }
   }
 
   const shareUrl = (link: string) =>
     `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(
-      "🎓 Inspiring Education — Prezident va ixtisoslashtirilgan maktablarga tayyorlov. Botga qo‘shiling: natijalar, kurslar va maxsus online dars 👇",
+      "Salom! 👋 Inspiring Education botiga qo‘shil — natijalar, kurslar va maxsus online darslar bor. Shu havolani bos 👇",
     )}`
+
+  /** "yana 3 ta do‘st kerak" — the one thing a child should remember from the screen. */
+  const nextStepText = (n: number, goal: number) =>
+    n >= goal
+      ? "🎉 <b>Tayyor!</b> Pastdagi «🎓 Kanalga kirish» tugmasini bosing."
+      : n === 0
+        ? `👇 Boshlash uchun «📤 Do‘stlarga yuborish» tugmasini bosing.`
+        : `💪 Yana <b>${goal - n} ta</b> do‘st kerak — davom eting!`
 
   async function onlineScreen(user: User) {
     const goal = cfg().goal
     const n = store.credited(user.id).length
     const link = await refLink(user.id)
-    const open = n >= goal || user.unlocked_at
+    const open = n >= goal || Boolean(user.unlocked_at)
     const text = [
       "🎓 <b>Online dars</b>",
       "",
-      "Inspiring Education ustozlarining maxsus online darslari — faqat taklif orqali kiriladigan yopiq kanalda.",
+      "Inspiring Education ustozlarining <b>maxsus online darslari</b> — yopiq kanalda.",
       "",
-      `Qo‘shilish uchun <b>${goal} ta do‘stingizni</b> taklif qiling. Do‘stingiz hisoblanadi, agar u:`,
-      "1) botga sizning havolangiz orqali birinchi marta kirsa,",
-      "2) anketani to‘ldirsa,",
-      ...(cfg().channel ? [`3) ${esc(cfg().channelTitle)} kanaliga obuna bo‘lsa.`] : []),
+      `🔑 Kirish uchun <b>${goal} ta do‘stingizni</b> taklif qiling.`,
       "",
       `Hisob: ${progress(n, goal)}`,
+      nextStepText(n, goal),
       "",
       `🔗 Sizning havolangiz:\n${link}`,
       "",
-      "💡 Havolani sinfdoshlar va ota-onalar guruhlariga yuboring — eng tez yo‘l.",
+      "❓ Tushunarsiz bo‘lsa — «Qanday ishlaydi?» tugmasini bosing.",
     ].join("\n")
     const kb: Button[][] = [
-      ...(open ? [[{ text: "🎓 Online darsga kirish", callback_data: "cl:open" }]] : []),
+      ...(open ? [[{ text: "🎓 Kanalga kirish", callback_data: "cl:open" }]] : []),
       [{ text: "📤 Do‘stlarga yuborish", url: shareUrl(link) }],
+      [{ text: "❓ Qanday ishlaydi?", callback_data: "o:help" }],
       [
         { text: "👥 Do‘stlarim", callback_data: "o:friends" },
         { text: "🏅 Reyting", callback_data: "o:rating" },
@@ -265,26 +272,72 @@ export function createBot(api: Api, store: Store, env: BotConfig, log: (m: strin
     return { text, markup: { inline_keyboard: kb } as Markup }
   }
 
+  /** Step by step, in short sentences a child can follow. */
+  async function helpScreen(user: User) {
+    const goal = cfg().goal
+    const channel = cfg().channel ? esc(cfg().channelTitle) : ""
+    const link = await refLink(user.id)
+    const text = [
+      "❓ <b>Online darsga qanday kiraman?</b>",
+      "",
+      "Juda oson — atigi <b>3 qadam</b> 👇",
+      "",
+      "<b>1️⃣ Havolani do‘stingizga yuboring</b>",
+      "«📤 Do‘stlarga yuborish» tugmasini bosing va do‘stingizni tanlang. Sinf guruhiga ham yuborsangiz bo‘ladi.",
+      "",
+      "<b>2️⃣ Do‘stingiz botga kiradi</b>",
+      "U havolani bosadi va:",
+      "  ✏️ anketani to‘ldiradi;",
+      ...(channel ? [`  📢 ${channel} kanaliga obuna bo‘ladi.`] : []),
+      `Shunda u sizning do‘stingiz bo‘lib sanaladi ✅ — sizga xabar keladi.`,
+      "",
+      `<b>3️⃣ ${goal} ta do‘st yig‘ing</b>`,
+      `Hisobingiz <b>${goal}/${goal}</b> bo‘lganda «🎓 Kanalga kirish» tugmasi chiqadi. Bosing — online darslar ochiladi! 🎉`,
+      "",
+      "━━━━━━━━━━━━",
+      "<b>❗ Bilib qo‘ying:</b>",
+      "• Faqat <b>yangi</b> do‘stlar sanaladi. Botga oldin kirgan odam sanalmaydi.",
+      "• Do‘stingiz albatta <b>sizning havolangizni</b> bosishi kerak.",
+      "• O‘zingizni o‘zingiz taklif qila olmaysiz.",
+      ...(channel ? ["• Do‘stingiz kanaldan chiqib ketsa, hisobdan ham chiqadi."] : []),
+      "• Kanalga kirish havolasi <b>faqat siz uchun</b>. Boshqaga bersangiz, u kira olmaydi.",
+      "",
+      "🤔 <b>Do‘stim sanalmadimi?</b>",
+      "«👥 Do‘stlarim» ni oching — u yerda kim nima qilishi kerakligi yozilgan.",
+    ].join("\n")
+    const markup: Markup = {
+      inline_keyboard: [
+        [{ text: "📤 Do‘stlarga yuborish", url: shareUrl(link) }],
+        [{ text: "👥 Do‘stlarim", callback_data: "o:friends" }],
+        [{ text: "⬅️ Online dars", callback_data: "cl:show" }],
+      ],
+    }
+    return { text, markup }
+  }
+
   function friendsText(user: User) {
+    const goal = cfg().goal
     const list = store.invited(user.id)
     const n = list.filter((f) => f.credited_at).length
     const rows = list.slice(-30).map((f) => {
       const name = esc(f.lead || f.name || `ID ${f.id}`)
-      return f.credited_at
-        ? `✅ ${name}`
-        : `⏳ ${name} — ${f.lead ? "kanalga obuna bo‘lmagan" : "anketani to‘ldirmagan"}`
+      if (f.credited_at) return `✅ ${name} — sanaldi`
+      return f.lead
+        ? `⏳ ${name} — ${cfg().channel ? `${esc(cfg().channelTitle)} kanaliga obuna bo‘lishi kerak` : "kutilmoqda"}`
+        : `⏳ ${name} — anketani to‘ldirishi kerak`
     })
     return [
       "👥 <b>Do‘stlarim</b>",
       "",
-      `Hisob: ${progress(n, cfg().goal)}`,
+      `Hisob: ${progress(n, goal)}`,
+      nextStepText(n, goal),
       "",
       rows.length
         ? rows.join("\n")
-        : "Hali hech kim taklifingiz bilan kirmagan. Havolangizni sinfdoshlar va ota-onalar guruhiga yuboring.",
+        : "Hali hech kim havolangiz orqali kirmagan.\nHavolani do‘stingizga yoki sinf guruhiga yuboring 📤",
       ...(list.length > 30 ? ["", `… jami ${list.length} ta`] : []),
       ...(rows.some((r) => r.startsWith("⏳"))
-        ? ["", "⏳ belgili do‘stlaringizga anketani tugatish va kanalga obuna bo‘lishni eslating."]
+        ? ["", "💬 ⏳ belgili do‘stlaringizga yozing: nima qilishi kerakligi yonida yozilgan."]
         : []),
     ].join("\n")
   }
@@ -332,7 +385,7 @@ export function createBot(api: Api, store: Store, env: BotConfig, log: (m: strin
         await api.call("answerCallbackQuery", { callback_query_id: cbId })
         return send(
           user.id,
-          `Hozir faol do‘stlaringiz: ${progress(active, goal)}\n\nBa’zi do‘stlaringiz ${esc(cfg().channelTitle)} kanalidan chiqib ketgan. Ularni qaytarish yoki yangi do‘st taklif qilish kerak.`,
+          `Hozir faol do‘stlaringiz: ${progress(active, goal)}\n\n😕 Ba’zi do‘stlaringiz ${esc(cfg().channelTitle)} kanalidan chiqib ketgan, shuning uchun ular endi sanalmaydi.\n\nNima qilish kerak: ularga qayta obuna bo‘lishni ayting yoki yangi do‘st taklif qiling. «👥 Do‘stlarim» da kim chiqib ketganini ko‘rasiz.`,
         )
       }
       store.unlock(user.id)
@@ -358,11 +411,14 @@ export function createBot(api: Api, store: Store, env: BotConfig, log: (m: strin
     return send(
       user.id,
       [
-        "🎓 <b>Online dars kanaliga havolangiz tayyor!</b>",
+        "🎉 <b>Tabriklaymiz! Online dars kanaliga kirish havolangiz tayyor.</b>",
         "",
-        "Tugmani bosing va «Qo‘shilish so‘rovi»ni yuboring — bot uni darhol tasdiqlaydi.",
+        "Qanday kiraman:",
+        "1️⃣ Pastdagi «➡️ Kanalga qo‘shilish» tugmasini bosing.",
+        "2️⃣ Ochilgan oynada «Qo‘shilish so‘rovini yuborish» ni bosing.",
+        "3️⃣ Bot so‘rovingizni bir zumda qabul qiladi — tayyor! ✅",
         "",
-        "🔐 Havola shaxsiy: faqat siz kira olasiz, boshqa odamning so‘rovi rad etiladi. 24 soat amal qiladi.",
+        "🔐 Havola <b>faqat siz uchun</b>: boshqa odam bossa, kira olmaydi. 24 soat ishlaydi.",
       ].join("\n"),
       { inline_keyboard: [[{ text: "➡️ Kanalga qo‘shilish", url: link }]] },
     )
@@ -1000,6 +1056,12 @@ export function createBot(api: Api, store: Store, env: BotConfig, log: (m: strin
         return send(user.id, subscribePrompt(), subscribeMarkup())
       }
       return onMonitoring(c, store.user(user.id)!)
+    }
+    if (data === "o:help") {
+      await done()
+      const h = await helpScreen(user)
+      if (message) return edit(user.id, message, h.text, h.markup).catch(() => send(user.id, h.text, h.markup))
+      return send(user.id, h.text, h.markup)
     }
     if (data === "o:friends" || data === "o:rating" || data === "u:friends") {
       await done()

@@ -50,6 +50,13 @@ const PICK = { closed: 1, required: 2, admin: 3, callCenter: 4 } as const
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
 const inline = (rows: Btn[][]): Markup => ({ inline_keyboard: rows })
 const home: Btn = { text: "⬅️ Admin panel", callback_data: "a:home" }
+/** Back to the section a screen belongs to. */
+const back = {
+  leads: { text: "⬅️ Lidlar", callback_data: "a:g:leads" },
+  mkt: { text: "⬅️ Marketing", callback_data: "a:g:mkt" },
+  online: { text: "⬅️ Online dars", callback_data: "a:g:online" },
+  set: { text: "⬅️ Sozlamalar", callback_data: "a:g:set" },
+} satisfies Record<string, Btn>
 const rows2 = <T>(items: T[], n = 2) =>
   Array.from({ length: Math.ceil(items.length / n) }, (_, i) => items.slice(i * n, i * n + n))
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
@@ -216,51 +223,112 @@ export function createAdmin(ctx: AdminContext) {
     const st = s()
     const c = store.counts(tashkentDay(Date.now()))
     const fresh = store.unhandledCount()
+    const mon = store.monitoringIds().length
+    const warn = [
+      ...(st.closedChannel ? [] : ["⚠️ Online dars kanali ulanmagan"]),
+      ...(st.monitoring.time || daysLeft(st.monitoring) < 0 ? [] : ["⚠️ Monitoring vaqti kiritilmagan"]),
+    ]
     return [
       [
         "⚙️ <b>Admin panel</b>",
         "",
-        `👥 Foydalanuvchilar: <b>${c.users}</b> (bugun +${c.users_today})`,
-        `📝 Lidlar: bot <b>${c.leads}</b> (bugun +${c.leads_today}), sayt <b>${store.siteLeads().length}</b>`,
-        `🆕 Ishlov berilmagan: <b>${fresh}</b>`,
-        "",
-        `📞 Call-markaz: <b>${st.callCenter.length}</b> kishi (lidlar faqat ularga)`,
-        `🎓 Online dars kanali: ${st.closedChannel ? `<b>${esc(st.closedTitle)}</b> ✅` : "⚠️ <b>ulanmagan</b>"}`,
-        `📢 Majburiy obuna: ${st.channel ? `<b>${esc(st.channelTitle)}</b> ✅` : "o‘chirilgan"}`,
-        `🎯 Online dars uchun: <b>${st.goal}</b> ta do‘st`,
-        `🕗 Kunlik hisobot: ${st.reportHour === null ? "o‘chirilgan" : `<b>${String(st.reportHour).padStart(2, "0")}:00</b>`}`,
+        `🆕 Ishlov berilmagan lidlar: <b>${fresh}</b>`,
+        `📝 Lidlar bugun: bot +${c.leads_today} · 👥 yangi foydalanuvchilar +${c.users_today}`,
+        `📝 Monitoringga yozilganlar: <b>${mon}</b>`,
+        ...(warn.length ? ["", ...warn] : []),
       ].join("\n"),
       inline([
-        [{ text: `🆕 Yangi lidlar (${fresh})`, callback_data: "a:new" }],
-        [{ text: `📝 Monitoring (${store.monitoringIds().length})`, callback_data: "a:mon" }],
+        [{ text: `📋 Lidlar${fresh ? ` (${fresh} yangi)` : ""}`, callback_data: "a:g:leads" }],
+        [{ text: `📝 Monitoring (${mon})`, callback_data: "a:mon" }],
         [
-          { text: "📊 Statistika", callback_data: "a:stats" },
-          { text: "📥 Excel", callback_data: "a:xl" },
-        ],
-        [
-          { text: "📈 Reklama havolalari", callback_data: "a:src" },
-          { text: "📣 Xabar yuborish", callback_data: "a:bc" },
-        ],
-        [
-          { text: "🎓 Online dars kanali", callback_data: "a:cl" },
-          { text: "📢 Majburiy kanal", callback_data: "a:rq" },
-        ],
-        [
-          { text: "🎯 Referal soni", callback_data: "a:goal" },
-          { text: "🕗 Hisobot vaqti", callback_data: "a:rep" },
+          { text: "📈 Marketing", callback_data: "a:g:mkt" },
+          { text: "🎓 Online dars", callback_data: "a:g:online" },
         ],
         [
           { text: "🔍 Foydalanuvchi", callback_data: "a:find" },
-          { text: "📞 Call-markaz", callback_data: "a:cc" },
+          { text: "⚙️ Sozlamalar", callback_data: "a:g:set" },
         ],
-        [{ text: "👮 Adminlar", callback_data: "a:adm" }],
       ]),
     ]
   }
 
+  /** The panel's sections: a few buttons each instead of one long list. */
+  function group(name: string): Screen {
+    const st = s()
+    const c = store.counts(tashkentDay(Date.now()))
+    switch (name) {
+      case "leads": {
+        const fresh = store.unhandledCount()
+        return [
+          [
+            "📋 <b>Lidlar</b>",
+            "",
+            `📝 Bot: <b>${c.leads}</b> (bugun +${c.leads_today}) · sayt: <b>${store.siteLeads().length}</b>`,
+            `🆕 Ishlov berilmagan: <b>${fresh}</b>`,
+            `📞 Call-markaz: <b>${st.callCenter.length}</b> kishi — lidlar faqat ularga keladi`,
+          ].join("\n"),
+          inline([
+            [{ text: `🆕 Yangi lidlar (${fresh})`, callback_data: "a:new" }],
+            [
+              { text: "📊 Statistika", callback_data: "a:stats" },
+              { text: "📥 Excel", callback_data: "a:xl" },
+            ],
+            [{ text: "📞 Call-markaz", callback_data: "a:cc" }],
+            [home],
+          ]),
+        ]
+      }
+      case "mkt":
+        return [
+          [
+            "📈 <b>Marketing</b>",
+            "",
+            `🔗 Reklama havolalari: <b>${store.sources().length}</b> ta`,
+            `👥 Foydalanuvchilar: <b>${c.users}</b> (bugun +${c.users_today})`,
+          ].join("\n"),
+          inline([
+            [{ text: "📈 Reklama havolalari", callback_data: "a:src" }],
+            [{ text: "📣 Xabar yuborish", callback_data: "a:bc" }],
+            [home],
+          ]),
+        ]
+      case "online":
+        return [
+          [
+            "🎓 <b>Online dars</b>",
+            "",
+            `Kanal: ${st.closedChannel ? `<b>${esc(st.closedTitle)}</b> ✅` : "⚠️ <b>ulanmagan</b>"}`,
+            `🎯 Kerakli do‘stlar: <b>${st.goal}</b> ta`,
+            `🤝 Referallar: <b>${c.referrals}</b> · ochganlar: <b>${c.unlocked}</b> · kanalda: <b>${c.joined}</b>`,
+          ].join("\n"),
+          inline([
+            [{ text: "🎓 Online dars kanali", callback_data: "a:cl" }],
+            [{ text: "🎯 Referal soni", callback_data: "a:goal" }],
+            [home],
+          ]),
+        ]
+      default:
+        return [
+          [
+            "⚙️ <b>Sozlamalar</b>",
+            "",
+            `📢 Majburiy obuna: ${st.channel ? `<b>${esc(st.channelTitle)}</b>` : "o‘chirilgan"}`,
+            `🕗 Kunlik hisobot: ${st.reportHour === null ? "o‘chirilgan" : `<b>${String(st.reportHour).padStart(2, "0")}:00</b>`} (call-markazga)`,
+            `👮 Adminlar: <b>${st.admins.length}</b>`,
+          ].join("\n"),
+          inline([
+            [{ text: "📢 Majburiy kanal", callback_data: "a:rq" }],
+            [{ text: "🕗 Hisobot vaqti", callback_data: "a:rep" }],
+            [{ text: "👮 Adminlar", callback_data: "a:adm" }],
+            [home],
+          ]),
+        ]
+    }
+  }
+
   function newLeads(): Screen {
     const list = store.unhandled()
-    if (!list.length) return ["🆕 <b>Yangi lidlar</b>\n\nHammasiga ishlov berilgan 👍", inline([[home]])]
+    if (!list.length) return ["🆕 <b>Yangi lidlar</b>\n\nHammasiga ishlov berilgan 👍", inline([[back.leads]])]
     return [
       [
         "🆕 <b>Ishlov berilmagan lidlar</b> (yangi va javob bermaganlar, oxirgi 15 ta)",
@@ -275,7 +343,7 @@ export function createAdmin(ctx: AdminContext) {
           },
         ]),
         [{ text: "🔄 Yangilash", callback_data: "a:new" }],
-        [home],
+        [back.leads],
       ]),
     ]
   }
@@ -304,7 +372,7 @@ export function createAdmin(ctx: AdminContext) {
         inline([
           [{ text: "➕ Yangi havola", callback_data: "a:src:add" }],
           ...list.map((x) => [{ text: `🗑 ${x.name}`, callback_data: `a:src:del:${x.code}` }]),
-          [home],
+          [back.mkt],
         ]),
       ] as Screen
     })
@@ -333,7 +401,7 @@ export function createAdmin(ctx: AdminContext) {
                 : []),
             ]
           : []),
-        [home],
+        [back.leads],
       ]),
     ]
   }
@@ -386,7 +454,7 @@ export function createAdmin(ctx: AdminContext) {
         ? ["", "<b>📍 Eng ko‘p lid kelgan hududlar:</b>", ...top.map((r, i) => `${i + 1}. ${esc(r.region)} — ${r.n}`)]
         : []),
     ].join("\n")
-    return [text, inline([[{ text: "🔄 Yangilash", callback_data: "a:stats" }], [home]])]
+    return [text, inline([[{ text: "🔄 Yangilash", callback_data: "a:stats" }], [back.leads]])]
   }
 
   async function closedScreen(): Promise<Screen> {
@@ -404,7 +472,7 @@ export function createAdmin(ctx: AdminContext) {
           "",
           "Kanal ulanmaguncha, 5 ta do‘st yig‘ganlarga «tez orada» deyiladi va hisobi saqlanadi.",
         ].join("\n"),
-        inline([[{ text: "🔗 Kanalni ulash", callback_data: "a:cl:pick" }], [home]]),
+        inline([[{ text: "🔗 Kanalni ulash", callback_data: "a:cl:pick" }], [back.online]]),
       ]
     }
     const ch = await check(st.closedChannel)
@@ -429,7 +497,7 @@ export function createAdmin(ctx: AdminContext) {
         [{ text: "🔄 Tekshirish", callback_data: "a:cl" }],
         [{ text: "🔁 Boshqa kanalga almashtirish", callback_data: "a:cl:pick" }],
         [{ text: "🔌 Uzish", callback_data: "a:cl:off" }],
-        [home],
+        [back.online],
       ]),
     ]
   }
@@ -442,7 +510,7 @@ export function createAdmin(ctx: AdminContext) {
         inline([
           [{ text: "↩️ @inspiringuz ni yoqish", callback_data: "a:rq:def" }],
           [{ text: "🔗 Boshqa kanalni ulash", callback_data: "a:rq:pick" }],
-          [home],
+          [back.set],
         ]),
       ]
     }
@@ -467,7 +535,7 @@ export function createAdmin(ctx: AdminContext) {
         [{ text: "🔄 Tekshirish", callback_data: "a:rq" }],
         [{ text: "🔁 Boshqa kanal", callback_data: "a:rq:pick" }],
         [{ text: "⏸ Majburiy obunani o‘chirish", callback_data: "a:rq:off" }],
-        [home],
+        [back.set],
       ]),
     ]
   }
@@ -478,7 +546,7 @@ export function createAdmin(ctx: AdminContext) {
       `🎯 <b>Online darsga qo‘shilish uchun nechta do‘st kerak?</b>\n\nHozir: <b>${g}</b>. Huquqni allaqachon olganlarniki saqlanadi.`,
       inline([
         [1, 3, 5, 7, 10, 15].map((n) => ({ text: n === g ? `• ${n} •` : String(n), callback_data: `a:goal:${n}` })),
-        [home],
+        [back.online],
       ]),
     ]
   }
@@ -494,7 +562,7 @@ export function createAdmin(ctx: AdminContext) {
           3,
         ),
         [{ text: h === null ? "• O‘chirilgan •" : "⏸ O‘chirish", callback_data: "a:rep:off" }],
-        [home],
+        [back.set],
       ]),
     ]
   }
@@ -509,7 +577,7 @@ export function createAdmin(ctx: AdminContext) {
           { text: "30 kun", callback_data: "a:xl:month" },
         ],
         [{ text: "Hammasi", callback_data: "a:xl:all" }],
-        [home],
+        [back.leads],
       ]),
     ]
   }
@@ -538,7 +606,7 @@ export function createAdmin(ctx: AdminContext) {
               ...st.extraAdmins.map((a) => [{ text: `➖ ${a} ni o‘chirish`, callback_data: `a:adm:del:${a}` }]),
             ]
           : []),
-        [home],
+        [back.set],
       ]),
     ]
   }
@@ -855,6 +923,8 @@ export function createAdmin(ctx: AdminContext) {
       case "home":
         states.delete(admin)
         return show(panel())
+      case "g":
+        return show(group(arg ?? ""))
       case "new":
         return show(newLeads())
       case "mon": {

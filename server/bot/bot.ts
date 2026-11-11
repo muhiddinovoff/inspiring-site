@@ -76,6 +76,12 @@ const menuKeyboard: Markup = {
   resize_keyboard: true,
   is_persistent: true,
 }
+/** Admins trying the user side keep a way back to their panel. */
+const adminMenuKeyboard: Markup = {
+  ...menuKeyboard,
+  keyboard: [...(menuKeyboard as { keyboard: { text: string }[][] }).keyboard, [{ text: "⚙️ Admin panel" }]],
+} as Markup
+
 /** Older button texts people may still have on screen. */
 const OLD_MENU: Record<string, string> = {
   "🔒 Yopiq kurslar": MENU.online,
@@ -764,7 +770,7 @@ export function createBot(api: Api, store: Store, env: BotConfig, log: (m: strin
           "📞 Savolingiz bo‘lsa — «Konsultatsiya olish», mutaxassis qo‘ng‘iroq qiladi.",
         ].join("\n")
       : "🏠 <b>Asosiy menyu</b>"
-    await send(user.id, text, menuKeyboard)
+    await send(user.id, text, isAdmin(user.id) ? adminMenuKeyboard : menuKeyboard)
   }
 
   async function showMe(user: User) {

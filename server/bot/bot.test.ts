@@ -200,7 +200,7 @@ describe("bot", () => {
   it("admin panel: connects the closed channel with the picker and changes the goal", async () => {
     bot.settings.set({ closedChannel: "", closedTitle: "" })
     await bot.handle(msg(ADMIN, "/admin"))
-    expect(t.sent(ADMIN).at(-1)).toContain("Online dars kanali: ⚠️")
+    expect(t.sent(ADMIN).at(-1)).toContain("⚠️ Online dars kanali ulanmagan")
     await bot.handle(cb(ADMIN, "a:cl:pick"))
     const picker = t.calls.at(-1)?.body.reply_markup as { keyboard: { request_chat?: object }[][] }
     expect(picker.keyboard[0][0].request_chat).toMatchObject({ request_id: 1, chat_is_channel: true })
@@ -215,6 +215,16 @@ describe("bot", () => {
     })
     expect(bot.settings.get()).toMatchObject({ closedChannel: "-100777", closedTitle: "Kanal -100777" })
 
+    // Sections keep the panel short; deeper screens lead back to their section.
+    const panel = t.calls.find((c) => String(c.body.text).startsWith("⚙️ <b>Admin panel"))?.body.reply_markup as {
+      inline_keyboard: unknown[][]
+    }
+    expect(panel.inline_keyboard.length).toBeLessThanOrEqual(5)
+    await bot.handle(cb(ADMIN, "a:g:online"))
+    expect(t.shown(ADMIN)).toContain("Kerakli do‘stlar")
+    await bot.handle(cb(ADMIN, "a:goal"))
+    const goalKb = t.calls.at(-1)?.body.reply_markup as { inline_keyboard: { callback_data?: string }[][] }
+    expect(goalKb.inline_keyboard.at(-1)?.[0].callback_data).toBe("a:g:online")
     await bot.handle(cb(ADMIN, "a:goal:3"))
     expect(bot.settings.get().goal).toBe(3)
     // Not an admin: the panel's buttons do nothing.
@@ -244,6 +254,24 @@ describe("bot", () => {
     expect(bot.settings.get().admins).toContain("555666777")
     await bot.handle(cb(ADMIN, "a:adm:del:555666777"))
     expect(bot.settings.get().admins).not.toContain("555666777")
+  })
+
+  it("keeps the admin panel button when an admin tries the user side", async () => {
+    t.members["@inspiringuz"].add(ADMIN)
+    await register(ADMIN, "/anketa")
+    const menu = t.calls.filter((c) => String(c.body.text).includes("Asosiy menyu")).at(-1)?.body.reply_markup as {
+      keyboard: { text: string }[][]
+    }
+    expect(menu.keyboard.at(-1)?.[0].text).toBe("⚙️ Admin panel")
+    await bot.handle(msg(ADMIN, "⚙️ Admin panel"))
+    expect(t.sent(ADMIN).at(-1)).toContain("Admin panel")
+    // Ordinary users don't get it.
+    t.members["@inspiringuz"].add(100)
+    await register(100)
+    const userMenu = t.calls
+      .filter((c) => c.body.chat_id === 100 && String(c.body.text).includes("Asosiy menyu"))
+      .at(-1)?.body.reply_markup as { keyboard: { text: string }[][] }
+    expect(userMenu.keyboard.flat().some((b) => b.text.includes("Admin"))).toBe(false)
   })
 
   it("offers a channel the bot was just made admin of", async () => {

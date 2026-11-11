@@ -91,7 +91,11 @@ Admin: ro‘yxat soni filial/sinf bo‘yicha, Excel («Monitoring» va «Filiall
 sana/vaqtni o‘zgartirish, ro‘yxatni yopish, eslatmalarni o‘chirish.
 
 ### Admin panel
-`/admin` (yoki «⚙️ Admin panel»):
+`/admin` (yoki «⚙️ Admin panel»). Bosh ekranda qisqa holat (yangi lidlar, monitoring, ogohlantirishlar) va bo‘limlar:
+**📋 Lidlar** (yangi lidlar, statistika, Excel, call-markaz) · **📝 Monitoring** · **📈 Marketing** (reklama havolalari,
+xabar yuborish) · **🎓 Online dars** (kanal, referal soni) · **🔍 Foydalanuvchi** · **⚙️ Sozlamalar** (majburiy kanal,
+hisobot vaqti, adminlar). Har bir ichki ekranda «⬅️» o‘z bo‘limiga qaytaradi. Admin foydalanuvchi menyusini sinab
+ko‘rsa, pastda «⚙️ Admin panel» tugmasi qoladi.
 
 | Bo‘lim | Nima qiladi |
 |---|---|
